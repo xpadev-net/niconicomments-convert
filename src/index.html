@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>niconicomments-convert</title>
+</head>
+<body id="body">
+<div id="movieInput">
+  <button id="movie">動画を選択</button>
+  <p id="movieMessage"></p>
+</div>
+<div id="commentInput">
+  <button id="commentData">コメントデータを選択</button>
+  <p id="commentMessage"></p>
+</div>
+<div id="startInput">
+  <button id="start">変換開始</button>
+  <p id="progress"></p>
+</div>
+<div id="options">
+  <label>
+    <input type="checkbox" name="show-fps" id="show-fps" autocomplete="off">
+    FPS表示
+  </label>
+  <label>
+    <input type="checkbox" name="show-collision" id="show-collision" autocomplete="off">
+    当たり判定表示
+  </label>
+  <label>
+    <input type="checkbox" name="show-comment-count" id="show-comment-count" autocomplete="off">
+    コメント数表示
+  </label>
+  <label>
+    <input type="checkbox" name="use-legacy" id="use-legacy" autocomplete="off">
+    ニコ動互換モード
+  </label>
+  <label>
+    <input type="checkbox" name="keep-ca" id="keep-ca" autocomplete="off">
+    CA衝突回避
+  </label>
+  <label>
+    <input type="number" name="scale" id="scale" autocomplete="off" value="1" step="0.01">
+    コメントサイズ
+  </label>
+</div>
+<canvas width="1920" height="1080" id="canvas"></canvas>
+</body>
+</html>
+<style>
+  #options label{
+    display: inline-block;
+  }
+  #options label:hover{
+    background-color: #ccc;
+  }
+  canvas{
+    width: 256px;
+    height: 144px;
+    object-fit: contain;
+  }
+</style>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@xpadev-net/niconicomments@latest/dist/bundle.min.js"></script>
+<script>
+</script>
+<script type="text/javascript" src="./main.js"></script>

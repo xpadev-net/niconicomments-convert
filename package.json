@@ -1,0 +1,51 @@
+{
+  "name": "niconicomments-convert",
+  "private": false,
+  "version": "0.0.0",
+  "type": "commonjs",
+  "main": "build/electron/electron.js",
+  "author": "xpadev(xpadev.net)",
+  "homepage": "./",
+  "scripts": {
+    "build:win": "tsc -p electron&&npm run copy-files&&node build-script/win.js",
+    "build": "tsc -p electron&&npm run copy-files&&node build-script/win.js&&node build-script/mac.js",
+    "copy-files": "npx rimraf build/electron/html&&npx copyfiles -u 1 src/* build/electron/html",
+    "electron:dev": "npm run copy-files&&concurrently \"tsc -p electron -w\" \"tsc -p electron && electron .\""
+  },
+  "dependencies": {
+    "ffmpeg-ffprobe-static": "^4.4.0-rc.11"
+  },
+  "devDependencies": {
+    "concurrently": "^7.3.0",
+    "copyfiles": "^2.4.1",
+    "cross-env": "^7.0.3",
+    "electron": "^20.1.0",
+    "electron-builder": "^23.3.3",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.6.4"
+  },
+  "browserslist": {
+    "production": [
+      "last 1 electron version"
+    ],
+    "development": [
+      "last 1 electron version"
+    ]
+  },
+  "build": {
+    "extraMetadata": {
+      "main": "./build/electron/electron.js"
+    },
+    "files": [
+      "build/**/*"
+    ],
+    "asarUnpack":[
+      "node_modules/ffmpeg-ffprobe-static/ffmpeg*",
+      "node_modules/ffmpeg-ffprobe-static/index.js",
+      "node_modules/ffmpeg-ffprobe-static/package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    }
+  }
+}
