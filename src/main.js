@@ -11,10 +11,6 @@ document.getElementById("commentData").onclick = () => {
 document.getElementById("start").onclick = () => {
   window.api.request({type:"start"});
 }
-document.getElementById("show-fps").onchange = (e) => {
-  showFPS = !showFPS;
-  e.target.checked = showFPS;
-}
 document.getElementById("show-collision").onchange = (e) => {
   showCollision = !showCollision;
   e.target.checked = showCollision;
@@ -52,7 +48,9 @@ window.api.onResponse((data)=>{
       useLegacy:useLegacy,
       keepCA:keepCA,
       format:"v1",
-      scale:Number(scale)
+      scale:Number(scale),
+      showCommentCount:showCommentCount,
+      showCollision:showCollision
     });
     generatedFrames = convertedFrames = 0;
     totalFrames = Math.ceil(duration*fps);
