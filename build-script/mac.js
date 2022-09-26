@@ -5,7 +5,13 @@ builder.build({
         'appId': 'net.xpadev.niconicomments-convert',
         'icon': 'assets/niconicomments_icon.png',
         'mac': {
-            'target': 'zip',
+            'target': {
+                'target': 'dmg',
+                'arch': [
+                    'x64',
+                    'arm64',
+                ]
+            }
         }
     }
 });
