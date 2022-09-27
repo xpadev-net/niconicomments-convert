@@ -140,8 +140,8 @@ ipcMain.on("request", async (IpcMainEvent, args) => {
     input = conv.createInputStream({
       f: 'image2pipe',
       r: 30,
-      filter_complex: `[1:v]scale=${width}:${height} [ovrl],[0:v][ovrl]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2`
-    }) // create input writable stream
+      filter_complex: `pad=width=max(iw\\,ih*(16/9)):height=ow/(16/9):x=(ow-iw)/2:y=(oh-ih)/2,scale=1920x1080,overlay=x=0:y=0`
+    })
     conv.output(path.filePath, {vcodec: 'libx264', pix_fmt: 'yuv420p'}) // output to file
 
     conv.run()
