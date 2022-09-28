@@ -6,5 +6,8 @@
 	"outDir": "../build",
 	"rootDir": "../"
   },
-  "include": ["*"]
+  "include": [
+	"*",
+	"../src/@types/types.d.ts"
+  ]
 }
