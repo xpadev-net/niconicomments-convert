@@ -29,7 +29,7 @@ const createWindow = () => {
 };
 
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
+  app.quit();
 });
 let conv: Converter;
 let input: Stream.Writable;
