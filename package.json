@@ -11,13 +11,13 @@
     "build:win": "tsc -p electron&&npm run copy-files&&node build-script/win.js",
     "build": "tsc -p electron&&npm run copy-files&&node build-script/win.js&&node build-script/mac.js",
     "copy-files": "npx rimraf build/electron/html&&npx vite build",
-    "electron:dev": "npm run copy-files&&concurrently \"tsc -p electron -w\" \"tsc -p electron && electron .\""
+    "electron:dev": "npm run copy-files&&concurrently \"tsc -p electron -w\" \"tsc -p electron && electron --unhandled-rejections=strict .\""
   },
   "dependencies": {
     "ffmpeg-ffprobe-static": "^4.4.0-rc.11"
   },
   "devDependencies": {
-    "@xpadev-net/niconicomments": "^0.2.27",
+    "@xpadev-net/niconicomments": "^0.2.30",
     "concurrently": "^7.3.0",
     "copyfiles": "^2.4.1",
     "cross-env": "^7.0.3",
