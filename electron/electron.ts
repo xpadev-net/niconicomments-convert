@@ -206,7 +206,7 @@ const selectMovie = async(IpcMainEvent) => {
     return;
   }
   const ffprobe = execSync(
-    `${ffprobePath} ${path.filePaths[0]} -hide_banner -v quiet -print_format json -show_streams`
+    `${ffprobePath} "${path.filePaths[0].replace(/"/g,"\\\"")}" -hide_banner -v quiet -print_format json -show_streams`
   );
   let metadata;
   metadata = JSON.parse(ffprobe.toString());
@@ -236,7 +236,7 @@ const selectMovie = async(IpcMainEvent) => {
     return;
   }
   duration = execSync(
-    `${ffprobePath} ${path.filePaths[0]} -v quiet -show_entries format=duration -of default=noprint_wrappers=1:nokey=1`
+    `${ffprobePath} "${path.filePaths[0].replace(/"/g,"\\\"")}" -v quiet -show_entries format=duration -of default=noprint_wrappers=1:nokey=1`
   ).toString();
   targetFileName = path.filePaths;
   IpcMainEvent.reply("response", {
