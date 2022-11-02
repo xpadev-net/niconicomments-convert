@@ -37,7 +37,7 @@ const init = () => {
         ...data.options,
       });
       let generatedFrames = 0,
-        offset = 0;
+        offset = Math.ceil(data.offset * 100);
       const totalFrames = Math.ceil(data.duration * data.fps);
       const process = async () => {
         let buffer: string[] = [];

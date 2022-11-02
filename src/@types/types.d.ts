@@ -29,6 +29,8 @@ type apiRequestStart = {
   type: "start";
   data: options;
   fps: number;
+  clipStart: number|undefined;
+  clipEnd: number|undefined;
 } & apiRequestFromMain;
 type apiRequestProgress = {
   type: "progress";
@@ -95,6 +97,7 @@ type apiResponseStartRender = {
   options: options;
   duration: number;
   fps: number;
+  offset:number;
 } & apiResponseToRender;
 type apiResponseEndMain = {
   type: "end";

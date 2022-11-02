@@ -63,6 +63,7 @@ let i = 0,
   generatedFrames = 0,
   fps,
   options;
+const videoOption:{ss?:number,to?:number} = {};
 ipcMain.on("request", async (IpcMainEvent, args) => {
   const value = args.data[0];
   if (typeGuard.render.buffer(value)) {
@@ -116,7 +117,8 @@ ipcMain.on("request", async (IpcMainEvent, args) => {
       data: data,
       format: type,
       options: options,
-      duration: duration,
+      duration: (videoOption.to || duration) - (videoOption.ss || 0),
+      offset: (videoOption.ss || 0),
       fps: fps,
     });
   } else {
@@ -140,6 +142,14 @@ const convertStart = async(IpcMainEvent,value) => {
   if (outputPath.canceled) return;
   options = value.data;
   fps = value.fps;
+  if (value.clipStart!==undefined){
+    videoOption.ss = value.clipStart;
+  }
+  
+  if (value.clipEnd!==undefined){
+    videoOption.to = value.clipEnd;
+  }
+  
   IpcMainEvent.reply("response", {
     type: "start",
     target: "main",
@@ -156,7 +166,7 @@ const convertStart = async(IpcMainEvent,value) => {
   });
   renderWindow.loadURL(`file://${__dirname}/html/index.html?render`);
   conv = new Converter();
-  conv.createInputFromFile(targetFileName, {});
+  conv.createInputFromFile(targetFileName, videoOption);
   input = conv.createInputStream({
     f: "image2pipe",
     r: fps,

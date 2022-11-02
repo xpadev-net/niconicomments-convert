@@ -1,4 +1,5 @@
 import { typeGuard } from "./typeGuard";
+import {str2time, time2str} from "./timeUtil";
 
 const init = () => {
   document.body.innerHTML = `
@@ -11,9 +12,9 @@ const init = () => {
   <p id="commentMessage"></p>
 </div>
 <div id="startInput">
-  <button id="start">変換開始</button>
+  <button id="start" class="disabled">変換開始</button>
 </div>
-<div id="progress">
+<div id="progress" class="disabled">
   <div>
     generate:
     <span id="genProgress" class="progress"></span>
@@ -23,31 +24,44 @@ const init = () => {
     <span id="conProgress" class="progress"></span>
   </div>
 </div>
-<div id="options">
-  <label>
-    <input type="checkbox" name="show-collision" id="show-collision" autocomplete="off">
-    当たり判定表示
-  </label>
-  <label>
-    <input type="checkbox" name="show-comment-count" id="show-comment-count" autocomplete="off">
-    コメント数表示
-  </label>
-  <label>
-    <input type="checkbox" name="use-legacy" id="use-legacy" autocomplete="off">
-    ニコ動互換モード
-  </label>
-  <label>
-    <input type="checkbox" name="keep-ca" id="keep-ca" autocomplete="off">
-    CA衝突回避
-  </label>
-  <label>
-    コメントサイズ
-    <input type="number" name="scale" id="scale" autocomplete="off" value="1" step="0.01">
-  </label>
-  <label>
-    FPS
-    <input type="number" name="scale" id="fps" autocomplete="off" value="30" step="1">
-  </label>
+<div id="options" class="disabled">
+  <div>
+    <label>
+      <input type="text" name="clip-start" id="clip-start" autocomplete="off" value="" placeholder="--:--:--">
+      開始位置
+    </label>
+    <label>
+      <input type="text" name="clip-end" id="clip-end" autocomplete="off" value="" placeholder="--:--:--">
+      終了位置
+    </label>
+    <p>0以下を設定すると先頭/末尾になります</p>
+  </div>
+  <div>
+    <label>
+      <input type="checkbox" name="show-collision" id="show-collision" autocomplete="off">
+      当たり判定表示
+    </label>
+    <label>
+      <input type="checkbox" name="show-comment-count" id="show-comment-count" autocomplete="off">
+      コメント数表示
+    </label>
+    <label>
+      <input type="checkbox" name="use-legacy" id="use-legacy" autocomplete="off">
+      ニコ動互換モード
+    </label>
+    <label>
+      <input type="checkbox" name="keep-ca" id="keep-ca" autocomplete="off">
+      CA衝突回避
+    </label>
+    <label>
+      コメントサイズ
+      <input type="number" name="scale" id="scale" autocomplete="off" value="1" step="0.01">
+    </label>
+    <label>
+      FPS
+      <input type="number" name="scale" id="fps" autocomplete="off" value="30" step="1">
+    </label>
+  </div>
 </div><style>
   #options label{
     display: inline-block;
@@ -65,18 +79,22 @@ const init = () => {
     border: 1px black solid;
     display: inline-block;
     color: white;
-  }</style>`;
+  }
+  .disabled{display: none}</style>`;
   let duration_: number = 0,
+    format: string|undefined = undefined,
     useLegacy = false,
     showCollision = false,
     showCommentCount = false,
     keepCA = false,
     totalFrames = 0,
     scale = 1,
-    fps = 30;
-  const movieButton = document.getElementById("movie"),
-    commentDataButton = document.getElementById("commentData"),
-    startButton = document.getElementById("start"),
+    fps = 30,
+    clipStart:number|undefined = undefined,
+    clipEnd:number|undefined = undefined;
+  const movieButton = document.getElementById("movie") as HTMLButtonElement,
+    commentDataButton = document.getElementById("commentData") as HTMLButtonElement,
+    startButton = document.getElementById("start") as HTMLButtonElement,
     collisionInput = document.getElementById(
       "show-collision"
     ) as HTMLInputElement,
@@ -87,10 +105,14 @@ const init = () => {
     keepCAInput = document.getElementById("keep-ca") as HTMLInputElement,
     scaleInput = document.getElementById("scale") as HTMLInputElement,
     fpsInput = document.getElementById("fps") as HTMLInputElement,
+    clipStartInput = document.getElementById("clip-start") as HTMLInputElement,
+    clipEndInput = document.getElementById("clip-end") as HTMLInputElement,
     movieMessage = document.getElementById("movieMessage"),
     commentMessage = document.getElementById("commentMessage"),
+    progressWrapper = document.getElementById("progress"),
     genProgress = document.getElementById("genProgress"),
-    conProgress = document.getElementById("conProgress");
+    conProgress = document.getElementById("conProgress"),
+    options = document.getElementById("options");
 
   if (
     !(
@@ -102,10 +124,14 @@ const init = () => {
       legacyInput &&
       keepCAInput &&
       scaleInput &&
+      clipStartInput &&
+      clipEndInput &&
       movieMessage &&
       commentMessage &&
+      progressWrapper &&
       genProgress &&
-      conProgress
+      conProgress &&
+      options
     )
   )
     throw new Error();
@@ -133,6 +159,8 @@ const init = () => {
         keepCA,
         scale,
       },
+      clipStart,
+      clipEnd,
       fps,
     });
   };
@@ -158,22 +186,49 @@ const init = () => {
   fpsInput.onchange = (_) => {
     fps = Number(fpsInput.value);
   };
+  clipStartInput.onchange = (_) => {
+    const time = str2time(clipStartInput.value)||undefined;
+    clipStart = (time&&clipEnd&&time > clipEnd) ? clipStart : time;
+    clipStartInput.value = clipStart===undefined?"":time2str(clipStart);
+  };
+  clipEndInput.onchange = (_) => {
+    const time = str2time(clipEndInput.value)||clipEnd;
+    clipEnd = (time&&clipStart&&time < clipStart) ? clipEnd : ((time&&time > duration_)?undefined:time);
+    clipEndInput.value = clipEnd===undefined?"":time2str(clipEnd);
+  };
   window.api.onResponse((data) => {
-    console.log(data);
     if (data.target !== "main") return;
     if (typeGuard.main.selectMovie(data)) {
       const {path,width,height,duration} = data.data;
       movieMessage.innerText = `path:${path.filePaths}, width:${width}, height:${height}, duration:${duration}`;
       duration_ = duration;
+      if (duration_&&format){
+        options.classList.toggle("disabled",false)
+        startButton.classList.toggle("disabled",false)
+      }
     } else if (typeGuard.main.selectComment(data)) {
+      format = data.format;
       commentMessage.innerText = `データ形式：${data.format}`;
+      if (duration_&&format){
+        options.classList.toggle("disabled",false)
+        startButton.classList.toggle("disabled",false)
+      }
     } else if (typeGuard.main.progress(data)) {
       progress(genProgress, data.generated, totalFrames);
       progress(conProgress, data.converted, totalFrames);
     } else if (typeGuard.main.start(data)) {
       document.body.style.pointerEvents = "none";
-      totalFrames = Math.ceil(duration_ * fps);
-    } else {
+      totalFrames = Math.ceil(((clipEnd || duration_) - (clipStart || 0) )* fps);
+      progressWrapper.classList.toggle("disabled",false)
+    } else if(typeGuard.main.end(data)) {
+      document.body.style.pointerEvents = "unset";
+      duration_=0;
+      format=undefined;
+      commentMessage.innerText =movieMessage.innerText = "";
+      options.classList.toggle("disabled",true)
+      startButton.classList.toggle("disabled",true)
+      progressWrapper.classList.toggle("disabled",true)
+      alert("変換が完了しました");
     }
   });
   const progress = (element: HTMLElement, current: number, max: number) => {
