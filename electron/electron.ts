@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, globalShortcut } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, globalShortcut,Menu } from "electron";
 import { Converter } from "./ffmpeg-stream/stream";
 import * as path from "path";
 import * as fs from "fs";
@@ -18,6 +18,7 @@ const createWindow = () => {
       contextIsolation: true,
     },
   });
+  mainWindow.removeMenu()
 
   const appURL = `file://${__dirname}/html/index.html`;
 
@@ -164,6 +165,7 @@ const convertStart = async(IpcMainEvent,value) => {
       contextIsolation: true,
     },
   });
+  renderWindow.removeMenu();
   renderWindow.loadURL(`file://${__dirname}/html/index.html?render`);
   conv = new Converter();
   conv.createInputFromFile(targetFileName, videoOption);

@@ -228,6 +228,8 @@ const init = () => {
       options.classList.toggle("disabled",true)
       startButton.classList.toggle("disabled",true)
       progressWrapper.classList.toggle("disabled",true)
+      clipStart=clipEnd=undefined;
+      clipStartInput.value=clipEndInput.value="";
       alert("変換が完了しました");
     }
   });
