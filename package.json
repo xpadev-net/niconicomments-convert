@@ -10,6 +10,7 @@
   "scripts": {
     "format": "prettier --write \"{src,electron}/**/*.{tsx,ts,js,json,css,scss}\"",
     "build:win": "tsc -p electron&&npm run copy-files&&node build-script/win.js",
+    "build:mac": "tsc -p electron&&npm run copy-files&&node build-script/mac.js",
     "build": "tsc -p electron&&npm run copy-files&&node build-script/win.js&&node build-script/mac.js",
     "copy-files": "npx rimraf build/electron/html&&npx vite build",
     "electron:dev": "npm run copy-files&&concurrently \"tsc -p electron -w\" \"tsc -p electron && electron --unhandled-rejections=strict .\""
