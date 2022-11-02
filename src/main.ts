@@ -41,7 +41,7 @@ const init = () => {
     CA衝突回避
   </label>
   <label>
-    コメントサイズ(%)
+    コメントサイズ
     <input type="number" name="scale" id="scale" autocomplete="off" value="1" step="0.01">
   </label>
   <label>
@@ -66,7 +66,7 @@ const init = () => {
     display: inline-block;
     color: white;
   }</style>`;
-  let duration: number = 0,
+  let duration_: number = 0,
     useLegacy = false,
     showCollision = false,
     showCommentCount = false,
@@ -162,16 +162,17 @@ const init = () => {
     console.log(data);
     if (data.target !== "main") return;
     if (typeGuard.main.selectMovie(data)) {
-      movieMessage.innerText = data.message;
-      duration = data.data?.duration || 0;
+      const {path,width,height,duration} = data.data;
+      movieMessage.innerText = `path:${path.filePaths}, width:${width}, height:${height}, duration:${duration}`;
+      duration_ = duration;
     } else if (typeGuard.main.selectComment(data)) {
-      commentMessage.innerText = `${data.data.length}スレッド`;
+      commentMessage.innerText = `データ形式：${data.format}`;
     } else if (typeGuard.main.progress(data)) {
       progress(genProgress, data.generated, totalFrames);
       progress(conProgress, data.converted, totalFrames);
     } else if (typeGuard.main.start(data)) {
       document.body.style.pointerEvents = "none";
-      totalFrames = Math.ceil(duration * fps);
+      totalFrames = Math.ceil(duration_ * fps);
     } else {
     }
   });

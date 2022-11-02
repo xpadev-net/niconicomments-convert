@@ -64,12 +64,16 @@ type apiResponseSelectMovie = {
   type: "selectMovie";
   message: string;
   data: {
+    path: Electron.OpenDialogReturnValue,
+    width: number;
+    height:number;
     duration: number;
   };
 } & apiResponseToMain;
 type apiResponseSelectComment = {
   type: "selectComment";
-  data: v1Thread[];
+  data:  formattedLegacyComment[] | rawApiResponse[] | ownerComment[] | v1Thread[]|XMLDocument|string;
+  format:"formatted"|"niconicome"|"legacy"|"owner"|"legacyOwner"|"v1";
 } & apiResponseToMain;
 type apiResponseProgress = {
   type: "progress";
@@ -86,7 +90,8 @@ type apiResponseStartMain = {
 } & apiResponseToMain;
 type apiResponseStartRender = {
   type: "start";
-  comment: v1Thread[];
+  data:  formattedLegacyComment[] | rawApiResponse[] | ownerComment[] | v1Thread[]|XMLDocument|string;
+  format:"formatted"|"niconicome"|"legacy"|"owner"|"legacyOwner"|"v1";
   options: options;
   duration: number;
   fps: number;
@@ -105,7 +110,68 @@ type options = {
   keepCA: boolean;
   scale: number;
 };
-
+type formattedComment = {
+  id: number;
+  vpos: number;
+  content: string;
+  date: number;
+  date_usec: number;
+  owner: boolean;
+  premium: boolean;
+  mail: string[];
+  user_id: number;
+  layer: number;
+};
+type formattedLegacyComment = {
+  id: number;
+  vpos: number;
+  content: string;
+  date: number;
+  date_usec: number;
+  owner: boolean;
+  premium: boolean;
+  mail: string[];
+};
+type rawApiResponse = {
+  [key: string]: apiPing | apiThread | apiLeaf | apiGlobalNumRes | apiChat;
+};
+type apiPing = {
+  content: string;
+};
+type apiThread = {
+  resultcode: number;
+  thread: string;
+  server_time: number;
+  ticket: string;
+  revision: number;
+};
+type apiLeaf = {
+  thread: string;
+  count: number;
+};
+type apiGlobalNumRes = {
+  thread: string;
+  num_res: number;
+};
+type apiChat = {
+  thread: string;
+  no: number;
+  vpos: number;
+  date: number;
+  date_usec: number;
+  nicoru: number;
+  premium: number;
+  anonymity: number;
+  user_id: string;
+  mail: string;
+  content: string;
+  deleted: number;
+};
+type ownerComment = {
+  time: string;
+  command: string;
+  comment: string;
+};
 type v1Thread = {
   id: string;
   fork: string;

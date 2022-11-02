@@ -5,9 +5,18 @@ import { typeGuard } from "./typeGuard";
 const init = () => {
   document.body.innerHTML = `<canvas width="1920" height="1080" id="canvas"></canvas><style>
   canvas{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  html,body{
     width: 100vw;
     height: 100vh;
-    object-fit: contain;
   }
   *{
     margin: 0;
@@ -23,8 +32,8 @@ const init = () => {
       inProgress = true;
       const canvas = document.getElementById("canvas") as HTMLCanvasElement;
       // @ts-ignore
-      const nico = new NiconiComments(canvas, data.comment, {
-        format: "v1",
+      const nico = new NiconiComments(canvas, data.data, {
+        format: data.format,
         ...data.options,
       });
       let generatedFrames = 0,

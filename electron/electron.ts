@@ -34,7 +34,7 @@ app.on("window-all-closed", () => {
 let conv: Converter;
 let input: Stream.Writable;
 let lastPromise = Promise.resolve() as Promise<unknown>;
-let json: v1Thread[];
+let data,type;
 app.whenReady().then(() => {
   createWindow();
   app.on("activate", () => {
@@ -66,6 +66,7 @@ let i = 0,
 ipcMain.on("request", async (IpcMainEvent, args) => {
   const value = args.data[0];
   if (typeGuard.render.buffer(value)) {
+
     for (const item of value.data) {
       let base64Image = item.split(";base64,").pop();
       lastPromise = lastPromise.then(() =>
@@ -101,135 +102,19 @@ ipcMain.on("request", async (IpcMainEvent, args) => {
   } else if (typeGuard.render.end(value)) {
     lastPromise.then(() => input.end());
   } else if (typeGuard.main.selectComment(value)) {
-    const path = await dialog.showOpenDialog({
-      properties: ["openFile"],
-      filters: [
-        { name: "JSON", extensions: ["json"] },
-        {
-          name: "All Files",
-          extensions: ["*"],
-        },
-      ],
-    });
-    if (path.canceled) return;
-    json = JSON.parse(fs.readFileSync(path.filePaths[0], "utf8"));
-
-    IpcMainEvent.reply("response", {
-      type: "selectComment",
-      target: "main",
-      data: json,
-    });
+    await selectComment(IpcMainEvent);
   } else if (typeGuard.main.selectMovie(value)) {
-    const path = await dialog.showOpenDialog({
-      properties: ["openFile"],
-      filters: [
-        {
-          name: "Movies",
-          extensions: ["mp4", "webm", "avi", "mkv", "wmv", "mov"],
-        },
-        {
-          name: "All Files",
-          extensions: ["*"],
-        },
-      ],
-    });
-    if (path.canceled) {
-      IpcMainEvent.reply("response", {
-        type: "selectMovie",
-        target: "main",
-        message: "cancelled",
-      });
-      return;
-    }
-    const ffprobe = execSync(
-      `${ffprobePath} ${path.filePaths[0]} -hide_banner -v quiet -print_format json -show_streams`
-    );
-    let metadata;
-    metadata = JSON.parse(ffprobe.toString());
-    if (!metadata.streams) {
-      IpcMainEvent.reply("response", {
-        type: "selectMovie",
-        target: "main",
-        message: "input file is not movie",
-      });
-      return;
-    }
-    for (const key in metadata.streams) {
-      const stream = metadata.streams[key];
-      if (stream.width) {
-        width = stream.width;
-      }
-      if (stream.height) {
-        height = stream.height;
-      }
-    }
-    if (!(height && width)) {
-      IpcMainEvent.reply("response", {
-        type: "selectMovie",
-        target: "main",
-        message: "fail to get resolution from input file",
-      });
-      return;
-    }
-    duration = execSync(
-      `${ffprobePath} ${path.filePaths[0]} -v quiet -show_entries format=duration -of default=noprint_wrappers=1:nokey=1`
-    ).toString();
-    targetFileName = path.filePaths;
-    IpcMainEvent.reply("response", {
-      type: "selectMovie",
-      target: "main",
-      message: `path:${path.filePaths}, width:${width}, height:${height}, duration:${duration}`,
-      data: { width, height, duration },
-    });
+    await selectMovie(IpcMainEvent);
   } else if (typeGuard.main.start(value)) {
-    const outputPath = await dialog.showSaveDialog({
-      filters: [{ name: "mp4", extensions: ["mp4"] }],
-      properties: ["createDirectory"],
-    });
-    if (outputPath.canceled) return;
-    options = value.data;
-    fps = value.fps;
-    IpcMainEvent.reply("response", {
-      type: "start",
-      target: "main",
-      message: `path:${outputPath.filePath}`,
-    });
-    renderWindow = new BrowserWindow({
-      width: 640,
-      height: 360,
-      webPreferences: {
-        preload: path.join(__dirname, "preload.js"),
-        nodeIntegration: false,
-        contextIsolation: true,
-      },
-    });
-    renderWindow.loadURL(`file://${__dirname}/html/index.html?render`);
-    conv = new Converter(); // create converter
-    conv.createInputFromFile(targetFileName, {});
-    input = conv.createInputStream({
-      f: "image2pipe",
-      r: fps,
-      filter_complex: `pad=width=max(iw\\,ih*(16/9)):height=ow/(16/9):x=(ow-iw)/2:y=(oh-ih)/2,scale=1920x1080,overlay=x=0:y=0`,
-    });
-    conv.output(outputPath.filePath, { vcodec: "libx264", pix_fmt: "yuv420p" }); // output to file
-
-    await conv.run();
-
-    renderWindow.webContents.send("response", {
-      type: "end",
-      target: "render",
-    });
-    mainWindow.webContents.send("response", {
-      type: "end",
-      target: "main",
-    });
+    await convertStart(IpcMainEvent,value);
   } else if (typeGuard.render.progress(value)) {
     generatedFrames = value.data.generated;
   } else if (typeGuard.render.load(value)) {
     IpcMainEvent.reply("response", {
       type: "start",
       target: "render",
-      comment: json,
+      data: data,
+      format: type,
       options: options,
       duration: duration,
       fps: fps,
@@ -246,4 +131,160 @@ function base64ToUint8Array(base64Str) {
       return x.charCodeAt(0);
     })
   );
+}
+const convertStart = async(IpcMainEvent,value) => {
+  const outputPath = await dialog.showSaveDialog({
+    filters: [{ name: "mp4", extensions: ["mp4"] }],
+    properties: ["createDirectory"],
+  });
+  if (outputPath.canceled) return;
+  options = value.data;
+  fps = value.fps;
+  IpcMainEvent.reply("response", {
+    type: "start",
+    target: "main",
+    message: `path:${outputPath.filePath}`,
+  });
+  renderWindow = new BrowserWindow({
+    width: 640,
+    height: 360,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+  });
+  renderWindow.loadURL(`file://${__dirname}/html/index.html?render`);
+  conv = new Converter();
+  conv.createInputFromFile(targetFileName, {});
+  input = conv.createInputStream({
+    f: "image2pipe",
+    r: fps,
+    filter_complex: `pad=width=max(iw\\,ih*(16/9)):height=ow/(16/9):x=(ow-iw)/2:y=(oh-ih)/2,scale=1920x1080,overlay=x=0:y=0`,
+  });
+  conv.output(outputPath.filePath, { vcodec: "libx264", "b:v": "0","cq":"25" }); // output to file
+  await conv.run();
+  renderWindow.webContents.send("response", {
+    type: "end",
+    target: "render",
+  });
+  mainWindow.webContents.send("response", {
+    type: "end",
+    target: "main",
+  });
+}
+const selectMovie = async(IpcMainEvent) => {
+  const path = await dialog.showOpenDialog({
+    properties: ["openFile"],
+    filters: [
+      {
+        name: "Movies",
+        extensions: ["mp4", "webm", "avi", "mkv", "wmv", "mov"],
+      },
+      {
+        name: "All Files",
+        extensions: ["*"],
+      },
+    ],
+  });
+  if (path.canceled) {
+    IpcMainEvent.reply("response", {
+      type: "selectMovie",
+      target: "main",
+      message: "cancelled",
+    });
+    return;
+  }
+  const ffprobe = execSync(
+    `${ffprobePath} ${path.filePaths[0]} -hide_banner -v quiet -print_format json -show_streams`
+  );
+  let metadata;
+  metadata = JSON.parse(ffprobe.toString());
+  if (!metadata.streams) {
+    IpcMainEvent.reply("response", {
+      type: "selectMovie",
+      target: "main",
+      message: "input file is not movie",
+    });
+    return;
+  }
+  for (const key in metadata.streams) {
+    const stream = metadata.streams[key];
+    if (stream.width) {
+      width = stream.width;
+    }
+    if (stream.height) {
+      height = stream.height;
+    }
+  }
+  if (!(height && width)) {
+    IpcMainEvent.reply("response", {
+      type: "selectMovie",
+      target: "main",
+      message: "fail to get resolution from input file",
+    });
+    return;
+  }
+  duration = execSync(
+    `${ffprobePath} ${path.filePaths[0]} -v quiet -show_entries format=duration -of default=noprint_wrappers=1:nokey=1`
+  ).toString();
+  targetFileName = path.filePaths;
+  IpcMainEvent.reply("response", {
+    type: "selectMovie",
+    target: "main",
+    data: { path,width, height, duration },
+  });
+}
+const selectComment = async(IpcMainEvent) => {
+  const path = await dialog.showOpenDialog({
+    properties: ["openFile"],
+    filters: [
+      { name: "formatted/legacy/v1/owner JSON", extensions: ["json"] },
+      { name: "niconicome XML", extensions: ["xml"] },
+      { name: "legacyOwner TXT", extensions: ["txt"] },
+      {
+        name: "All Files",
+        extensions: ["*"],
+      },
+    ],
+  });
+  if (path.canceled) return;
+  const file = path.filePaths[0];
+  const fileData = fs.readFileSync(file, "utf8");
+  if (file.match(/\.xml$/)){
+    const parser = new DOMParser();
+    data = parser.parseFromString(fileData, "application/xml");
+    type = "niconicome";
+  }else if(file.match(/\.txt/)){
+    data = fileData;
+    type = "legacyOwner";
+  }else if(file.match(/\.json/)){
+    const json = JSON.parse(fileData);
+    if (json?.meta?.status===200&&typeGuard.v1.threads(json?.data?.threads)){
+      data = json.data.threads;
+      type = "v1";
+    }else{
+      if(typeGuard.v1.threads(json)){
+        type = "v1";
+      }else if(typeGuard.legacy.rawApiResponses(json)){
+        type = "legacy"
+      }else if(typeGuard.owner.comments(json)){
+        type = "owner"
+      }else if(typeGuard.formatted.comments(json)||typeGuard.formatted.legacyComments(json)){
+        type = "formatted"
+      }else{
+        return;
+      }
+      data = json;
+    }
+  }else{
+    return;
+  }
+
+  IpcMainEvent.reply("response", {
+    type: "selectComment",
+    target: "main",
+    data: data,
+    format: type,
+  });
 }

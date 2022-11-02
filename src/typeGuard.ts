@@ -21,4 +21,6 @@ const typeGuard = {
       typeof i === "object" && (i as apiResponseEndRender).type === "end",
   },
 };
+
+
 export { typeGuard };
