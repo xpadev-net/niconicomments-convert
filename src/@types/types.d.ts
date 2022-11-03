@@ -107,7 +107,6 @@ type apiResponseEndRender = {
 } & apiResponseToRender;
 
 type options = {
-  useLegacy: boolean;
   showCollision: boolean;
   showCommentCount: boolean;
   keepCA: boolean;

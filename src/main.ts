@@ -46,10 +46,6 @@ const init = () => {
       コメント数表示
     </label>
     <label>
-      <input type="checkbox" name="use-legacy" id="use-legacy" autocomplete="off">
-      ニコ動互換モード
-    </label>
-    <label>
       <input type="checkbox" name="keep-ca" id="keep-ca" autocomplete="off">
       CA衝突回避
     </label>
@@ -83,7 +79,6 @@ const init = () => {
   .disabled{display: none}</style>`;
   let duration_: number = 0,
     format: string|undefined = undefined,
-    useLegacy = false,
     showCollision = false,
     showCommentCount = false,
     keepCA = false,
@@ -101,7 +96,6 @@ const init = () => {
     commentCountInput = document.getElementById(
       "show-comment-count"
     ) as HTMLInputElement,
-    legacyInput = document.getElementById("use-legacy") as HTMLInputElement,
     keepCAInput = document.getElementById("keep-ca") as HTMLInputElement,
     scaleInput = document.getElementById("scale") as HTMLInputElement,
     fpsInput = document.getElementById("fps") as HTMLInputElement,
@@ -121,7 +115,6 @@ const init = () => {
       startButton &&
       collisionInput &&
       commentCountInput &&
-      legacyInput &&
       keepCAInput &&
       scaleInput &&
       clipStartInput &&
@@ -153,7 +146,6 @@ const init = () => {
       type: "start",
       host: "main",
       data: {
-        useLegacy,
         showCollision,
         showCommentCount,
         keepCA,
@@ -171,10 +163,6 @@ const init = () => {
   commentCountInput.onchange = (_) => {
     showCommentCount = !showCommentCount;
     commentCountInput.checked = showCommentCount;
-  };
-  legacyInput.onchange = (_) => {
-    useLegacy = !useLegacy;
-    legacyInput.checked = useLegacy;
   };
   keepCAInput.onchange = (_) => {
     keepCA = !keepCA;
