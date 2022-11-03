@@ -241,7 +241,7 @@ export class Converter {
       const stdio = this.getStdioArg();
       dbg(`spawn: ${FFMPEG_PATH} ${command.join(" ")}`);
       dbg(`spawn stdio: ${stdio.join(" ")}`);
-      this.process = spawn("ffmpeg", command, { stdio });
+      this.process = spawn(FFMPEG_PATH, command, { stdio });
       const finished = this.handleProcess();
 
       for (const pipe of this.pipes) {
