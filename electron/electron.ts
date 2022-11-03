@@ -4,8 +4,10 @@ import * as path from "path";
 import * as fs from "fs";
 import * as Stream from "stream";
 import { ffprobe as ffprobePath } from "./ffmpeg";
-import { execSync } from "child_process";
+import {spawn} from "./lib/spawn";
 import { typeGuard } from "./typeGuard";
+import {execSync} from "child_process";
+
 
 let mainWindow, renderWindow;
 const createWindow = () => {
@@ -218,21 +220,34 @@ const selectMovie = async(IpcMainEvent) => {
   if (path.canceled) {
     return;
   }
-  let ffprobe
+  let ffprobe:spawnResult
+  let metadata;
   try {
-    ffprobe = execSync(
-      `${ffprobePath} "${path.filePaths[0].replace(/"/g,"\\\"")}" -hide_banner -v quiet -print_format json -show_streams`
-    );
+    ffprobe = await spawn(ffprobePath,[path.filePaths[0],"-hide_banner", "-v", "quiet", "-print_format", "json", "-show_streams"]);
   }catch (e) {
     IpcMainEvent.reply("response", {
       type: "selectMovie",
       target: "main",
-      message: "input file is not movie(ffprobe fail)",
+      message: `
+<div>input file is not movie(fail to execute ffprobe)</div>
+<div>code:<pre><code>${e.code}</code></pre></div>
+<div>stdout:<pre><code>${e.stdout}</code></pre></div>
+<div>stdout:<pre><code>${e.stderr}</code></pre></div>`,
     });
     return;
   }
-  let metadata;
-  metadata = JSON.parse(ffprobe.toString());
+  try{
+    metadata = JSON.parse(ffprobe.stdout);
+  }catch (e){
+    IpcMainEvent.reply("response", {
+      type: "selectMovie",
+      target: "main",
+      message: `
+<div>input file is not movie(fail to parse ffprobe output)</div>
+<div>Error:<pre><code>${JSON.stringify(e)}</code></pre></div>`,
+    });
+    return;
+  }
   if (!metadata.streams||!Array.isArray(metadata.streams)) {
     IpcMainEvent.reply("response", {
       type: "selectMovie",
@@ -285,8 +300,7 @@ const selectComment = async(IpcMainEvent) => {
   const file = path.filePaths[0];
   const fileData = fs.readFileSync(file, "utf8");
   if (file.match(/\.xml$/)){
-    const parser = new DOMParser();
-    data = parser.parseFromString(fileData, "application/xml");
+    data = fileData;
     type = "niconicome";
   }else if(file.match(/\.txt$/)){
     data = fileData;

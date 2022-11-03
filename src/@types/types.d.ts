@@ -116,3 +116,4 @@ type options = {
   keepCA: boolean;
   scale: number;
 };
+type spawnResult = {stdout: string, stderr: string, code: number}

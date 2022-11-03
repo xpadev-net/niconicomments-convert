@@ -30,6 +30,10 @@ const init = () => {
     if (data.target !== "render") return;
     if (typeGuard.render.start(data)) {
       inProgress = true;
+      if (data.format==="niconicome"){
+        const parser = new DOMParser();
+        data.data = parser.parseFromString(data.data as string, "application/xml");
+      }
       const canvas = document.getElementById("canvas") as HTMLCanvasElement;
       // @ts-ignore
       const nico = new NiconiComments(canvas, data.data, {

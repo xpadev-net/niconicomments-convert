@@ -3,6 +3,7 @@ import {str2time, time2str} from "./timeUtil";
 
 const init = () => {
   document.body.innerHTML = `
+<div id="info"></div>
 <div id="movieInput">
   <button id="movie">動画を選択</button>
   <p id="movieMessage"></p>
@@ -106,7 +107,8 @@ const init = () => {
     progressWrapper = document.getElementById("progress"),
     genProgress = document.getElementById("genProgress"),
     conProgress = document.getElementById("conProgress"),
-    options = document.getElementById("options");
+    options = document.getElementById("options"),
+    info = document.getElementById("info");
 
   if (
     !(
@@ -124,7 +126,8 @@ const init = () => {
       progressWrapper &&
       genProgress &&
       conProgress &&
-      options
+      options &&
+      info
     )
   )
     throw new Error();
@@ -188,7 +191,7 @@ const init = () => {
     if (data.target !== "main") return;
     if (typeGuard.main.selectMovie(data)) {
       if (data.message){
-        movieMessage.innerText = data.message;
+        movieMessage.innerHTML = data.message;
         return;
       }
       const {path,width,height,duration} = data.data;
@@ -224,7 +227,7 @@ const init = () => {
       clipStartInput.value=clipEndInput.value="";
       alert("変換が完了しました");
     } else if(typeGuard.main.message(data)){
-      alert(data.message);
+      info.innerHTML = data.message
     }
   });
   const progress = (element: HTMLElement, current: number, max: number) => {
