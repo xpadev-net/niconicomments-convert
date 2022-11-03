@@ -187,6 +187,10 @@ const init = () => {
   window.api.onResponse((data) => {
     if (data.target !== "main") return;
     if (typeGuard.main.selectMovie(data)) {
+      if (data.message){
+        movieMessage.innerText = data.message;
+        return;
+      }
       const {path,width,height,duration} = data.data;
       movieMessage.innerText = `path:${path.filePaths}, width:${width}, height:${height}, duration:${duration}`;
       duration_ = duration;
@@ -219,6 +223,8 @@ const init = () => {
       clipStart=clipEnd=undefined;
       clipStartInput.value=clipEndInput.value="";
       alert("変換が完了しました");
+    } else if(typeGuard.main.message(data)){
+      alert(data.message);
     }
   });
   const progress = (element: HTMLElement, current: number, max: number) => {

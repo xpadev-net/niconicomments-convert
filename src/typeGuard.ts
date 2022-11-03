@@ -12,6 +12,8 @@ const typeGuard = {
       typeof i === "object" && (i as apiResponseStartMain).type === "start",
     end: (i: unknown): i is apiResponseEndMain =>
       typeof i === "object" && (i as apiResponseEndMain).type === "end",
+    message: (i: unknown): i is apiResponse =>
+      typeof i === "object" && (i as apiResponse).type === "message",
   },
   render: {
     start: (i: unknown): i is apiResponseStartRender =>

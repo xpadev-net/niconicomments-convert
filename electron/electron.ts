@@ -123,7 +123,11 @@ ipcMain.on("request", async (IpcMainEvent, args) => {
       fps: fps,
     });
   } else {
-    console.log(args);
+    mainWindow.webContents.send("response", {
+      type: "message",
+      target: "main",
+      message: `unknown IPC Message: ${JSON.stringify(value)}`
+    });
   }
 });
 
@@ -167,23 +171,35 @@ const convertStart = async(IpcMainEvent,value) => {
   });
   renderWindow.removeMenu();
   renderWindow.loadURL(`file://${__dirname}/html/index.html?render`);
-  conv = new Converter();
-  conv.createInputFromFile(targetFileName, videoOption);
-  input = conv.createInputStream({
-    f: "image2pipe",
-    r: fps,
-    filter_complex: `pad=width=max(iw\\,ih*(16/9)):height=ow/(16/9):x=(ow-iw)/2:y=(oh-ih)/2,scale=1920x1080,overlay=x=0:y=0`,
-  });
-  conv.output(outputPath.filePath, { vcodec: "libx264", "b:v": "0","cq":"25" }); // output to file
-  await conv.run();
-  renderWindow.webContents.send("response", {
-    type: "end",
-    target: "render",
-  });
-  mainWindow.webContents.send("response", {
-    type: "end",
-    target: "main",
-  });
+  
+  if (!app.isPackaged) {
+    renderWindow.webContents.openDevTools();
+  }
+  try {
+    conv = new Converter();
+    conv.createInputFromFile(targetFileName, videoOption);
+    input = conv.createInputStream({
+      f: "image2pipe",
+      r: fps,
+      filter_complex: `pad=width=max(iw\\,ih*(16/9)):height=ow/(16/9):x=(ow-iw)/2:y=(oh-ih)/2,scale=1920x1080,overlay=x=0:y=0`,
+    });
+    conv.output(outputPath.filePath, { vcodec: "libx264", "b:v": "0","cq":"25" }); // output to file
+    await conv.run();
+    renderWindow.webContents.send("response", {
+      type: "end",
+      target: "render",
+    });
+    mainWindow.webContents.send("response", {
+      type: "end",
+      target: "main",
+    });
+  }catch (e){
+    mainWindow.webContents.send("response", {
+      type: "message",
+      target: "main",
+      message: `unknown error: ${JSON.stringify(e)}`
+    });
+  }
 }
 const selectMovie = async(IpcMainEvent) => {
   const path = await dialog.showOpenDialog({
@@ -200,23 +216,28 @@ const selectMovie = async(IpcMainEvent) => {
     ],
   });
   if (path.canceled) {
+    return;
+  }
+  let ffprobe
+  try {
+    ffprobe = execSync(
+      `${ffprobePath} "${path.filePaths[0].replace(/"/g,"\\\"")}" -hide_banner -v quiet -print_format json -show_streams`
+    );
+  }catch (e) {
     IpcMainEvent.reply("response", {
       type: "selectMovie",
       target: "main",
-      message: "cancelled",
+      message: "input file is not movie(ffprobe fail)",
     });
     return;
   }
-  const ffprobe = execSync(
-    `${ffprobePath} "${path.filePaths[0].replace(/"/g,"\\\"")}" -hide_banner -v quiet -print_format json -show_streams`
-  );
   let metadata;
   metadata = JSON.parse(ffprobe.toString());
-  if (!metadata.streams) {
+  if (!metadata.streams||!Array.isArray(metadata.streams)) {
     IpcMainEvent.reply("response", {
       type: "selectMovie",
       target: "main",
-      message: "input file is not movie",
+      message: "input file is not movie(stream not found)",
     });
     return;
   }
@@ -233,7 +254,7 @@ const selectMovie = async(IpcMainEvent) => {
     IpcMainEvent.reply("response", {
       type: "selectMovie",
       target: "main",
-      message: "fail to get resolution from input file",
+      message: "input file is not movie(fail to get resolution from input file)",
     });
     return;
   }
@@ -267,10 +288,10 @@ const selectComment = async(IpcMainEvent) => {
     const parser = new DOMParser();
     data = parser.parseFromString(fileData, "application/xml");
     type = "niconicome";
-  }else if(file.match(/\.txt/)){
+  }else if(file.match(/\.txt$/)){
     data = fileData;
     type = "legacyOwner";
-  }else if(file.match(/\.json/)){
+  }else if(file.match(/\.json$/)){
     const json = JSON.parse(fileData);
     if (json?.meta?.status===200&&typeGuard.v1.threads(json?.data?.threads)){
       data = json.data.threads;
@@ -290,6 +311,11 @@ const selectComment = async(IpcMainEvent) => {
       data = json;
     }
   }else{
+    mainWindow.webContents.send("response", {
+      type: "message",
+      target: "main",
+      message: `unknown input format`
+    });
     return;
   }
 

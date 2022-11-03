@@ -55,7 +55,8 @@ type apiResponseType =
   | apiResponseStartMain
   | apiResponseStartRender
   | apiResponseEndMain
-  | apiResponseEndRender;
+  | apiResponseEndRender
+  | apiResponse;
 type apiResponseToMain = {
   target: "main";
 };
@@ -105,7 +106,10 @@ type apiResponseEndMain = {
 type apiResponseEndRender = {
   type: "end";
 } & apiResponseToRender;
-
+type apiResponse = {
+  type: "message",
+  message: string;
+} & apiResponseToMain
 type options = {
   showCollision: boolean;
   showCommentCount: boolean;
