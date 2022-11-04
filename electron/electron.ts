@@ -273,9 +273,7 @@ const selectMovie = async(IpcMainEvent) => {
     });
     return;
   }
-  duration = execSync(
-    `${ffprobePath} "${path.filePaths[0].replace(/"/g,"\\\"")}" -v quiet -show_entries format=duration -of default=noprint_wrappers=1:nokey=1`
-  ).toString();
+  duration = (await spawn(ffprobePath,[path.filePaths[0],"-hide_banner", "-v", "quiet", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1"])).stdout;
   targetFileName = path.filePaths;
   IpcMainEvent.reply("response", {
     type: "selectMovie",
