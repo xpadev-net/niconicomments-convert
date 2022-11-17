@@ -35,7 +35,6 @@ const init = () => {
         data.data = parser.parseFromString(data.data as string, "application/xml");
       }
       const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-      // @ts-ignore
       const nico = new NiconiComments(canvas, data.data, {
         format: data.format,
         ...data.options,
