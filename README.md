@@ -1,26 +1,29 @@
-# niconicomments-convert(仮、名称未定)
-niconicommentsを使って動画を書き出す簡易ツール(?)です  
-適当に作ったのでエラー出たらもう一度起動してやり直してみてください  
+# niconicomments-convert(tmp)
+[日本語](https://github.com/xpadev-net/niconicomments-convert/blob/master/README.ja.md)
 
-## 注意事項
-- なにか損害が発生しても一切責任を負いません
-- めっちゃ変換遅いです
 
-## 使い方  
-- コメントデータを入手  
-niconicommentsが対応している入力フォーマット全てをサポートしています  
-選択後認識したフォーマットが表示されるので合っているかを確認してください  
-合っていない場合はissuesから報告をお願いします  
+A simple tool to export videos using niconicomments.  
+I made it up as I went along, so if you get an error, start it up again and try again.
 
-- 動画データを入手  
-簡単：httpでシステムメッセージからダウンロード  
-面倒：yt-dlpとかでダウンロード(アニメとかはこっち)  
+## Notes
+- I will not be held responsible for any damage that may occur.
+- Conversion takes so long!
 
-- 動画とコメントを選択してオプションセット  
-多分niconicommentsのドキュメントかサンプルを見るか丹波津さんのコメント増量を使うかすればオプションの意味はわかると思う  
+## How to use
+- Get comment data  
+  Supports all input formats supported by niconicomments  
+  After selecting the file, the recognized format will be displayed, so please make sure it is correct.  
+  If it doesn't match, please report it through ISSUES
 
-- 変換  
-変換完了の通知が来ます
+- Get Video Data  
+  Easy: Download from system messages using http  
+  Difficult: Download with tools such as yt-dlp (this way for animations, etc.)
 
-## お願い
-なんかいい名前つけてください
+- Select video and comments and set options  
+  See niconicomments documentation for options
+
+- Convert  
+  A notification will appear when the conversion is complete
+
+## Request to Users
+Please name it something nice.
