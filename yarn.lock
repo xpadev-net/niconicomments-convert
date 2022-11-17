@@ -177,10 +177,10 @@
   dependencies:
     "@types/node" "*"
 
-"@xpadev-net/niconicomments@^0.2.30":
-  version "0.2.30"
-  resolved "https://registry.npmjs.org/@xpadev-net/niconicomments/-/niconicomments-0.2.30.tgz"
-  integrity sha512-Z0lsD2G+77wlQbFXmY1/bqY/WD0UOAEV5SZCcSqPJLUmEG4anKnGquENN13P0GzzE71D8TR5JgNEuUPpW2QNkQ==
+"@xpadev-net/niconicomments@^0.2.33":
+  version "0.2.33"
+  resolved "https://registry.yarnpkg.com/@xpadev-net/niconicomments/-/niconicomments-0.2.33.tgz#f8cfecccbd85990eb173162bf834f92166ee814e"
+  integrity sha512-H2ThOTj79dTwQKd077CzbJ9i1fqQQSJ5f//1zzbmtXnFujuS2AQAfycAzZbuZaCm94kPqb1hc3O7pj492cPI1A==
 
 "@yarnpkg/lockfile@^1.1.0":
   version "1.1.0"
