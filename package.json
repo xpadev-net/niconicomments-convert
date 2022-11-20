@@ -31,17 +31,17 @@
     "concurrently": "^7.3.0",
     "copyfiles": "^2.4.1",
     "cross-env": "^7.0.3",
-    "electron": "^20.1.0",
+    "electron": "21.3.0",
     "electron-builder": "^23.3.3",
     "eslint": "^8.27.0",
     "eslint-config-prettier": "8.5.0",
     "husky": "^8.0.2",
-    "jsdom": "^20.0.2",
+    "jsdom": "^20.0.3",
     "lint-staged": "^13.0.3",
     "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
-    "typescript": "^4.6.4",
-    "vite": "^3.1.0"
+    "typescript": "^4.9.3",
+    "vite": "^3.2.4"
   },
   "browserslist": {
     "production": [
