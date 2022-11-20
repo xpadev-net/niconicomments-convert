@@ -13,19 +13,31 @@
     "build:mac": "tsc -p electron&&npm run copy-files&&node build-script/mac.js",
     "build": "tsc -p electron&&npm run copy-files&&node build-script/win.js&&node build-script/mac.js",
     "copy-files": "npx rimraf build/electron/html&&npx vite build",
-    "electron:dev": "npm run copy-files&&concurrently \"tsc -p electron -w\" \"tsc -p electron && electron --unhandled-rejections=strict .\""
+    "check-types": "npx tsc --noEmit",
+    "electron:dev": "npm run copy-files&&concurrently \"tsc -p electron -w\" \"tsc -p electron && electron --unhandled-rejections=strict .\"",
+    "eslint": "eslint {src,electron}/**/*.ts*",
+    "eslint:fix": "eslint {src,electron}/**/*.ts* --fix",
+    "lint": "npm run eslint&&npm run check-types",
+    "lint:fix": "npm run format&&npm run eslint:fix&&npm run check-types",
+    "prepare": "husky install"
   },
   "dependencies": {
     "ffmpeg-ffprobe-static": "^4.4.0-rc.11"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.43.0",
+    "@typescript-eslint/parser": "^5.43.0",
     "@xpadev-net/niconicomments": "^0.2.33",
     "concurrently": "^7.3.0",
     "copyfiles": "^2.4.1",
     "cross-env": "^7.0.3",
     "electron": "^20.1.0",
     "electron-builder": "^23.3.3",
+    "eslint": "^8.27.0",
+    "eslint-config-prettier": "8.5.0",
+    "husky": "^8.0.2",
     "jsdom": "^20.0.2",
+    "lint-staged": "^13.0.3",
     "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
     "typescript": "^4.6.4",
