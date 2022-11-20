@@ -1,5 +1,5 @@
 const typeGuard = {
-  main: {
+  controller: {
     selectMovie: (i: unknown): i is apiResponseSelectMovie =>
       typeof i === "object" &&
       (i as apiResponseSelectMovie).type === "selectMovie",
@@ -15,7 +15,7 @@ const typeGuard = {
     message: (i: unknown): i is apiResponse =>
       typeof i === "object" && (i as apiResponse).type === "message",
   },
-  render: {
+  renderer: {
     start: (i: unknown): i is apiResponseStartRender =>
       typeof i === "object" && (i as apiResponseStartRender).type === "start",
     progress: (i: unknown): i is apiResponseProgressRender =>
@@ -25,6 +25,5 @@ const typeGuard = {
       typeof i === "object" && (i as apiResponseEndRender).type === "end",
   },
 };
-
 
 export { typeGuard };

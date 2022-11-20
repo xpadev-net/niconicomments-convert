@@ -29,8 +29,8 @@ type apiRequestStart = {
   type: "start";
   data: options;
   fps: number;
-  clipStart: number|undefined;
-  clipEnd: number|undefined;
+  clipStart: number | undefined;
+  clipEnd: number | undefined;
 } & apiRequestFromMain;
 type apiRequestProgress = {
   type: "progress";
@@ -58,25 +58,37 @@ type apiResponseType =
   | apiResponseEndRender
   | apiResponse;
 type apiResponseToMain = {
-  target: "main";
+  target: "controller";
 };
 type apiResponseToRender = {
-  target: "render";
+  target: "renderer";
 };
 type apiResponseSelectMovie = {
   type: "selectMovie";
   message: string;
   data: {
-    path: Electron.OpenDialogReturnValue,
+    path: Electron.OpenDialogReturnValue;
     width: number;
-    height:number;
+    height: number;
     duration: number;
   };
 } & apiResponseToMain;
 type apiResponseSelectComment = {
   type: "selectComment";
-  data:  formattedLegacyComment[] | rawApiResponse[] | ownerComment[] | v1Thread[]|XMLDocument|string;
-  format:"formatted"|"niconicome"|"legacy"|"owner"|"legacyOwner"|"v1";
+  data:
+    | formattedLegacyComment[]
+    | rawApiResponse[]
+    | ownerComment[]
+    | v1Thread[]
+    | XMLDocument
+    | string;
+  format:
+    | "formatted"
+    | "niconicome"
+    | "legacy"
+    | "owner"
+    | "legacyOwner"
+    | "v1";
 } & apiResponseToMain;
 type apiResponseProgress = {
   type: "progress";
@@ -91,14 +103,28 @@ type apiResponseProgressRender = {
 type apiResponseStartMain = {
   type: "start";
 } & apiResponseToMain;
+type inputFormats =
+  | formattedLegacyComment[]
+  | rawApiResponse[]
+  | ownerComment[]
+  | v1Thread[]
+  | XMLDocument
+  | string;
+type inputFormatTypes =
+  | "formatted"
+  | "niconicome"
+  | "legacy"
+  | "owner"
+  | "legacyOwner"
+  | "v1";
 type apiResponseStartRender = {
   type: "start";
-  data:  formattedLegacyComment[] | rawApiResponse[] | ownerComment[] | v1Thread[]|XMLDocument|string;
-  format:"formatted"|"niconicome"|"legacy"|"owner"|"legacyOwner"|"v1";
+  data: inputFormats;
+  format: inputFormatTypes;
   options: options;
   duration: number;
   fps: number;
-  offset:number;
+  offset: number;
 } & apiResponseToRender;
 type apiResponseEndMain = {
   type: "end";
@@ -107,13 +133,13 @@ type apiResponseEndRender = {
   type: "end";
 } & apiResponseToRender;
 type apiResponse = {
-  type: "message",
+  type: "message";
   message: string;
-} & apiResponseToMain
+} & apiResponseToMain;
 type options = {
   showCollision: boolean;
   showCommentCount: boolean;
   keepCA: boolean;
   scale: number;
 };
-type spawnResult = {stdout: string, stderr: string, code: number}
+type spawnResult = { stdout: string; stderr: string; code: number };

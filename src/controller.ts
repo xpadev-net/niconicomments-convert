@@ -1,5 +1,5 @@
 import { typeGuard } from "./typeGuard";
-import {str2time, time2str} from "./timeUtil";
+import { str2time, time2str } from "./timeUtil";
 
 const init = () => {
   document.body.innerHTML = `
@@ -79,17 +79,19 @@ const init = () => {
   }
   .disabled{display: none}</style>`;
   let duration_: number = 0,
-    format: string|undefined = undefined,
+    format: string | undefined = undefined,
     showCollision = false,
     showCommentCount = false,
     keepCA = false,
     totalFrames = 0,
     scale = 1,
     fps = 30,
-    clipStart:number|undefined = undefined,
-    clipEnd:number|undefined = undefined;
+    clipStart: number | undefined = undefined,
+    clipEnd: number | undefined = undefined;
   const movieButton = document.getElementById("movie") as HTMLButtonElement,
-    commentDataButton = document.getElementById("commentData") as HTMLButtonElement,
+    commentDataButton = document.getElementById(
+      "commentData"
+    ) as HTMLButtonElement,
     startButton = document.getElementById("start") as HTMLButtonElement,
     collisionInput = document.getElementById(
       "show-collision"
@@ -178,56 +180,63 @@ const init = () => {
     fps = Number(fpsInput.value);
   };
   clipStartInput.onchange = (_) => {
-    const time = str2time(clipStartInput.value)||undefined;
-    clipStart = (time&&clipEnd&&time > clipEnd) ? clipStart : time;
-    clipStartInput.value = clipStart===undefined?"":time2str(clipStart);
+    const time = str2time(clipStartInput.value) || undefined;
+    clipStart = time && clipEnd && time > clipEnd ? clipStart : time;
+    clipStartInput.value = clipStart === undefined ? "" : time2str(clipStart);
   };
   clipEndInput.onchange = (_) => {
-    const time = str2time(clipEndInput.value)||clipEnd;
-    clipEnd = (time&&clipStart&&time < clipStart) ? clipEnd : ((time&&time > duration_)?undefined:time);
-    clipEndInput.value = clipEnd===undefined?"":time2str(clipEnd);
+    const time = str2time(clipEndInput.value) || clipEnd;
+    clipEnd =
+      time && clipStart && time < clipStart
+        ? clipEnd
+        : time && time > duration_
+        ? undefined
+        : time;
+    clipEndInput.value = clipEnd === undefined ? "" : time2str(clipEnd);
   };
   window.api.onResponse((data) => {
-    if (data.target !== "main") return;
-    if (typeGuard.main.selectMovie(data)) {
-      if (data.message){
+    if (data.target !== "controller") return;
+    if (typeGuard.controller.selectMovie(data)) {
+      if (data.message) {
         movieMessage.innerHTML = data.message;
         return;
       }
-      const {path,width,height,duration} = data.data;
+      const { path, width, height, duration } = data.data;
       movieMessage.innerText = `path:${path.filePaths}, width:${width}, height:${height}, duration:${duration}`;
       duration_ = duration;
-      if (duration_&&format){
-        options.classList.toggle("disabled",false)
-        startButton.classList.toggle("disabled",false)
+      if (duration_ && format) {
+        options.classList.toggle("disabled", false);
+        startButton.classList.toggle("disabled", false);
       }
-    } else if (typeGuard.main.selectComment(data)) {
+    } else if (typeGuard.controller.selectComment(data)) {
       format = data.format;
       commentMessage.innerText = `データ形式：${data.format}`;
-      if (duration_&&format){
-        options.classList.toggle("disabled",false)
-        startButton.classList.toggle("disabled",false)
+      if (duration_ && format) {
+        options.classList.toggle("disabled", false);
+        startButton.classList.toggle("disabled", false);
       }
-    } else if (typeGuard.main.progress(data)) {
+    } else if (typeGuard.controller.progress(data)) {
       progress(genProgress, data.generated, totalFrames);
       progress(conProgress, data.converted, totalFrames);
-    } else if (typeGuard.main.start(data)) {
+    } else if (typeGuard.controller.start(data)) {
       document.body.style.pointerEvents = "none";
-      totalFrames = Math.ceil(((clipEnd || duration_) - (clipStart || 0) )* fps);
-      progressWrapper.classList.toggle("disabled",false)
-    } else if(typeGuard.main.end(data)) {
+      totalFrames = Math.ceil(
+        ((clipEnd || duration_) - (clipStart || 0)) * fps
+      );
+      progressWrapper.classList.toggle("disabled", false);
+    } else if (typeGuard.controller.end(data)) {
       document.body.style.pointerEvents = "unset";
-      duration_=0;
-      format=undefined;
-      commentMessage.innerText =movieMessage.innerText = "";
-      options.classList.toggle("disabled",true)
-      startButton.classList.toggle("disabled",true)
-      progressWrapper.classList.toggle("disabled",true)
-      clipStart=clipEnd=undefined;
-      clipStartInput.value=clipEndInput.value="";
+      duration_ = 0;
+      format = undefined;
+      commentMessage.innerText = movieMessage.innerText = "";
+      options.classList.toggle("disabled", true);
+      startButton.classList.toggle("disabled", true);
+      progressWrapper.classList.toggle("disabled", true);
+      clipStart = clipEnd = undefined;
+      clipStartInput.value = clipEndInput.value = "";
       alert("変換が完了しました");
-    } else if(typeGuard.main.message(data)){
-      info.innerHTML = data.message
+    } else if (typeGuard.controller.message(data)) {
+      info.innerHTML = data.message;
     }
   });
   const progress = (element: HTMLElement, current: number, max: number) => {

@@ -14,6 +14,7 @@ import type { Readable, Writable } from "stream";
 import { PassThrough } from "stream";
 import { promisify } from "util";
 import { ffmpeg as ffmpegPath } from "../ffmpeg";
+import { sendMessageToController } from "../controllerWindow";
 
 const dbg = debug("ffmpeg-stream");
 const { FFMPEG_PATH = ffmpegPath } = process.env;
@@ -37,7 +38,7 @@ function getTmpPath(prefix = "", suffix = ""): string {
   return join(dir, `${prefix}${id}${suffix}`);
 }
 
-type Options = Record<
+export type Options = Record<
   string,
   | string
   | number
@@ -98,7 +99,7 @@ export class Converter {
     if (file != null) {
       return void this.createInputFromFile(file, opts);
     }
-    if (Boolean(opts.buffer)) {
+    if (opts.buffer) {
       delete opts.buffer;
       return this.createBufferedInputStream(opts);
     }
@@ -115,7 +116,7 @@ export class Converter {
     if (file != null) {
       return void this.createOutputToFile(file, opts);
     }
-    if (Boolean(opts.buffer)) {
+    if (opts.buffer) {
       delete opts.buffer;
       return this.createBufferedOutputStream(opts);
     }
@@ -254,6 +255,11 @@ export class Converter {
       }
 
       await finished;
+    } catch (e) {
+      sendMessageToController({
+        type: "message",
+        message: `unknown error: ${JSON.stringify(e)}`,
+      });
     } finally {
       for (const pipe of pipes) {
         await pipe.onFinish?.();
@@ -331,7 +337,9 @@ export class Converter {
 
       this.process.on("exit", (code, signal) => {
         dbg(`exit: code=${code ?? "unknown"} sig=${signal ?? "unknown"}`);
-        console.log(`exit: code=${code ?? "unknown"} sig=${signal ?? "unknown"}`);
+        console.log(
+          `exit: code=${code ?? "unknown"} sig=${signal ?? "unknown"}`
+        );
         if (code == null) return resolve();
         if (EXIT_CODES.includes(code)) return resolve();
         const log = logLines.map((line) => `  ${line}`).join("\n");

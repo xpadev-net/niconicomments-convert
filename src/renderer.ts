@@ -27,12 +27,15 @@ const init = () => {
   let convertedFrames = 0;
   window.api.onResponse((data) => {
     console.log(data);
-    if (data.target !== "render") return;
-    if (typeGuard.render.start(data)) {
+    if (data.target !== "renderer") return;
+    if (typeGuard.renderer.start(data)) {
       inProgress = true;
-      if (data.format==="niconicome"){
+      if (data.format === "niconicome") {
         const parser = new DOMParser();
-        data.data = parser.parseFromString(data.data as string, "application/xml");
+        data.data = parser.parseFromString(
+          data.data as string,
+          "application/xml"
+        );
       }
       const canvas = document.getElementById("canvas") as HTMLCanvasElement;
       const nico = new NiconiComments(canvas, data.data, {
@@ -77,9 +80,9 @@ const init = () => {
         setTimeout(process, 0);
       };
       process();
-    } else if (typeGuard.render.progress(data)) {
+    } else if (typeGuard.renderer.progress(data)) {
       convertedFrames = data.converted;
-    } else if (typeGuard.render.end(data)) {
+    } else if (typeGuard.renderer.end(data)) {
       window.close();
     }
   });
@@ -91,6 +94,6 @@ const init = () => {
   };
   window.api.request({ type: "load", host: "render" });
 };
-if (window.location.search === "?render") {
+if (window.location.search === "?renderer") {
   init();
 }
