@@ -12,8 +12,8 @@ const str2time = (date: string): number | undefined => {
     if (match[2] !== undefined) time += Number(match[2]);
     if (match[3] !== undefined)
       time += Number(match[3]) / Math.pow(10, match[3].length);
-    if (time < 0){
-      return undefined
+    if (time < 0) {
+      return undefined;
     }
     return time;
   } else {
