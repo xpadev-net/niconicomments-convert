@@ -71,10 +71,11 @@ ipcMain.on("request", async (IpcMainEvent, args) => {
   const value = args.data[0];
   if (typeGuard.render.buffer(value)) {
 
-    for (const item of value.data) {
+    for (const key in value.data) {
+      const item = value.data[key];
       let base64Image = item.split(";base64,").pop();
       lastPromise = lastPromise.then(() =>
-        new Promise<unknown>((fulfill, reject) => {
+        new Promise<void>((fulfill, reject) => {
           const myStream = new Stream.Readable();
           myStream._read = function (size) {
             const u8 = base64ToUint8Array(base64Image);
@@ -95,9 +96,12 @@ ipcMain.on("request", async (IpcMainEvent, args) => {
             generated: generatedFrames,
           });
           return myStream
-            .on("end", fulfill) // fulfill promise on frame end
-            .on("error", reject) // reject promise on error
-            .pipe(input, { end: false }); // pipe to converter, but don't end the input yet
+            .on("end", ()=>{
+              delete value.data[key];
+              fulfill();
+            })
+            .on("error", reject)
+            .pipe(input, { end: false });
         }).catch((e) => {
           console.warn(e);
         })
