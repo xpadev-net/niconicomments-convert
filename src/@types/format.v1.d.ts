@@ -19,3 +19,11 @@ type v1Comment = {
   source: string;
   isMyPost: boolean;
 };
+type v1Raw = {
+  meta: {
+    status: 200;
+  };
+  data: {
+    threads: v1Thread[];
+  };
+};

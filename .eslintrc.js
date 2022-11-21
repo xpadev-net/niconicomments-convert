@@ -23,6 +23,7 @@ module.exports = {
     rules: {
         "@typescript-eslint/restrict-template-expressions": "off",
         "@typescript-eslint/unbound-method": "off",
+        "@typescript-eslint/no-for-in-array": "off",
         "@typescript-eslint/no-unused-vars": "error",
         "no-unused-vars": "off",
         "no-control-regex": "off",

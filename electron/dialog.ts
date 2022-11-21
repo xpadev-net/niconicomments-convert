@@ -6,7 +6,7 @@ import * as fs from "fs";
 import { typeGuard } from "./typeGuard";
 import { sendMessageToController } from "./controllerWindow";
 
-const selectMovie = async (IpcMainEvent) => {
+const selectMovie = async () => {
   const path = await dialog.showOpenDialog({
     properties: ["openFile"],
     filters: [
@@ -47,7 +47,7 @@ const selectMovie = async (IpcMainEvent) => {
     return;
   }
   try {
-    metadata = JSON.parse(ffprobe.stdout);
+    metadata = JSON.parse(ffprobe.stdout) as ffmpegOutput;
   } catch (e) {
     sendMessageToController({
       type: "selectMovie",
@@ -92,7 +92,7 @@ const selectMovie = async (IpcMainEvent) => {
     data: { path, width, height, duration },
   });
 };
-const selectComment = async (IpcMainEvent) => {
+const selectComment = async () => {
   const path = await dialog.showOpenDialog({
     properties: ["openFile"],
     filters: [
@@ -116,12 +116,12 @@ const selectComment = async (IpcMainEvent) => {
     data = fileData;
     type = "legacyOwner";
   } else if (file.match(/\.json$/)) {
-    const json = JSON.parse(fileData);
+    const json = JSON.parse(fileData) as unknown;
     if (
-      json?.meta?.status === 200 &&
-      typeGuard.v1.threads(json?.data?.threads)
+      (json as v1Raw)?.meta?.status === 200 &&
+      typeGuard.v1.threads((json as v1Raw)?.data?.threads)
     ) {
-      data = json.data.threads;
+      data = (json as v1Raw).data.threads;
       type = "v1";
     } else {
       if (typeGuard.v1.threads(json)) {

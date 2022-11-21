@@ -78,7 +78,7 @@ const init = () => {
     color: white;
   }
   .disabled{display: none}</style>`;
-  let duration_: number = 0,
+  let duration_ = 0,
     format: string | undefined = undefined,
     showCollision = false,
     showCommentCount = false,
@@ -161,30 +161,30 @@ const init = () => {
       fps,
     });
   };
-  collisionInput.onchange = (_) => {
+  collisionInput.onchange = () => {
     showCollision = !showCollision;
     collisionInput.checked = showCollision;
   };
-  commentCountInput.onchange = (_) => {
+  commentCountInput.onchange = () => {
     showCommentCount = !showCommentCount;
     commentCountInput.checked = showCommentCount;
   };
-  keepCAInput.onchange = (_) => {
+  keepCAInput.onchange = () => {
     keepCA = !keepCA;
     keepCAInput.checked = keepCA;
   };
-  scaleInput.onchange = (_) => {
+  scaleInput.onchange = () => {
     scale = Number(scaleInput.value);
   };
-  fpsInput.onchange = (_) => {
+  fpsInput.onchange = () => {
     fps = Number(fpsInput.value);
   };
-  clipStartInput.onchange = (_) => {
+  clipStartInput.onchange = () => {
     const time = str2time(clipStartInput.value) || undefined;
     clipStart = time && clipEnd && time > clipEnd ? clipStart : time;
     clipStartInput.value = clipStart === undefined ? "" : time2str(clipStart);
   };
-  clipEndInput.onchange = (_) => {
+  clipEndInput.onchange = () => {
     const time = str2time(clipEndInput.value) || clipEnd;
     clipEnd =
       time && clipStart && time < clipStart

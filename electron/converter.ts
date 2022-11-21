@@ -1,12 +1,13 @@
 import { Converter } from "./ffmpeg-stream/stream";
 import type { Options } from "./ffmpeg-stream/stream";
+import * as Stream from "stream";
 
-let converter, inputStream;
+let converter, inputStream: Stream.Writable;
 const startConverter = async (
   inputPath: string,
   outputPath: string,
   option: Options,
-  fps
+  fps: number
 ) => {
   converter = new Converter();
   converter.createInputFromFile(inputPath, option);

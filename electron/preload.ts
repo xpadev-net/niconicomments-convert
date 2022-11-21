@@ -5,7 +5,7 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.send("request", {
       data,
     }),
-  onResponse: (fn) => {
-    ipcRenderer.on("response", (event, ...args) => fn(...args));
+  onResponse: (fn: (...args) => void) => {
+    ipcRenderer.on("response", (event, ...args) => fn(...(args as unknown[])));
   },
 });

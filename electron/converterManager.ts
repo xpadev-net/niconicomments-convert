@@ -9,9 +9,9 @@ import { base64ToUint8Array } from "./utils";
 import { updateProgress } from "./ipcManager";
 
 let convertedFrames = 0;
-let convertQueue = Promise.resolve() as Promise<void>;
+let convertQueue = Promise.resolve();
 
-const convertStart = async (IpcMainEvent, value) => {
+const convertStart = async (value: apiRequestStart) => {
   const outputPath = await dialog.showSaveDialog({
     filters: [{ name: "mp4", extensions: ["mp4"] }],
     properties: ["createDirectory"],
@@ -29,6 +29,7 @@ const convertStart = async (IpcMainEvent, value) => {
   const options = value.data;
   setVideoOptions({ ...videoOption, fps });
   setNiconicommentsOption(options);
+  delete options.scale;
 
   sendMessageToController({
     type: "start",
@@ -52,15 +53,15 @@ const convertStart = async (IpcMainEvent, value) => {
   }
 };
 
-const appendBuffers = async (blobs: string[]) => {
+const appendBuffers = (blobs: string[]) => {
   for (const key in blobs) {
     const item = blobs[key];
-    let base64Image = item.split(";base64,").pop();
+    const base64Image = item.split(";base64,").pop();
 
     convertQueue = convertQueue.then(() =>
       new Promise<void>((fulfill, reject) => {
         const myStream = new Stream.Readable();
-        myStream._read = function (size) {
+        myStream._read = () => {
           const u8 = base64ToUint8Array(base64Image);
           myStream.push(u8);
           myStream.push(null);
@@ -68,10 +69,8 @@ const appendBuffers = async (blobs: string[]) => {
         convertedFrames++;
         updateProgress(convertedFrames);
         return myStream
-          .on("end", () => {
-            fulfill();
-          })
-          .on("error", reject)
+          .on("end", () => fulfill())
+          .on("error", () => reject())
           .pipe(inputStream, { end: false });
       }).catch((e) => {
         console.warn(e);
@@ -80,7 +79,7 @@ const appendBuffers = async (blobs: string[]) => {
   }
 };
 const markAsCompleted = () => {
-  convertQueue.then(() => inputStream.end());
+  void convertQueue.then(() => inputStream.end());
 };
 
 export { convertStart, appendBuffers, markAsCompleted };

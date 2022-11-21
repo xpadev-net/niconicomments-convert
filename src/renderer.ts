@@ -46,7 +46,7 @@ const init = () => {
         offset = Math.ceil(data.offset * 100);
       const totalFrames = Math.ceil(data.duration * data.fps);
       const process = async () => {
-        let buffer: string[] = [];
+        const buffer: string[] = [];
         for (let i = 0; i < data.fps; i++) {
           nico.drawCanvas(Math.ceil(i * (100 / data.fps)) + offset);
           buffer.push(canvas.toDataURL("image/png"));
@@ -77,9 +77,9 @@ const init = () => {
         while (generatedFrames - convertedFrames > 200) {
           await sleep(100);
         }
-        setTimeout(process, 0);
+        setTimeout(() => void process(), 0);
       };
-      process();
+      void process();
     } else if (typeGuard.renderer.progress(data)) {
       convertedFrames = data.converted;
     } else if (typeGuard.renderer.end(data)) {

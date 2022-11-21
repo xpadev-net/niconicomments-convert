@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
 
-let controllerWindow;
+let controllerWindow: BrowserWindow;
 const createControllerWindow = () => {
   controllerWindow = new BrowserWindow({
     width: 800,
@@ -16,7 +16,7 @@ const createControllerWindow = () => {
 
   const appURL = `file://${__dirname}/html/index.html`;
 
-  controllerWindow.loadURL(appURL);
+  void controllerWindow.loadURL(appURL);
 
   if (!app.isPackaged) {
     controllerWindow.webContents.openDevTools();
