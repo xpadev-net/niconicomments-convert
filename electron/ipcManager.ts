@@ -38,7 +38,8 @@ const registerListener = () => {
         data: commendData.data,
         format: commendData.type,
         options: niconicommentsOption,
-        duration: (videoOption.to || duration) - (videoOption.ss || 0),
+        duration:
+          (Number(videoOption.to) || duration) - (Number(videoOption.ss) || 0),
         offset: videoOption.ss || 0,
         fps: videoOption.fps,
       });
