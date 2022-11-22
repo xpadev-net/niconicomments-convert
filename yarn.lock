@@ -382,10 +382,10 @@
     "@typescript-eslint/types" "5.43.0"
     eslint-visitor-keys "^3.3.0"
 
-"@xpadev-net/niconicomments@^0.2.33":
-  version "0.2.33"
-  resolved "https://registry.npmjs.org/@xpadev-net/niconicomments/-/niconicomments-0.2.33.tgz"
-  integrity sha512-H2ThOTj79dTwQKd077CzbJ9i1fqQQSJ5f//1zzbmtXnFujuS2AQAfycAzZbuZaCm94kPqb1hc3O7pj492cPI1A==
+"@xpadev-net/niconicomments@^0.2.34":
+  version "0.2.34"
+  resolved "https://registry.yarnpkg.com/@xpadev-net/niconicomments/-/niconicomments-0.2.34.tgz#32a1b838cd483a0fb5273ce6195c5d5b0372d51c"
+  integrity sha512-kIhM3QgNdDUpX96BYnpRT0IVGRo5xnFFvXfHXEPdrl7LFNZYIte9M4uS1Rn6bMtpc/DpkXb8Jg1ARV2PVo6Ugw==
 
 "@yarnpkg/lockfile@^1.1.0":
   version "1.1.0"
