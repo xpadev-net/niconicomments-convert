@@ -3,6 +3,7 @@ import { sleep } from "./utils";
 import { typeGuard } from "./typeGuard";
 
 const init = () => {
+  document.title = "renderer - niconicomments-convert";
   document.body.innerHTML = `<canvas width="1920" height="1080" id="canvas"></canvas><div id="msg">準備しています...</div><style>
   canvas{
     position: fixed;
