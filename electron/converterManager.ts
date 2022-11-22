@@ -29,7 +29,6 @@ const convertStart = async (value: apiRequestStart) => {
   const options = value.data;
   setVideoOptions({ ...videoOption, fps });
   setNiconicommentsOption(options);
-  delete options.scale;
 
   sendMessageToController({
     type: "start",
@@ -38,7 +37,7 @@ const convertStart = async (value: apiRequestStart) => {
   convertedFrames = 0;
   createRendererWindow();
   try {
-    await startConverter(inputPath, outputPath.filePath, options, fps);
+    await startConverter(inputPath, outputPath.filePath, videoOption, fps);
     sendMessageToRenderer({
       type: "end",
     });
