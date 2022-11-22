@@ -3,7 +3,7 @@ import { sleep } from "./utils";
 import { typeGuard } from "./typeGuard";
 
 const init = () => {
-  document.body.innerHTML = `<canvas width="1920" height="1080" id="canvas"></canvas><style>
+  document.body.innerHTML = `<canvas width="1920" height="1080" id="canvas"></canvas><div id="msg"></div><style>
   canvas{
     position: fixed;
     top: 0;
@@ -14,6 +14,15 @@ const init = () => {
     height: 100%;
     object-fit: contain;
   }
+  div {
+    height: 100vh;
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    text-align: center;
+    line-height: 100vh;
+  }
   html,body{
     width: 100vw;
     height: 100vh;
@@ -23,6 +32,8 @@ const init = () => {
     padding: 0;
     box-sizing: border-box;
   }</style>`;
+  const message = document.getElementById("msg");
+  if (!message) return;
   let inProgress = false;
   let convertedFrames = 0;
 
@@ -47,10 +58,10 @@ const init = () => {
   };
 
   window.api.onResponse((data) => {
-    console.log(data);
     if (data.target !== "renderer") return;
     if (typeGuard.renderer.start(data)) {
       inProgress = true;
+      message.innerText = "コメントを処理しています...";
       if (data.format === "niconicome") {
         const parser = new DOMParser();
         data.data = parser.parseFromString(
@@ -63,6 +74,7 @@ const init = () => {
         format: data.format,
         ...data.options,
       });
+      message.innerText = "";
       let generatedFrames = 0,
         offset = Math.ceil(data.offset * 100);
       const totalFrames = Math.ceil(data.duration * data.fps);
@@ -77,6 +89,7 @@ const init = () => {
             updateProgress(generatedFrames);
             window.api.request({ type: "end", host: "render" });
             inProgress = false;
+            message.innerText = "変換の終了を待っています...";
             return;
           }
         }
