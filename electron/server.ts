@@ -6,9 +6,9 @@ const launchServer = () => {
   const app = express();
   const port = 55535;
   app.use(bodyParser.urlencoded({ extended: true }));
-  app.use(bodyParser.json({ extended: true, limit: "1gb" }));
+  app.use(bodyParser.json({ limit: "1gb" }));
   app.post("/image", (req, res) => {
-    const value = req.body;
+    const value = req.body as unknown;
     if (typeGuard.renderer.buffer(value)) {
       void appendBuffers(value.data);
       res.send({ status: "ok" });
@@ -19,6 +19,6 @@ const launchServer = () => {
   app.get("/check", (req, res) => {
     res.send({ status: "ok" });
   });
-  app.listen(port, function () {});
+  app.listen(port);
 };
 export { launchServer };

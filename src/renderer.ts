@@ -3,7 +3,7 @@ import { sleep } from "./utils";
 import { typeGuard } from "./typeGuard";
 
 const init = () => {
-  document.body.innerHTML = `<canvas width="1920" height="1080" id="canvas"></canvas><div id="msg"></div><style>
+  document.body.innerHTML = `<canvas width="1920" height="1080" id="canvas"></canvas><div id="msg">準備しています...</div><style>
   canvas{
     position: fixed;
     top: 0;
@@ -37,7 +37,7 @@ const init = () => {
   let inProgress = false;
   let convertedFrames = 0;
 
-  const sendBuffer = async (buffer: string[]) => {
+  const sendBuffer = async (buffer: string[]): Promise<void> => {
     const req = await fetch("http://localhost:55535/image", {
       method: "POST",
       body: JSON.stringify({
@@ -47,7 +47,7 @@ const init = () => {
       }),
       headers: { "Content-Type": "application/json" },
     });
-    return await req.json();
+    await req.json();
   };
   const updateProgress = (generatedFrames: number) => {
     window.api.request({
@@ -79,22 +79,18 @@ const init = () => {
         offset = Math.ceil(data.offset * 100);
       const totalFrames = Math.ceil(data.duration * data.fps);
       const process = async () => {
-        const buffer: string[] = [];
         for (let i = 0; i < data.fps; i++) {
           nico.drawCanvas(Math.ceil(i * (100 / data.fps)) + offset);
-          buffer.push(canvas.toDataURL("image/png"));
+          await sendBuffer([canvas.toDataURL("image/png")]);
           generatedFrames++;
+          updateProgress(generatedFrames);
           if (generatedFrames >= totalFrames) {
-            await sendBuffer(buffer);
-            updateProgress(generatedFrames);
             window.api.request({ type: "end", host: "render" });
             inProgress = false;
             message.innerText = "変換の終了を待っています...";
             return;
           }
         }
-        await sendBuffer(buffer);
-        updateProgress(generatedFrames);
         offset += 100;
         while (generatedFrames - convertedFrames > 200) {
           await sleep(100);
