@@ -238,7 +238,7 @@ export class Converter {
         pipes.push(pipe);
       }
 
-      const command = ["-y", "-v", "quiet", ...this.getSpawnArgs()];
+      const command = ["-y", "-v", "error", ...this.getSpawnArgs()];
       const stdio = this.getStdioArg();
       dbg(`spawn: ${FFMPEG_PATH} ${command.join(" ")}`);
       dbg(`spawn stdio: ${stdio.join(" ")}`);

@@ -25,6 +25,27 @@ const init = () => {
   }</style>`;
   let inProgress = false;
   let convertedFrames = 0;
+
+  const sendBuffer = async (buffer: string[]) => {
+    const req = await fetch("http://localhost:55535/image", {
+      method: "POST",
+      body: JSON.stringify({
+        type: "buffer",
+        host: "render",
+        data: buffer,
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+    return await req.json();
+  };
+  const updateProgress = (generatedFrames: number) => {
+    window.api.request({
+      type: "progress",
+      host: "render",
+      data: { generated: generatedFrames },
+    });
+  };
+
   window.api.onResponse((data) => {
     console.log(data);
     if (data.target !== "renderer") return;
@@ -52,28 +73,16 @@ const init = () => {
           buffer.push(canvas.toDataURL("image/png"));
           generatedFrames++;
           if (generatedFrames >= totalFrames) {
-            window.api.request({
-              type: "progress",
-              host: "render",
-              data: { generated: generatedFrames },
-            });
-            window.api.request({
-              type: "buffer",
-              host: "render",
-              data: buffer,
-            });
+            await sendBuffer(buffer);
+            updateProgress(generatedFrames);
             window.api.request({ type: "end", host: "render" });
             inProgress = false;
             return;
           }
         }
-        window.api.request({ type: "buffer", host: "render", data: buffer });
+        await sendBuffer(buffer);
+        updateProgress(generatedFrames);
         offset += 100;
-        window.api.request({
-          type: "progress",
-          host: "render",
-          data: { generated: generatedFrames },
-        });
         while (generatedFrames - convertedFrames > 200) {
           await sleep(100);
         }
