@@ -28,11 +28,11 @@ const init = () => {
 <div id="options" class="disabled">
   <div>
     <label>
-      <input type="text" name="clip-start" id="clip-start" autocomplete="off" value="" placeholder="--:--:--">
+      <input type="text" name="clip-start" id="clip-start" autocomplete="off" value="" placeholder="--:--.--">
       開始位置
     </label>
     <label>
-      <input type="text" name="clip-end" id="clip-end" autocomplete="off" value="" placeholder="--:--:--">
+      <input type="text" name="clip-end" id="clip-end" autocomplete="off" value="" placeholder="--:--.--">
       終了位置
     </label>
     <p>0以下を設定すると先頭/末尾になります</p>
