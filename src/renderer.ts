@@ -38,17 +38,8 @@ const init = () => {
   let inProgress = false;
   let convertedFrames = 0;
 
-  const sendBuffer = async (buffer: string[]): Promise<void> => {
-    const req = await fetch("http://localhost:55535/image", {
-      method: "POST",
-      body: JSON.stringify({
-        type: "buffer",
-        host: "render",
-        data: buffer,
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
-    await req.json();
+  const sendBuffer = (buffer: string[]) => {
+    window.api.request({ type: "buffer", host: "render", data: buffer });
   };
   const updateProgress = (generatedFrames: number) => {
     window.api.request({
@@ -82,7 +73,7 @@ const init = () => {
       const process = async () => {
         for (let i = 0; i < data.fps; i++) {
           nico.drawCanvas(Math.ceil(i * (100 / data.fps)) + offset);
-          await sendBuffer([canvas.toDataURL("image/png")]);
+          sendBuffer([canvas.toDataURL("image/png")]);
           generatedFrames++;
           updateProgress(generatedFrames);
           if (generatedFrames >= totalFrames) {

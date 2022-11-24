@@ -6,7 +6,7 @@
   "license": "MIT",
   "main": "build/electron/electron.js",
   "author": "xpadev(xpadev.net)",
-  "homepage": "./",
+  "homepage": "https://github.com/xpadev-net/niconicomments-convert",
   "scripts": {
     "format": "prettier --write \"{src,electron}/**/*.{tsx,ts,js,json,css,scss}\"",
     "build:win": "tsc -p electron&&npm run copy-files&&node build-script/win.js",
@@ -22,8 +22,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "ffmpeg-ffprobe-static": "^4.4.0-rc.11",
-    "express": "^4.18.2"
+    "ffmpeg-ffprobe-static": "^4.4.0-rc.11"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.2",

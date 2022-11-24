@@ -1,7 +1,6 @@
 import { app, BrowserWindow, globalShortcut } from "electron";
 import { createControllerWindow } from "./controllerWindow";
 import { registerListener } from "./ipcManager";
-import { launchServer } from "./server";
 
 app.on("window-all-closed", () => {
   app.quit();
@@ -29,4 +28,3 @@ app.on("browser-window-blur", function () {
   globalShortcut.unregister("F5");
 });
 registerListener();
-launchServer();
