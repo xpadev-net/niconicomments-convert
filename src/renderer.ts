@@ -66,14 +66,21 @@ const init = () => {
         format: data.format,
         ...data.options,
       });
+      const emptyBuffer = canvas.toDataURL("image/png");
       message.innerText = "";
       let generatedFrames = 0,
         offset = Math.ceil(data.offset * 100);
       const totalFrames = Math.ceil(data.duration * data.fps);
       const process = async () => {
         for (let i = 0; i < data.fps; i++) {
-          nico.drawCanvas(Math.ceil(i * (100 / data.fps)) + offset);
-          sendBuffer([canvas.toDataURL("image/png")]);
+          const vpos = Math.ceil(i * (100 / data.fps)) + offset;
+          // eslint-disable-next-line
+          if ((nico["timeline"][vpos]?.length || 0) === 0) {
+            sendBuffer([emptyBuffer]);
+          } else {
+            nico.drawCanvas(vpos);
+            sendBuffer([canvas.toDataURL("image/png")]);
+          }
           generatedFrames++;
           updateProgress(generatedFrames);
           if (generatedFrames >= totalFrames) {
