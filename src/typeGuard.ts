@@ -8,21 +8,21 @@ const typeGuard = {
       (i as apiResponseSelectComment).type === "selectComment",
     progress: (i: unknown): i is apiResponseProgress =>
       typeof i === "object" && (i as apiResponseProgress).type === "progress",
-    start: (i: unknown): i is apiResponseStartMain =>
-      typeof i === "object" && (i as apiResponseStartMain).type === "start",
-    end: (i: unknown): i is apiResponseEndMain =>
-      typeof i === "object" && (i as apiResponseEndMain).type === "end",
-    message: (i: unknown): i is apiResponse =>
-      typeof i === "object" && (i as apiResponse).type === "message",
+    start: (i: unknown): i is apiResponseStartController =>
+      typeof i === "object" &&
+      (i as apiResponseStartController).type === "start",
+    end: (i: unknown): i is apiResponseEnd =>
+      typeof i === "object" && (i as apiResponseEnd).type === "end",
+    message: (i: unknown): i is apiResponseMessage =>
+      typeof i === "object" && (i as apiResponseMessage).type === "message",
   },
   renderer: {
     start: (i: unknown): i is apiResponseStartRender =>
       typeof i === "object" && (i as apiResponseStartRender).type === "start",
-    progress: (i: unknown): i is apiResponseProgressRender =>
-      typeof i === "object" &&
-      (i as apiResponseProgressRender).type === "progress",
-    end: (i: unknown): i is apiResponseEndRender =>
-      typeof i === "object" && (i as apiResponseEndRender).type === "end",
+    progress: (i: unknown): i is apiResponseProgress =>
+      typeof i === "object" && (i as apiResponseProgress).type === "progress",
+    end: (i: unknown): i is apiResponseEnd =>
+      typeof i === "object" && (i as apiResponseEnd).type === "end",
   },
 };
 
