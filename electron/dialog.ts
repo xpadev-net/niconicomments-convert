@@ -35,7 +35,6 @@ const selectMovie = async () => {
       "json",
       "-show_streams",
     ]);
-    console.log(ffprobe.stdout);
   } catch (e) {
     sendMessageToController({
       type: "selectMovie",

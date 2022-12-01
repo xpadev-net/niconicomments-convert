@@ -195,7 +195,6 @@ const init = () => {
     clipEndInput.value = clipEnd === undefined ? "" : time2str(clipEnd);
   };
   window.api.onResponse((data) => {
-    console.log(data);
     if (data.target !== "controller") return;
     if (typeGuard.controller.selectMovie(data)) {
       if (data.message) {
