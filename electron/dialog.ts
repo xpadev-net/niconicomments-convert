@@ -1,6 +1,6 @@
 import { dialog } from "electron";
 import { spawn } from "./lib/spawn";
-import { ffprobe as ffprobePath } from "./ffmpeg";
+import { ffprobePath } from "./ffmpeg";
 import { setCommentData, setDuration, setInputPath } from "./context";
 import * as fs from "fs";
 import { typeGuard } from "./typeGuard";
@@ -35,6 +35,7 @@ const selectMovie = async () => {
       "json",
       "-show_streams",
     ]);
+    console.log(ffprobe.stdout);
   } catch (e) {
     sendMessageToController({
       type: "selectMovie",

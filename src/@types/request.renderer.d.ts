@@ -1,5 +1,5 @@
-type apiRequestFromRender = {
-  host: "render";
+type apiRequestFromRenderer = {
+  host: "renderer";
 };
 
 type apiRequestProgress = {

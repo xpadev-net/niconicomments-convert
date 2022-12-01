@@ -13,7 +13,7 @@ import { join } from "path";
 import type { Readable, Writable } from "stream";
 import { PassThrough } from "stream";
 import { promisify } from "util";
-import { ffmpeg as ffmpegPath } from "../ffmpeg";
+import { ffmpegPath } from "../ffmpeg";
 import { sendMessageToController } from "../controllerWindow";
 
 const dbg = debug("ffmpeg-stream");

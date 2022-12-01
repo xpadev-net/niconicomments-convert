@@ -39,12 +39,12 @@ const init = () => {
   let convertedFrames = 0;
 
   const sendBuffer = (buffer: string[]) => {
-    window.api.request({ type: "buffer", host: "render", data: buffer });
+    window.api.request({ type: "buffer", host: "renderer", data: buffer });
   };
   const updateProgress = (generatedFrames: number) => {
     window.api.request({
       type: "progress",
-      host: "render",
+      host: "renderer",
       data: { generated: generatedFrames },
     });
   };
@@ -84,7 +84,7 @@ const init = () => {
           generatedFrames++;
           updateProgress(generatedFrames);
           if (generatedFrames >= totalFrames) {
-            window.api.request({ type: "end", host: "render" });
+            window.api.request({ type: "end", host: "renderer" });
             inProgress = false;
             message.innerText = "変換の終了を待っています...";
             return;
@@ -109,7 +109,7 @@ const init = () => {
       e.returnValue = "";
     }
   };
-  window.api.request({ type: "load", host: "render" });
+  window.api.request({ type: "load", host: "renderer" });
 };
 if (window.location.search === "?renderer") {
   init();

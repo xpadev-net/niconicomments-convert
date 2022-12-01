@@ -6,6 +6,6 @@ contextBridge.exposeInMainWorld("api", {
       data,
     }),
   onResponse: (fn: (...args) => void) => {
-    ipcRenderer.on("response", fn);
+    ipcRenderer.on("response", (event, ...args) => fn(...(args as unknown[])));
   },
 });

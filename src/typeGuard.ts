@@ -24,6 +24,11 @@ const typeGuard = {
     end: (i: unknown): i is apiResponseEnd =>
       typeof i === "object" && (i as apiResponseEnd).type === "end",
   },
+  downloader: {
+    progress: (i: unknown): i is apiResponseDownloadProgress =>
+      typeof i === "object" &&
+      (i as apiResponseDownloadProgress).type === "downloadProgress",
+  },
 };
 
 export { typeGuard };

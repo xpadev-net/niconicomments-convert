@@ -1,13 +1,15 @@
 import { app, BrowserWindow, globalShortcut } from "electron";
 import { createControllerWindow } from "./controllerWindow";
 import { registerListener } from "./ipcManager";
+import { onStartUp } from "./ffmpeg";
 
 app.on("window-all-closed", () => {
   app.quit();
 });
 app
   .whenReady()
-  .then(() => {
+  .then(async () => {
+    await onStartUp();
     createControllerWindow();
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createControllerWindow();

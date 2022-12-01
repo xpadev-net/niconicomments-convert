@@ -22,24 +22,26 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "ffmpeg-ffprobe-static": "^4.4.0-rc.11"
+    "debug": "^4.3.4",
+    "follow-redirects": "^1.15.2"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.2",
-    "@typescript-eslint/eslint-plugin": "^5.44.0",
-    "@typescript-eslint/parser": "^5.44.0",
-    "@xpadev-net/niconicomments": "^0.2.35",
+    "@types/follow-redirects": "^1.14.1",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "@xpadev-net/niconicomments": "^0.2.36",
     "body-parser": "^1.20.1",
     "concurrently": "^7.3.0",
     "copyfiles": "^2.4.1",
     "cross-env": "^7.0.3",
-    "electron": "21.3.1",
+    "electron": "20.3.8",
     "electron-builder": "^23.3.3",
     "eslint": "^8.27.0",
     "eslint-config-prettier": "8.5.0",
     "husky": "^8.0.2",
     "jsdom": "^20.0.3",
-    "lint-staged": "^13.0.3",
+    "lint-staged": "^13.0.4",
     "prettier": "^2.8.0",
     "rimraf": "^3.0.2",
     "typescript": "^4.9.3",
@@ -59,11 +61,6 @@
     },
     "files": [
       "build/**/*"
-    ],
-    "asarUnpack": [
-      "node_modules/ffmpeg-ffprobe-static/ffmpeg*",
-      "node_modules/ffmpeg-ffprobe-static/index.js",
-      "node_modules/ffmpeg-ffprobe-static/package.json"
     ],
     "directories": {
       "output": "dist"

@@ -137,19 +137,19 @@ const init = () => {
   movieButton.onclick = () => {
     window.api.request({
       type: "selectMovie",
-      host: "main",
+      host: "controller",
     });
   };
   commentDataButton.onclick = () => {
     window.api.request({
       type: "selectComment",
-      host: "main",
+      host: "controller",
     });
   };
   startButton.onclick = () => {
     window.api.request({
       type: "start",
-      host: "main",
+      host: "controller",
       data: {
         showCollision,
         showCommentCount,
@@ -195,6 +195,7 @@ const init = () => {
     clipEndInput.value = clipEnd === undefined ? "" : time2str(clipEnd);
   };
   window.api.onResponse((data) => {
+    console.log(data);
     if (data.target !== "controller") return;
     if (typeGuard.controller.selectMovie(data)) {
       if (data.message) {

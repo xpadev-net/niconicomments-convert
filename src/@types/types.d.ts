@@ -7,11 +7,12 @@ interface Window {
 }
 
 type apiRequestType =
-  | (apiRequestsFromMain & apiRequestFromMain)
-  | (apiRequestsFromRenderer & apiRequestFromRender);
+  | (apiRequestsFromController & apiRequestFromController)
+  | (apiRequestsFromRenderer & apiRequestFromRenderer);
 type apiResponseType =
   | (apiResponsesToController & apiResponseToController)
-  | (apiResponsesToRenderer & apiResponseToRenderer);
+  | (apiResponsesToRenderer & apiResponseToRenderer)
+  | (apiResponsesToDownloader & apiResponseToDownloader);
 
 type inputFormats =
   | formattedLegacyComment[]

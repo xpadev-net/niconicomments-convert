@@ -1,5 +1,5 @@
-type apiRequestFromMain = {
-  host: "main";
+type apiRequestFromController = {
+  host: "controller";
 };
 type apiRequestSelectMovie = {
   type: "selectMovie";
@@ -14,7 +14,8 @@ type apiRequestStart = {
   clipStart: number | undefined;
   clipEnd: number | undefined;
 };
-type apiRequestsFromMain =
+type apiRequestsFromController =
   | apiRequestStart
   | apiRequestSelectComment
-  | apiRequestSelectMovie;
+  | apiRequestSelectMovie
+  | apiRequestLoad;
