@@ -2,7 +2,11 @@ import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import { https } from "follow-redirects";
-import { createDownloaderWindow, downloaderWindow } from "./downloaderWindow";
+import {
+  createDownloaderWindow,
+  downloaderWindow,
+  sendMessageToDownloader,
+} from "./downloaderWindow";
 import { app } from "electron";
 
 const ext = process.platform === "win32" ? ".exe" : "";
@@ -57,36 +61,48 @@ const downloadBinary = async () => {
   if (!fs.existsSync(basePath)) {
     await fs.promises.mkdir(basePath, { recursive: true });
   }
-  await downloadFile(`${baseUrl.ffmpeg}ffmpeg-${distro.ffmpeg}`, ffmpegPath);
-  await downloadFile(`${baseUrl.ffmpeg}ffprobe-${distro.ffmpeg}`, ffprobePath);
-  await downloadFile(`${baseUrl.ytdlp}${distro.ytdlp}`, ytdlpPath);
+  await downloadFile(`${baseUrl.ffmpeg}ffmpeg-${distro.ffmpeg}`, ffmpegPath, 1);
+  await downloadFile(
+    `${baseUrl.ffmpeg}ffprobe-${distro.ffmpeg}`,
+    ffprobePath,
+    2
+  );
+  await downloadFile(`${baseUrl.ytdlp}${distro.ytdlp}`, ytdlpPath, 3);
   if (process.platform === "darwin") {
     fs.chmodSync(ffmpegPath, 0o755);
     fs.chmodSync(ffprobePath, 0o755);
     fs.chmodSync(ytdlpPath, 0o755);
   }
 };
-const downloadFile = async (url: string, path: string) => {
+const downloadFile = async (url: string, path: string, step: number) => {
   return new Promise<void>((resolve, reject) => {
+    sendMessageToDownloader({
+      type: "downloadProgress",
+      step: step,
+      progress: (step - 1) / 3,
+    });
     const file = fs.createWriteStream(path);
 
-    const request = https.get(url, (response) => {
-      if (response.statusCode !== 200) {
-        fs.unlink(path, () => {
-          console.log(`Failed to get '${url}' (${response.statusCode})`);
-          reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
-        });
-        return;
-      }
-
-      response.pipe(file);
-    });
+    const request = https
+      .get(url)
+      .on("response", (response) => {
+        if (response.statusCode !== 200) {
+          fs.unlink(path, () => {
+            console.log(`Failed to get '${url}' (${response.statusCode})`);
+            reject(
+              new Error(`Failed to get '${url}' (${response.statusCode})`)
+            );
+          });
+          return;
+        }
+        response.pipe(file);
+      })
+      .on("error", () => {
+        fs.unlink(path, () => reject());
+      });
 
     file.on("finish", () => resolve());
 
-    request.on("error", () => {
-      fs.unlink(path, () => reject());
-    });
     file.on("error", () => {
       fs.unlink(path, () => reject());
     });

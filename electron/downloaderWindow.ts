@@ -5,7 +5,7 @@ let downloaderWindow: BrowserWindow;
 const createDownloaderWindow = async () => {
   downloaderWindow = new BrowserWindow({
     width: 400,
-    height: 150,
+    height: 200,
     resizable: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -23,5 +23,11 @@ const createDownloaderWindow = async () => {
     downloaderWindow.webContents.openDevTools();
   }
 };
+const sendMessageToDownloader = (value) => {
+  downloaderWindow.webContents.send("response", {
+    ...value,
+    target: "downloader",
+  });
+};
 
-export { createDownloaderWindow, downloaderWindow };
+export { createDownloaderWindow, sendMessageToDownloader, downloaderWindow };
