@@ -60,6 +60,11 @@ const downloadBinary = async () => {
   await downloadFile(`${baseUrl.ffmpeg}ffmpeg-${distro.ffmpeg}`, ffmpegPath);
   await downloadFile(`${baseUrl.ffmpeg}ffprobe-${distro.ffmpeg}`, ffprobePath);
   await downloadFile(`${baseUrl.ytdlp}${distro.ytdlp}`, ytdlpPath);
+  if (process.platform === "darwin") {
+    fs.chmodSync(ffmpegPath, 0o755);
+    fs.chmodSync(ffprobePath, 0o755);
+    fs.chmodSync(ytdlpPath, 0o755);
+  }
 };
 const downloadFile = async (url: string, path: string) => {
   return new Promise<void>((resolve, reject) => {
