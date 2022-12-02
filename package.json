@@ -22,8 +22,8 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "debug": "^4.3.4",
-    "follow-redirects": "^1.15.2"
+    "axios": "^1.2.0",
+    "debug": "^4.3.4"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.2",

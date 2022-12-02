@@ -1,13 +1,13 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { https } from "follow-redirects";
 import {
   createDownloaderWindow,
   downloaderWindow,
   sendMessageToDownloader,
 } from "./downloaderWindow";
 import { app } from "electron";
+import axios from "axios";
 
 const ext = process.platform === "win32" ? ".exe" : "";
 
@@ -75,39 +75,33 @@ const downloadBinary = async () => {
   }
 };
 const downloadFile = async (url: string, path: string, step: number) => {
-  return new Promise<void>((resolve, reject) => {
-    sendMessageToDownloader({
-      type: "downloadProgress",
-      step: step,
-      progress: (step - 1) / 3,
-    });
-    const file = fs.createWriteStream(path);
-
-    const request = https
-      .get(url)
-      .on("response", (response) => {
-        if (response.statusCode !== 200) {
-          fs.unlink(path, () => {
-            console.log(`Failed to get '${url}' (${response.statusCode})`);
-            reject(
-              new Error(`Failed to get '${url}' (${response.statusCode})`)
-            );
-          });
-          return;
-        }
-        response.pipe(file);
-      })
-      .on("error", () => {
-        fs.unlink(path, () => reject());
+  const file = fs.createWriteStream(path);
+  return axios({
+    method: "get",
+    url,
+    responseType: "stream",
+    onDownloadProgress: (progress) => {
+      sendMessageToDownloader({
+        type: "downloadProgress",
+        step: step,
+        progress: (step - 1 + progress.loaded / progress.total) / 3,
       });
-
-    file.on("finish", () => resolve());
-
-    file.on("error", () => {
-      fs.unlink(path, () => reject());
+    },
+  }).then((res) => {
+    return new Promise<void>((resolve, reject) => {
+      res.data.pipe(file);
+      let error = null;
+      file.on("error", (err) => {
+        error = err;
+        file.close();
+        reject();
+      });
+      file.on("close", () => {
+        if (!error) {
+          resolve();
+        }
+      });
     });
-
-    request.end();
   });
 };
 export { onStartUp, ffmpegPath, ffprobePath, ytdlpPath };
