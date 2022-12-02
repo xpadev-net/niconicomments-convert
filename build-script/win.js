@@ -13,5 +13,6 @@ builder.build({
                 ]
             }
         }
-    }
+    },
+    publish: "never"
 });

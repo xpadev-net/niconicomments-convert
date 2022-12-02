@@ -12,5 +12,6 @@ builder.build({
                 ]
             }
         }
-    }
+    },
+    publish: "never"
 });
