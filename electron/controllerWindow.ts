@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
+import { baseUrl } from "./context";
 
 let controllerWindow: BrowserWindow;
 const createControllerWindow = () => {
@@ -14,7 +15,7 @@ const createControllerWindow = () => {
   });
   controllerWindow.removeMenu();
 
-  const appURL = `file://${__dirname}/html/index.html`;
+  const appURL = `${baseUrl}`;
 
   void controllerWindow.loadURL(appURL);
 

@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
+import { baseUrl } from "./context";
 
 let downloaderWindow: BrowserWindow;
 const createDownloaderWindow = async () => {
@@ -15,7 +16,7 @@ const createDownloaderWindow = async () => {
   });
   downloaderWindow.removeMenu();
 
-  const appURL = `file://${__dirname}/html/index.html?downloader`;
+  const appURL = `${baseUrl}?downloader`;
 
   await downloaderWindow.loadURL(appURL);
 

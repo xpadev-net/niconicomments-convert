@@ -1,4 +1,5 @@
 import type { Options } from "./ffmpeg-stream/stream";
+import { app } from "electron";
 
 let inputPath = "";
 const setInputPath = (val: string) => (inputPath = val);
@@ -13,6 +14,9 @@ let duration: number;
 const setDuration = (val: number) => (duration = val);
 let niconicommentsOption: options;
 const setNiconicommentsOption = (val: options) => (niconicommentsOption = val);
+const baseUrl = app.isPackaged
+  ? `file://${__dirname}/html/index.html`
+  : "http://localhost:5173";
 export {
   inputPath,
   setInputPath,
@@ -26,4 +30,5 @@ export {
   setDuration,
   niconicommentsOption,
   setNiconicommentsOption,
+  baseUrl,
 };

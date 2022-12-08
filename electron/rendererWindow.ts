@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
+import { baseUrl } from "./context";
 
 let rendererWindow: BrowserWindow;
 const createRendererWindow = () => {
@@ -14,7 +15,7 @@ const createRendererWindow = () => {
     },
   });
   rendererWindow.removeMenu();
-  void rendererWindow.loadURL(`file://${__dirname}/html/index.html?renderer`);
+  void rendererWindow.loadURL(`${baseUrl}?renderer`);
 
   if (!app.isPackaged) {
     rendererWindow.webContents.openDevTools();

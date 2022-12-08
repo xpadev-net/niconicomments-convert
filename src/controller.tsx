@@ -1,5 +1,17 @@
 import { typeGuard } from "./typeGuard";
 import { str2time, time2str } from "./timeUtil";
+import { Button } from "./components/button";
+
+const Controller = () => {
+  return (
+    <div>
+      <Button>動画を選択</Button>
+      <Button>コメントデータを選択</Button>
+    </div>
+  );
+};
+
+export { Controller };
 
 const init = () => {
   document.body.innerHTML = `
@@ -248,6 +260,3 @@ const init = () => {
     }%,#000000 ${(current / max) * 100}%,#000000 100%)`;
   };
 };
-if (window.location.search === "") {
-  init();
-}
