@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 const Downloader = () => {
   const [progress, setProgress] = useState("");
   useEffect(() => {
-    const eventHandler = (data: apiResponseType) => {
+    const eventHandler = (_: unknown, data: apiResponseType) => {
       if (data.target !== "downloader") return;
       if (typeGuard.downloader.progress(data)) {
         setProgress(`step: ${data.step} / ${Math.floor(data.progress * 100)}%`);

@@ -21,7 +21,7 @@ const createRendererWindow = () => {
     rendererWindow.webContents.openDevTools();
   }
 };
-const sendMessageToRenderer = (value) => {
+const sendMessageToRenderer = (value: apiResponsesToRenderer) => {
   rendererWindow.webContents.send("response", { ...value, target: "renderer" });
 };
 

@@ -2,7 +2,14 @@ import { dialog } from "electron";
 import { sendMessageToController } from "./controllerWindow";
 import type { Options } from "./ffmpeg-stream/stream";
 import { inputStream, startConverter } from "./converter";
-import { inputPath, setNiconicommentsOption, setVideoOptions } from "./context";
+import {
+  duration,
+  inputPath,
+  setNiconicommentsOption,
+  setTotalFrames,
+  setVideoOptions,
+  totalFrames,
+} from "./context";
 import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
 import * as Stream from "stream";
 import { base64ToUint8Array } from "./utils";
@@ -32,8 +39,10 @@ const convertStart = async (value: apiRequestStart) => {
 
   sendMessageToController({
     type: "start",
-    message: `path:${outputPath.filePath}`,
   });
+  setTotalFrames(
+    Math.ceil((value.clipEnd || duration) - (value.clipStart || 0)) * fps
+  );
   convertedFrames = 0;
   createRendererWindow();
   try {
@@ -47,7 +56,7 @@ const convertStart = async (value: apiRequestStart) => {
   } catch (e) {
     sendMessageToController({
       type: "message",
-      message: `unknown error: ${JSON.stringify(e)}`,
+      message: JSON.stringify(e),
     });
   }
 };

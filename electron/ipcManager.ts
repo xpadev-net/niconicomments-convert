@@ -12,6 +12,7 @@ import {
   generatedFrames,
   niconicommentsOption,
   setGeneratedFrames,
+  totalFrames,
   videoOption,
 } from "./context";
 import { sendMessageToRenderer } from "./rendererWindow";
@@ -40,8 +41,9 @@ const registerListener = () => {
         options: niconicommentsOption,
         duration:
           (Number(videoOption.to) || duration) - (Number(videoOption.ss) || 0),
-        offset: videoOption.ss || 0,
-        fps: videoOption.fps,
+        offset: Number(videoOption.ss) || 0,
+        fps: Number(videoOption.fps),
+        frames: totalFrames,
       });
     } else {
       sendMessageToController({
@@ -55,13 +57,19 @@ const registerListener = () => {
 const updateProgress = (convertedFrames: number) => {
   sendMessageToController({
     type: "progress",
-    converted: convertedFrames,
-    generated: generatedFrames,
+    progress: {
+      converted: convertedFrames,
+      generated: generatedFrames,
+      total: totalFrames,
+    },
   });
   sendMessageToRenderer({
     type: "progress",
-    converted: convertedFrames,
-    generated: generatedFrames,
+    progress: {
+      converted: convertedFrames,
+      generated: generatedFrames,
+      total: totalFrames,
+    },
   });
 };
 

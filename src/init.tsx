@@ -5,6 +5,7 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
+import { createTheme, ThemeProvider } from "@mui/material";
 
 const init = () => {
   const reactRootDom = document.getElementById("root");
@@ -12,7 +13,16 @@ const init = () => {
   const reactRoot = createRoot(reactRootDom);
   const loc = window.location.search;
   if (loc === "") {
-    reactRoot.render(<Controller />);
+    const darkTheme = createTheme({
+      palette: {
+        mode: "dark",
+      },
+    });
+    reactRoot.render(
+      <ThemeProvider theme={darkTheme}>
+        <Controller />
+      </ThemeProvider>
+    );
   } else if (loc === "downloader") {
     reactRoot.render(<Downloader />);
   }

@@ -37,12 +37,12 @@ const selectMovie = async () => {
     ]);
   } catch (e) {
     sendMessageToController({
-      type: "selectMovie",
-      message: `
-<div>input file is not movie(fail to execute ffprobe)</div>
-<div>code:<pre><code>${e.code}</code></pre></div>
-<div>stdout:<pre><code>${e.stdout}</code></pre></div>
-<div>stdout:<pre><code>${e.stderr}</code></pre></div>`,
+      type: "message",
+      title: "input file is not movie",
+      message: `fail to execute ffprobe
+code:${e.code}
+stdout:${e.stdout}
+stdout:${e.stderr}`,
     });
     return;
   }
@@ -50,17 +50,18 @@ const selectMovie = async () => {
     metadata = JSON.parse(ffprobe.stdout) as ffmpegOutput;
   } catch (e) {
     sendMessageToController({
-      type: "selectMovie",
-      message: `
-<div>input file is not movie(fail to parse ffprobe output)</div>
-<div>Error:<pre><code>${JSON.stringify(e)}</code></pre></div>`,
+      type: "message",
+      title: "input file is not movie",
+      message: `fail to parse ffprobe output
+Error:${JSON.stringify(e)}`,
     });
     return;
   }
   if (!metadata.streams || !Array.isArray(metadata.streams)) {
     sendMessageToController({
-      type: "selectMovie",
-      message: "input file is not movie(stream not found)",
+      type: "message",
+      title: "input file is not movie",
+      message: "stream not found",
     });
     return;
   }
@@ -79,9 +80,9 @@ const selectMovie = async () => {
   }
   if (!(height && width && duration)) {
     sendMessageToController({
-      type: "selectMovie",
-      message:
-        "input file is not movie(fail to get resolution or duration from input file)",
+      type: "message",
+      title: "input file is not movie",
+      message: "fail to get resolution or duration from input file",
     });
     return;
   }

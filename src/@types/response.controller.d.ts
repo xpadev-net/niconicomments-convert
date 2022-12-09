@@ -3,35 +3,32 @@ type apiResponseToController = {
 };
 type apiResponseSelectMovie = {
   type: "selectMovie";
-  message: string;
-  data: {
-    path: Electron.OpenDialogReturnValue;
-    width: number;
-    height: number;
-    duration: number;
-  };
+  data: Movie;
 };
+type niconicommentsData =
+  | formattedLegacyComment[]
+  | rawApiResponse[]
+  | ownerComment[]
+  | v1Thread[]
+  | XMLDocument
+  | string;
+
+type niconicommentsFormat =
+  | "formatted"
+  | "niconicome"
+  | "legacy"
+  | "owner"
+  | "legacyOwner"
+  | "v1";
+
 type apiResponseSelectComment = {
   type: "selectComment";
-  data:
-    | formattedLegacyComment[]
-    | rawApiResponse[]
-    | ownerComment[]
-    | v1Thread[]
-    | XMLDocument
-    | string;
-  format:
-    | "formatted"
-    | "niconicome"
-    | "legacy"
-    | "owner"
-    | "legacyOwner"
-    | "v1";
+  data: niconicommentsData;
+  format: niconicommentsFormat;
 };
 type apiResponseProgress = {
   type: "progress";
-  generated: number;
-  converted: number;
+  progress: Progress;
 };
 type apiResponseStartController = {
   type: "start";
@@ -41,6 +38,7 @@ type apiResponseEnd = {
 };
 type apiResponseMessage = {
   type: "message";
+  title?: string;
   message: string;
 };
 

@@ -5,6 +5,8 @@ let inputPath = "";
 const setInputPath = (val: string) => (inputPath = val);
 let generatedFrames = 0;
 const setGeneratedFrames = (val: number) => (generatedFrames = val);
+let totalFrames = 0;
+const setTotalFrames = (val: number) => (totalFrames = val);
 let commendData: { type: inputFormatTypes; data: inputFormats };
 const setCommentData = (val: { type: inputFormatTypes; data: inputFormats }) =>
   (commendData = val);
@@ -22,6 +24,8 @@ export {
   setInputPath,
   generatedFrames,
   setGeneratedFrames,
+  totalFrames,
+  setTotalFrames,
   commendData,
   setCommentData,
   videoOption,

@@ -22,13 +22,13 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "@emotion/react": "^11.10.5",
+    "@emotion/styled": "^11.10.5",
     "@fontsource/roboto": "^4.5.8",
     "@mui/icons-material": "^5.10.16",
     "@mui/material": "^5.10.17",
-    "@mui/styled-engine-sc": "^5.10.16",
     "axios": "^1.2.0",
-    "debug": "^4.3.4",
-    "styled-components": "^5.3.6"
+    "debug": "^4.3.4"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.2",

@@ -1,18 +1,146 @@
 import { typeGuard } from "./typeGuard";
 import { str2time, time2str } from "./timeUtil";
-import { Button } from "./components/button";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import { useCallback, useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from "@mui/material";
+import Styles from "./controller.module.scss";
 
 const Controller = () => {
+  const [movie, setMovie] = useState<Movie | undefined>();
+  const [commentFormat, setCommentFormat] = useState<
+    niconicommentsFormat | undefined
+  >();
+  const [progress, setProgress] = useState<Progress | undefined>();
+  const [processing, setProcessing] = useState<boolean>(false);
+  const [message, setMessage] = useState<Message | undefined>();
+  const [rawClip, setRawClip] = useState<{ start: string; end: string }>({
+    start: "",
+    end: "",
+  });
+  const [clip, setClip] = useState<Clip>({});
+
+  const onMovieClick = useCallback(() => {
+    window.api.request({
+      type: "selectMovie",
+      host: "controller",
+    });
+  }, []);
+  const onCommentClick = useCallback(() => {
+    window.api.request({
+      type: "selectComment",
+      host: "controller",
+    });
+  }, []);
+
+  useEffect(() => {
+    const eventHandler = (_: unknown, data: apiResponseType) => {
+      if (data.target !== "controller") return;
+      if (typeGuard.controller.selectMovie(data)) {
+        setMovie(data.data);
+      } else if (typeGuard.controller.selectComment(data)) {
+        setCommentFormat(data.format);
+      } else if (typeGuard.controller.progress(data)) {
+        setProgress(data.progress);
+      } else if (typeGuard.controller.start(data)) {
+        setProcessing(true);
+      } else if (typeGuard.controller.end(data)) {
+        setProcessing(false);
+        setCommentFormat(undefined);
+        setMovie(undefined);
+        alert("変換が完了しました");
+      } else if (typeGuard.controller.message(data)) {
+        setMessage({
+          title: data.title || "未知のエラーが発生しました",
+          content: data.message,
+        });
+      }
+    };
+    window.api.onResponse(eventHandler);
+    return () => {
+      window.api.remove(eventHandler);
+    };
+  });
   return (
-    <div>
-      <Button>動画を選択</Button>
-      <Button>コメントデータを選択</Button>
+    <div className={Styles.wrapper}>
+      <div>
+        <Button variant={"outlined"} onClick={onMovieClick}>
+          動画を選択
+        </Button>
+        {typeof movie === "object" && (
+          <p>
+            path:{movie.path.filePaths}, width:{movie.width}, height:
+            {movie.height}, duration:{movie.duration}
+          </p>
+        )}
+      </div>
+      <div>
+        <Button variant={"outlined"} onClick={onCommentClick}>
+          コメントデータを選択
+        </Button>
+        {commentFormat && <p>フォーマット：{commentFormat}</p>}
+      </div>
+      {movie && commentFormat && (
+        <section>
+          <div>
+            <Button variant={"outlined"}>変換</Button>
+          </div>
+          <div>
+            <h3>切り抜き</h3>
+            <TextField
+              label="開始位置"
+              defaultValue=""
+              placeholder={"--:--.--"}
+              variant="standard"
+              value={rawClip.start}
+              onChange={(e) =>
+                setRawClip({ ...rawClip, start: e.target.value })
+              }
+              onBlur={(e) => {
+                const time = str2time(e.target.value);
+                setClip({ ...clip, start: time });
+                setRawClip({ ...rawClip, start: time2str(time) });
+              }}
+            />
+            <TextField
+              label="終了位置"
+              defaultValue=""
+              placeholder={"--:--.--"}
+              variant="standard"
+              value={rawClip.end}
+              onChange={(e) => setRawClip({ ...rawClip, end: e.target.value })}
+              onBlur={(e) => {
+                const time = str2time(e.target.value);
+                setClip({ ...clip, end: time });
+                setRawClip({ ...rawClip, end: time2str(time) });
+              }}
+            />
+          </div>
+        </section>
+      )}
+      <Dialog open={!!message} onClose={() => setMessage(undefined)}>
+        <DialogTitle>{message?.title}</DialogTitle>
+        <DialogContent>
+          <pre>{message?.content}</pre>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMessage(undefined)} autoFocus>
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
 
 export { Controller };
 
+/*
 const init = () => {
   document.body.innerHTML = `
 <div id="info"></div>
@@ -259,4 +387,4 @@ const init = () => {
       (current / max) * 100
     }%,#000000 ${(current / max) * 100}%,#000000 100%)`;
   };
-};
+};*/

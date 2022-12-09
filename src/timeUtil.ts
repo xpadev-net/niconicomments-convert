@@ -25,7 +25,8 @@ const str2time = (date: string): number | undefined => {
  * フォーマット：分：秒.小数点以下2桁
  * @param time
  */
-const time2str = (time: number): string => {
+const time2str = (time: number | undefined): string => {
+  if (!time) return "";
   return `${String(Math.floor(time / 60)).padStart(2, "0")}:${String(
     (time % 60).toFixed(2).padStart(5, "0")
   )}`;

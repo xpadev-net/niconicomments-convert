@@ -49,7 +49,7 @@ const init = () => {
     });
   };
 
-  window.api.onResponse((data) => {
+  window.api.onResponse((_, data) => {
     if (data.target !== "renderer") return;
     if (typeGuard.renderer.start(data)) {
       inProgress = true;
@@ -70,7 +70,7 @@ const init = () => {
       message.innerText = "";
       let generatedFrames = 0,
         offset = Math.ceil(data.offset * 100);
-      const totalFrames = Math.ceil(data.duration * data.fps);
+      const totalFrames = data.frames;
       const process = async () => {
         for (let i = 0; i < data.fps; i++) {
           const vpos = Math.ceil(i * (100 / data.fps)) + offset;
@@ -98,7 +98,7 @@ const init = () => {
       };
       void process();
     } else if (typeGuard.renderer.progress(data)) {
-      convertedFrames = data.converted;
+      convertedFrames = data.progress.converted;
     } else if (typeGuard.renderer.end(data)) {
       window.close();
     }

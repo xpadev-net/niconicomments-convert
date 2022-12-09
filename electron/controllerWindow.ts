@@ -23,7 +23,7 @@ const createControllerWindow = () => {
     controllerWindow.webContents.openDevTools();
   }
 };
-const sendMessageToController = (value) => {
+const sendMessageToController = (value: apiResponsesToController) => {
   controllerWindow.webContents.send("response", {
     ...value,
     target: "controller",

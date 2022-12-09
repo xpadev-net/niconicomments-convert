@@ -24,7 +24,7 @@ const createDownloaderWindow = async () => {
     downloaderWindow.webContents.openDevTools();
   }
 };
-const sendMessageToDownloader = (value) => {
+const sendMessageToDownloader = (value: apiResponsesToDownloader) => {
   downloaderWindow.webContents.send("response", {
     ...value,
     target: "downloader",

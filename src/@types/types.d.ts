@@ -1,8 +1,8 @@
 interface Window {
   api: {
     request: (data: apiRequestType) => void;
-    onResponse: (callback: (data: apiResponseType) => void) => void;
-    remove: (callback: (data: apiResponseType) => void) => void;
+    onResponse: (callback: (_: unknown, data: apiResponseType) => void) => void;
+    remove: (callback: (_: unknown, data: apiResponseType) => void) => void;
   };
 }
 
@@ -28,6 +28,29 @@ type inputFormatTypes =
   | "owner"
   | "legacyOwner"
   | "v1";
+
+type Movie = {
+  path: Electron.OpenDialogReturnValue;
+  width: number;
+  height: number;
+  duration: number;
+};
+
+type Progress = {
+  generated: number;
+  converted: number;
+  total: number;
+};
+
+type Message = {
+  title: string;
+  content: string;
+};
+
+type Clip = {
+  start?: number;
+  end?: number;
+};
 
 type options = {
   showCollision: boolean;

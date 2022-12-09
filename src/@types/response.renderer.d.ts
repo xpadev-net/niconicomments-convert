@@ -9,6 +9,7 @@ type apiResponseStartRender = {
   duration: number;
   fps: number;
   offset: number;
+  frames: number;
 };
 type apiResponsesToRenderer =
   | apiResponseEnd
