@@ -3,8 +3,9 @@ import { spawn } from "./lib/spawn";
 import { ffprobePath } from "./ffmpeg";
 import { setCommentData, setDuration, setInputPath } from "./context";
 import * as fs from "fs";
-import { typeGuard } from "./typeGuard";
 import { sendMessageToController } from "./controllerWindow";
+import NiconiComments from "@xpadev-net/niconicomments";
+import JSDOM from "jsdom";
 
 const selectMovie = async () => {
   const path = await dialog.showOpenDialog({
@@ -111,36 +112,51 @@ const selectComment = async () => {
   const fileData = fs.readFileSync(file, "utf8");
   let data, type;
   if (file.match(/\.xml$/)) {
-    data = fileData;
-    type = "niconicome";
-  } else if (file.match(/\.txt$/)) {
-    data = fileData;
-    type = "legacyOwner";
-  } else if (file.match(/\.json$/)) {
+    const jsdom = new JSDOM();
+    const parser = new jsdom.window.DOMParser();
+    const dom = parser.parseFromString(fileData, "application/xhtml+xml");
+    if (NiconiComments.typeGuard.xmlDocument(dom)) {
+      data = fileData;
+      type = "niconicome";
+    } else {
+      sendMessageToController({
+        type: "message",
+        message: `unknown input format`,
+      });
+      return;
+    }
+  } else if (file.match(/\.json$/) || file.match(/_commentJSON\.txt$/)) {
     const json = JSON.parse(fileData) as unknown;
     if (
       (json as v1Raw)?.meta?.status === 200 &&
-      typeGuard.v1.threads((json as v1Raw)?.data?.threads)
+      NiconiComments.typeGuard.v1.threads((json as v1Raw)?.data?.threads)
     ) {
       data = (json as v1Raw).data.threads;
       type = "v1";
     } else {
-      if (typeGuard.v1.threads(json)) {
+      if (NiconiComments.typeGuard.v1.threads(json)) {
         type = "v1";
-      } else if (typeGuard.legacy.rawApiResponses(json)) {
+      } else if (NiconiComments.typeGuard.legacy.rawApiResponses(json)) {
         type = "legacy";
-      } else if (typeGuard.owner.comments(json)) {
+      } else if (NiconiComments.typeGuard.owner.comments(json)) {
         type = "owner";
       } else if (
-        typeGuard.formatted.comments(json) ||
-        typeGuard.formatted.legacyComments(json)
+        NiconiComments.typeGuard.formatted.comments(json) ||
+        NiconiComments.typeGuard.formatted.legacyComments(json)
       ) {
         type = "formatted";
       } else {
+        sendMessageToController({
+          type: "message",
+          message: `unknown input format`,
+        });
         return;
       }
       data = json;
     }
+  } else if (file.match(/\.txt$/)) {
+    data = fileData;
+    type = "legacyOwner";
   } else {
     sendMessageToController({
       type: "message",
