@@ -1,5 +1,5 @@
-import { typeGuard } from "./typeGuard";
-import { str2time, time2str } from "./util/time";
+import { typeGuard } from "@/typeGuard";
+import { str2time, time2str } from "@/util/time";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { useCallback, useEffect, useState } from "react";
@@ -8,14 +8,16 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
   FormControlLabel,
   FormGroup,
+  InputLabel,
   MenuItem,
   Select,
   Switch,
 } from "@mui/material";
-import Styles from "./controller.module.scss";
-import type { apiResponseType, Message, Movie, Progress } from "@/@types/types";
+import Styles from "./convert.module.scss";
+import type { apiResponseType, Message, Movie } from "@/@types/types";
 import type { niconicommentsOptions, Options } from "@/@types/options";
 import { inputFormatType } from "@xpadev-net/niconicomments";
 
@@ -39,7 +41,7 @@ const initialConfig: Options = {
     },
     mode: {
       value: "default",
-      name: "スケール",
+      name: "変換モード",
     },
   },
   video: {
@@ -47,13 +49,12 @@ const initialConfig: Options = {
   },
 };
 
-const Controller = () => {
+const Convert = () => {
   const [movie, setMovie] = useState<Movie | undefined>();
   const [commentFormat, setCommentFormat] = useState<
     inputFormatType | undefined
   >();
-  const [progress, setProgress] = useState<Progress | undefined>();
-  const [processing, setProcessing] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<Message | undefined>();
   const [rawClip, setRawClip] = useState<{ start: string; end: string }>({
     start: "",
@@ -62,43 +63,71 @@ const Controller = () => {
   const [options, setOptions] = useState<Options>(initialConfig);
 
   const onMovieClick = useCallback(() => {
-    window.api.request({
-      type: "selectMovie",
-      host: "controller",
-    });
+    void (async () => {
+      setLoading(true);
+      const data = await window.api.request({
+        type: "selectMovie",
+        host: "controller",
+      });
+      if (!typeGuard.controller.selectMovie(data)) {
+        setLoading(false);
+        if (typeGuard.controller.message(data)) {
+          setMessage({
+            title: data.title || "未知のエラーが発生しました",
+            content: data.message,
+          });
+          return;
+        }
+        if (!data) return;
+        throw new Error();
+      }
+      setMovie(data.data);
+      setLoading(false);
+    })();
   }, []);
   const onCommentClick = useCallback(() => {
-    window.api.request({
-      type: "selectComment",
-      host: "controller",
-    });
+    void (async () => {
+      setLoading(true);
+      const data = await window.api.request({
+        type: "selectComment",
+        host: "controller",
+      });
+
+      if (!typeGuard.controller.selectComment(data)) {
+        setLoading(false);
+        if (typeGuard.controller.message(data)) {
+          setMessage({
+            title: data.title || "未知のエラーが発生しました",
+            content: data.message,
+          });
+          return;
+        }
+        if (!data) return;
+        throw new Error();
+      }
+      setCommentFormat(data.format);
+      setLoading(false);
+    })();
   }, []);
 
   const convert = () => {
-    window.api.request({
-      type: "start",
-      host: "controller",
-      data: options,
-    });
+    void (async () => {
+      setLoading(true);
+      await window.api.request({
+        type: "start",
+        host: "controller",
+        data: options,
+      });
+      setCommentFormat(undefined);
+      setMovie(undefined);
+      setLoading(false);
+    })();
   };
 
   useEffect(() => {
     const eventHandler = (_: unknown, data: apiResponseType) => {
       if (data.target !== "controller") return;
-      if (typeGuard.controller.selectMovie(data)) {
-        setMovie(data.data);
-      } else if (typeGuard.controller.selectComment(data)) {
-        setCommentFormat(data.format);
-      } else if (typeGuard.controller.progress(data)) {
-        setProgress(data.progress);
-      } else if (typeGuard.controller.start(data)) {
-        setProcessing(true);
-      } else if (typeGuard.controller.end(data)) {
-        setProcessing(false);
-        setCommentFormat(undefined);
-        setMovie(undefined);
-        alert("変換が完了しました");
-      } else if (typeGuard.controller.message(data)) {
+      if (typeGuard.controller.message(data)) {
         setMessage({
           title: data.title || "未知のエラーが発生しました",
           content: data.message,
@@ -165,10 +194,22 @@ const Controller = () => {
                 setRawClip({ ...rawClip, end: time2str(time) });
               }}
             />
+            <TextField
+              label="FPS"
+              variant="standard"
+              type={"number"}
+              value={options.video.fps}
+              onChange={(e) =>
+                setOptions({
+                  ...options,
+                  video: { ...options.video, fps: Number(e.target.value) },
+                })
+              }
+            />
           </div>
           <FormGroup>
             <h3>設定</h3>
-            {Object.keys(options).map((key) => {
+            {Object.keys(options.nico).map((key) => {
               const item = options.nico[key as keyof niconicommentsOptions];
               if (typeof item.value === "boolean") {
                 return (
@@ -189,33 +230,36 @@ const Controller = () => {
                         }
                       />
                     }
-                    label={key}
+                    label={item.name}
                   />
                 );
               } else if (typeof (item.value as string) === "string") {
                 return (
-                  <Select
-                    value={item.value}
-                    onChange={(e) =>
-                      setOptions({
-                        ...options,
-                        nico: {
-                          ...options.nico,
-                          [key]: { ...item, value: e.target.value },
-                        },
-                      })
-                    }
-                  >
-                    <MenuItem value={"default"}>自動</MenuItem>
-                    <MenuItem value={"html5"}>HTML5互換</MenuItem>
-                    <MenuItem value={"flash"}>Flash風</MenuItem>
-                  </Select>
+                  <FormControl key={key} variant="standard">
+                    <InputLabel>{item.name}</InputLabel>
+                    <Select
+                      value={item.value}
+                      onChange={(e) =>
+                        setOptions({
+                          ...options,
+                          nico: {
+                            ...options.nico,
+                            [key]: { ...item, value: e.target.value },
+                          },
+                        })
+                      }
+                    >
+                      <MenuItem value={"default"}>自動</MenuItem>
+                      <MenuItem value={"html5"}>HTML5互換</MenuItem>
+                      <MenuItem value={"flash"}>Flash風</MenuItem>
+                    </Select>
+                  </FormControl>
                 );
               }
               return (
                 <TextField
                   key={key}
-                  label={key}
+                  label={item.name}
                   variant="standard"
                   value={item.value}
                   type={"number"}
@@ -250,11 +294,12 @@ const Controller = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      {loading && <div className={Styles.loading}>処理中...</div>}
     </div>
   );
 };
 
-export { Controller };
+export { Convert };
 
 /*
 const init = () => {

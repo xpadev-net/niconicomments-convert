@@ -18,18 +18,18 @@ import { sendMessageToRenderer } from "./rendererWindow";
 import { selectComment, selectMovie } from "./dialog";
 
 const registerListener = () => {
-  ipcMain.on("request", (IpcMainEvent, args) => {
+  ipcMain.handle("request", async (IpcMainEvent, args) => {
     const value = (args as { data: unknown[] }).data[0];
     if (typeGuard.renderer.buffer(value)) {
       void appendBuffers(value.data);
     } else if (typeGuard.renderer.end(value)) {
       markAsCompleted();
     } else if (typeGuard.controller.selectComment(value)) {
-      void selectComment();
+      return await selectComment();
     } else if (typeGuard.controller.selectMovie(value)) {
-      void selectMovie();
+      return await selectMovie();
     } else if (typeGuard.controller.start(value)) {
-      void convertStart(value);
+      return await convertStart(value);
     } else if (typeGuard.renderer.progress(value)) {
       setGeneratedFrames(value.data.generated);
     } else if (typeGuard.renderer.load(value)) {

@@ -13,43 +13,47 @@ import * as Stream from "stream";
 import { base64ToUint8Array } from "./utils";
 import { updateProgress } from "./ipcManager";
 import { apiRequestStart } from "@/@types/request.controller";
+import { apiResponseStartRender } from "@/@types/response.renderer";
+import { apiResponseStartController } from "@/@types/response.controller";
 
 let convertedFrames = 0;
 let convertQueue = Promise.resolve();
 
-const convertStart = async (value: apiRequestStart) => {
-  const outputPath = await dialog.showSaveDialog({
-    filters: [{ name: "mp4", extensions: ["mp4"] }],
-    properties: ["createDirectory"],
-  });
-  if (outputPath.canceled) return;
-  setVideoOptions(value.data.video);
-  setNiconicommentsOption(value.data.nico);
+const convertStart = (value: apiRequestStart) => {
+  return new Promise<void | apiResponseStartController>(
+    async (resolve, reject) => {
+      const outputPath = await dialog.showSaveDialog({
+        filters: [{ name: "mp4", extensions: ["mp4"] }],
+        properties: ["createDirectory"],
+      });
+      if (outputPath.canceled) resolve();
+      setVideoOptions(value.data.video);
+      setNiconicommentsOption(value.data.nico);
 
-  sendMessageToController({
-    type: "start",
-  });
-  setTotalFrames(
-    Math.ceil(
-      (value.data.video.end || duration) - (value.data.video.start || 0)
-    ) * value.data.video.fps
+      setTotalFrames(
+        Math.ceil(
+          (value.data.video.end || duration) - (value.data.video.start || 0)
+        ) * value.data.video.fps
+      );
+      convertedFrames = 0;
+      createRendererWindow();
+      resolve({ type: "start" });
+      try {
+        await startConverter(inputPath, outputPath.filePath, value.data.video);
+        sendMessageToRenderer({
+          type: "end",
+        });
+        sendMessageToController({
+          type: "end",
+        });
+      } catch (e) {
+        sendMessageToController({
+          type: "message",
+          message: JSON.stringify(e),
+        });
+      }
+    }
   );
-  convertedFrames = 0;
-  createRendererWindow();
-  try {
-    await startConverter(inputPath, outputPath.filePath, value.data.video);
-    sendMessageToRenderer({
-      type: "end",
-    });
-    sendMessageToController({
-      type: "end",
-    });
-  } catch (e) {
-    sendMessageToController({
-      type: "message",
-      message: JSON.stringify(e),
-    });
-  }
 };
 
 const appendBuffers = (blobs: string[]) => {

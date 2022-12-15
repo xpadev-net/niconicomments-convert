@@ -8,5 +8,10 @@ module.exports = {
     emptyOutDir: true,
     outDir: '../build/electron/html/'
   },
+  resolve:{
+    alias: {
+      "@/": `${__dirname}/src/`,
+    },
+  },
   base:""
 }

@@ -5,7 +5,7 @@ import { setCommentData, setDuration, setInputPath } from "./context";
 import * as fs from "fs";
 import { sendMessageToController } from "./controllerWindow";
 import NiconiComments from "@xpadev-net/niconicomments";
-import JSDOM from "jsdom";
+import { JSDOM } from "jsdom";
 import { spawnResult, v1Raw } from "@/@types/types";
 import { ffmpegOutput } from "@/@types/ffmpeg";
 
@@ -39,34 +39,31 @@ const selectMovie = async () => {
       "-show_streams",
     ]);
   } catch (e) {
-    sendMessageToController({
+    return {
       type: "message",
       title: "input file is not movie",
       message: `fail to execute ffprobe
 code:${e.code}
 stdout:${e.stdout}
 stdout:${e.stderr}`,
-    });
-    return;
+    };
   }
   try {
     metadata = JSON.parse(ffprobe.stdout) as ffmpegOutput;
   } catch (e) {
-    sendMessageToController({
+    return {
       type: "message",
       title: "input file is not movie",
       message: `fail to parse ffprobe output
 Error:${JSON.stringify(e)}`,
-    });
-    return;
+    };
   }
   if (!metadata.streams || !Array.isArray(metadata.streams)) {
-    sendMessageToController({
+    return {
       type: "message",
       title: "input file is not movie",
       message: "stream not found",
-    });
-    return;
+    };
   }
   let width, height, duration;
   for (const key in metadata.streams) {
@@ -82,19 +79,18 @@ Error:${JSON.stringify(e)}`,
     }
   }
   if (!(height && width && duration)) {
-    sendMessageToController({
+    return {
       type: "message",
       title: "input file is not movie",
       message: "fail to get resolution or duration from input file",
-    });
-    return;
+    };
   }
   setInputPath(path.filePaths[0]);
   setDuration(duration);
-  sendMessageToController({
+  return {
     type: "selectMovie",
     data: { path, width, height, duration },
-  });
+  };
 };
 const selectComment = async () => {
   const path = await dialog.showOpenDialog({
@@ -171,11 +167,11 @@ const selectComment = async () => {
     type,
     data,
   });
-  sendMessageToController({
+  return {
     type: "selectComment",
     data: data,
     format: type,
-  });
+  };
 };
 
 export { selectComment, selectMovie };

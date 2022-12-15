@@ -23,7 +23,7 @@ import type { v1Thread } from "@xpadev-net/niconicomments";
 declare global {
   interface Window {
     api: {
-      request: (data: apiRequestType) => void;
+      request: (data: apiRequestType) => Promise<unknown>;
       onResponse: (
         callback: (_: unknown, data: apiResponseType) => void
       ) => void;
