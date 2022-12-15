@@ -1,5 +1,6 @@
 import { Converter } from "./ffmpeg-stream/stream";
 import * as Stream from "stream";
+import { videoOptions } from "@/@types/options";
 
 let converter, inputStream: Stream.Writable;
 const startConverter = async (

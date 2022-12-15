@@ -1,23 +1,25 @@
-type apiRequestFromRenderer = {
+export type apiRequestFromRenderer = {
   host: "renderer";
 };
 
-type apiRequestProgress = {
+export type apiRequestProgress = {
   type: "progress";
   data: { generated: number };
 };
-type apiRequestBuffer = {
+export type apiRequestBuffer = {
   type: "buffer";
   data: string[];
 };
-type apiRequestEnd = {
+export type apiRequestEnd = {
   type: "end";
 };
-type apiRequestLoad = {
+export type apiRequestLoad = {
   type: "load";
 };
-type apiRequestsFromRenderer =
+export type apiRequestsFromRenderer =
   | apiRequestProgress
   | apiRequestBuffer
   | apiRequestEnd
   | apiRequestLoad;
+
+export {};

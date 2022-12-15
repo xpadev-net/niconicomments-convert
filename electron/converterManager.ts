@@ -1,6 +1,5 @@
 import { dialog } from "electron";
 import { sendMessageToController } from "./controllerWindow";
-import type { Options } from "./ffmpeg-stream/stream";
 import { inputStream, startConverter } from "./converter";
 import {
   duration,
@@ -8,12 +7,12 @@ import {
   setNiconicommentsOption,
   setTotalFrames,
   setVideoOptions,
-  totalFrames,
 } from "./context";
 import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
 import * as Stream from "stream";
 import { base64ToUint8Array } from "./utils";
 import { updateProgress } from "./ipcManager";
+import { apiRequestStart } from "@/@types/request.controller";
 
 let convertedFrames = 0;
 let convertQueue = Promise.resolve();
@@ -25,13 +24,15 @@ const convertStart = async (value: apiRequestStart) => {
   });
   if (outputPath.canceled) return;
   setVideoOptions(value.data.video);
-  setNiconicommentsOption(value.data.niconicomments);
+  setNiconicommentsOption(value.data.nico);
 
   sendMessageToController({
     type: "start",
   });
   setTotalFrames(
-    Math.ceil((value.data.video.end || duration) - (value.data.video.start || 0)) * value.data.video.fps
+    Math.ceil(
+      (value.data.video.end || duration) - (value.data.video.start || 0)
+    ) * value.data.video.fps
   );
   convertedFrames = 0;
   createRendererWindow();

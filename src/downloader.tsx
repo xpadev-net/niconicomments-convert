@@ -1,6 +1,7 @@
 import { typeGuard } from "./typeGuard";
 import Styles from "./downloader.module.scss";
 import { useEffect, useState } from "react";
+import { apiResponseType } from "@/@types/types";
 
 const Downloader = () => {
   const [progress, setProgress] = useState("");

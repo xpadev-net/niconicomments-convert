@@ -1,10 +1,12 @@
-type apiResponseToDownloader = {
+export type apiResponseToDownloader = {
   target: "downloader";
 };
-type apiResponseDownloadProgress = {
+export type apiResponseDownloadProgress = {
   type: "downloadProgress";
   step: number;
   progress: number;
 };
 
-type apiResponsesToDownloader = apiResponseDownloadProgress;
+export type apiResponsesToDownloader = apiResponseDownloadProgress;
+
+export {};

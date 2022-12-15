@@ -7,19 +7,50 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle, FormControlLabel, FormGroup, Switch,
+  DialogTitle,
+  FormControlLabel,
+  FormGroup,
+  MenuItem,
+  Select,
+  Switch,
 } from "@mui/material";
 import Styles from "./controller.module.scss";
+import type { apiResponseType, Message, Movie, Progress } from "@/@types/types";
+import type { niconicommentsOptions, Options } from "@/@types/options";
+import { inputFormatType } from "@xpadev-net/niconicomments";
 
-const initialConfig:Options = {
-  niconicomments:{showCollision:false,showCommentCount:false,keepCA:false,scale:1},
-  video:{fps:30}
-}
+const initialConfig: Options = {
+  nico: {
+    showCollision: {
+      value: false,
+      name: "当たり判定表示",
+    },
+    showCommentCount: {
+      value: false,
+      name: "コメント描画数表示",
+    },
+    keepCA: {
+      value: false,
+      name: "CA衝突抑制",
+    },
+    scale: {
+      value: 1,
+      name: "スケール",
+    },
+    mode: {
+      value: "default",
+      name: "スケール",
+    },
+  },
+  video: {
+    fps: 30,
+  },
+};
 
 const Controller = () => {
   const [movie, setMovie] = useState<Movie | undefined>();
   const [commentFormat, setCommentFormat] = useState<
-    niconicommentsFormat | undefined
+    inputFormatType | undefined
   >();
   const [progress, setProgress] = useState<Progress | undefined>();
   const [processing, setProcessing] = useState<boolean>(false);
@@ -28,7 +59,7 @@ const Controller = () => {
     start: "",
     end: "",
   });
-  const [options,setOptions] = useState<Options>(initialConfig);
+  const [options, setOptions] = useState<Options>(initialConfig);
 
   const onMovieClick = useCallback(() => {
     window.api.request({
@@ -47,9 +78,9 @@ const Controller = () => {
     window.api.request({
       type: "start",
       host: "controller",
-      data: options
+      data: options,
     });
-  }
+  };
 
   useEffect(() => {
     const eventHandler = (_: unknown, data: apiResponseType) => {
@@ -112,7 +143,10 @@ const Controller = () => {
               }
               onBlur={(e) => {
                 const time = str2time(e.target.value);
-                setOptions({ ...options, video: {...options.video,start: time} });
+                setOptions({
+                  ...options,
+                  video: { ...options.video, start: time },
+                });
                 setRawClip({ ...rawClip, start: time2str(time) });
               }}
             />
@@ -124,30 +158,84 @@ const Controller = () => {
               onChange={(e) => setRawClip({ ...rawClip, end: e.target.value })}
               onBlur={(e) => {
                 const time = str2time(e.target.value);
-                setOptions({ ...options, video: {...options.video,end: time} });
+                setOptions({
+                  ...options,
+                  video: { ...options.video, end: time },
+                });
                 setRawClip({ ...rawClip, end: time2str(time) });
               }}
             />
           </div>
           <FormGroup>
             <h3>設定</h3>
-            {Object.keys(options).map((key)=>{
-              const value = options.niconicomments[key as keyof niconicommentsOptions];
-              if (typeof value === "boolean"){
-                return <FormControlLabel key={key} control={<Switch key={`${key}-switch`} checked={value} onChange={()=>setOptions({...options,niconicomments: {...options.niconicomments,[key]: !value}})} />} label={key} />
+            {Object.keys(options).map((key) => {
+              const item = options.nico[key as keyof niconicommentsOptions];
+              if (typeof item.value === "boolean") {
+                return (
+                  <FormControlLabel
+                    key={key}
+                    control={
+                      <Switch
+                        key={`${key}-switch`}
+                        checked={item.value}
+                        onChange={() =>
+                          setOptions({
+                            ...options,
+                            nico: {
+                              ...options.nico,
+                              [key]: { ...item, value: !item.value },
+                            },
+                          })
+                        }
+                      />
+                    }
+                    label={key}
+                  />
+                );
+              } else if (typeof (item.value as string) === "string") {
+                return (
+                  <Select
+                    value={item.value}
+                    onChange={(e) =>
+                      setOptions({
+                        ...options,
+                        nico: {
+                          ...options.nico,
+                          [key]: { ...item, value: e.target.value },
+                        },
+                      })
+                    }
+                  >
+                    <MenuItem value={"default"}>自動</MenuItem>
+                    <MenuItem value={"html5"}>HTML5互換</MenuItem>
+                    <MenuItem value={"flash"}>Flash風</MenuItem>
+                  </Select>
+                );
               }
-              return <TextField
-                key={key}
-                label={key}
-                variant="standard"
-                value={value}
-                type={"number"}
-                onChange={(e) => setOptions({ ...options,niconicomments: {...options.niconicomments,[key]: e.target.value} })}
-              />;
+              return (
+                <TextField
+                  key={key}
+                  label={key}
+                  variant="standard"
+                  value={item.value}
+                  type={"number"}
+                  onChange={(e) =>
+                    setOptions({
+                      ...options,
+                      nico: {
+                        ...options.nico,
+                        [key]: { ...item, value: e.target.value },
+                      },
+                    })
+                  }
+                />
+              );
             })}
           </FormGroup>
           <div>
-            <Button variant={"outlined"} onClick={convert}>変換</Button>
+            <Button variant={"outlined"} onClick={convert}>
+              変換
+            </Button>
           </div>
         </section>
       )}

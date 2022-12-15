@@ -1,17 +1,27 @@
-type apiResponseToRenderer = {
+import type { inputFormat, inputFormatType } from "@xpadev-net/niconicomments";
+
+import type { Options } from "./options";
+import {
+  apiResponseEnd,
+  apiResponseProgress,
+} from "@/@types/response.controller";
+
+export type apiResponseToRenderer = {
   target: "renderer";
 };
-type apiResponseStartRender = {
+export type apiResponseStartRender = {
   type: "start";
-  data: inputFormats;
-  format: inputFormatTypes;
-  options: Options;
+  data: inputFormat;
+  format: inputFormatType;
+  options?: Options;
   duration: number;
   fps: number;
   offset: number;
   frames: number;
 };
-type apiResponsesToRenderer =
+export type apiResponsesToRenderer =
   | apiResponseEnd
   | apiResponseProgress
   | apiResponseStartRender;
+
+export {};

@@ -1,9 +1,35 @@
-interface Window {
-  api: {
-    request: (data: apiRequestType) => void;
-    onResponse: (callback: (_: unknown, data: apiResponseType) => void) => void;
-    remove: (callback: (_: unknown, data: apiResponseType) => void) => void;
-  };
+import type {
+  apiRequestsFromController,
+  apiRequestFromController,
+} from "./request.controller";
+import type {
+  apiRequestsFromRenderer,
+  apiRequestFromRenderer,
+} from "./request.renderer";
+import type {
+  apiResponsesToController,
+  apiResponseToController,
+} from "./response.controller";
+import type {
+  apiResponsesToRenderer,
+  apiResponseToRenderer,
+} from "./response.renderer";
+import type {
+  apiResponsesToDownloader,
+  apiResponseToDownloader,
+} from "./response.downloader";
+import type { v1Thread } from "@xpadev-net/niconicomments";
+
+declare global {
+  interface Window {
+    api: {
+      request: (data: apiRequestType) => void;
+      onResponse: (
+        callback: (_: unknown, data: apiResponseType) => void
+      ) => void;
+      remove: (callback: (_: unknown, data: apiResponseType) => void) => void;
+    };
+  }
 }
 
 type apiRequestType =
@@ -13,21 +39,6 @@ type apiResponseType =
   | (apiResponsesToController & apiResponseToController)
   | (apiResponsesToRenderer & apiResponseToRenderer)
   | (apiResponsesToDownloader & apiResponseToDownloader);
-
-type inputFormats =
-  | formattedLegacyComment[]
-  | rawApiResponse[]
-  | ownerComment[]
-  | v1Thread[]
-  | XMLDocument
-  | string;
-type inputFormatTypes =
-  | "formatted"
-  | "niconicome"
-  | "legacy"
-  | "owner"
-  | "legacyOwner"
-  | "v1";
 
 type Movie = {
   path: Electron.OpenDialogReturnValue;
@@ -47,21 +58,13 @@ type Message = {
   content: string;
 };
 
-type Options = {
-  niconicomments: niconicommentsOptions;
-  video: videoOptions
+export type v1Raw = {
+  meta: {
+    status: 200;
+  };
+  data: {
+    threads: v1Thread[];
+  };
 };
-type niconicommentsOptions = {
-  showCollision: boolean;
-  showCommentCount: boolean;
-  keepCA: boolean;
-  scale: number;
-}
 
-type videoOptions = {
-  fps: number;
-  start?: number;
-  end?: number;
-}
-
-type spawnResult = { stdout: string; stderr: string; code: number };
+export type spawnResult = { stdout: string; stderr: string; code: number };

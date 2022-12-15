@@ -10,7 +10,6 @@ import {
   commendData,
   duration,
   generatedFrames,
-  niconicommentsOption,
   setGeneratedFrames,
   totalFrames,
   videoOption,
@@ -38,7 +37,6 @@ const registerListener = () => {
         type: "start",
         data: commendData.data,
         format: commendData.type,
-        options: niconicommentsOption,
         duration:
           (Number(videoOption.to) || duration) - (Number(videoOption.ss) || 0),
         offset: Number(videoOption.ss) || 0,

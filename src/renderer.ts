@@ -62,10 +62,7 @@ const init = () => {
         );
       }
       const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-      const nico = new NiconiComments(canvas, data.data, {
-        format: data.format,
-        ...data.options,
-      });
+      const nico = new NiconiComments(canvas, data.data);
       const emptyBuffer = canvas.toDataURL("image/png");
       message.innerText = "";
       let generatedFrames = 0,

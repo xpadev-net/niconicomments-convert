@@ -1,51 +1,41 @@
-type apiResponseToController = {
+import { Movie, Progress } from "@/@types/types";
+import { inputFormat, inputFormatType } from "@xpadev-net/niconicomments";
+
+export type apiResponseToController = {
   target: "controller";
 };
-type apiResponseSelectMovie = {
+export type apiResponseSelectMovie = {
   type: "selectMovie";
   data: Movie;
 };
-type niconicommentsData =
-  | formattedLegacyComment[]
-  | rawApiResponse[]
-  | ownerComment[]
-  | v1Thread[]
-  | XMLDocument
-  | string;
 
-type niconicommentsFormat =
-  | "formatted"
-  | "niconicome"
-  | "legacy"
-  | "owner"
-  | "legacyOwner"
-  | "v1";
-
-type apiResponseSelectComment = {
+export type apiResponseSelectComment = {
   type: "selectComment";
-  data: niconicommentsData;
-  format: niconicommentsFormat;
+  data: inputFormat;
+  format: inputFormatType;
 };
-type apiResponseProgress = {
+export type apiResponseProgress = {
   type: "progress";
   progress: Progress;
 };
-type apiResponseStartController = {
+export type apiResponseStartController = {
   type: "start";
 };
-type apiResponseEnd = {
+export type apiResponseEnd = {
   type: "end";
 };
-type apiResponseMessage = {
+export type apiResponseMessage = {
   type: "message";
   title?: string;
   message: string;
 };
 
-type apiResponsesToController =
+export type apiResponsesToController =
   | apiResponseSelectComment
   | apiResponseSelectMovie
   | apiResponseProgress
   | apiResponseStartController
   | apiResponseEnd
   | apiResponseMessage;
+
+export {};

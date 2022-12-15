@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
 import { baseUrl } from "./context";
+import { apiResponsesToDownloader } from "@/@types/response.downloader";
 
 let downloaderWindow: BrowserWindow;
 const createDownloaderWindow = async () => {

@@ -1,18 +1,23 @@
-type apiRequestFromController = {
+import type { Options } from "./options";
+import { apiRequestLoad } from "@/@types/request.renderer";
+
+export type apiRequestFromController = {
   host: "controller";
 };
-type apiRequestSelectMovie = {
+export type apiRequestSelectMovie = {
   type: "selectMovie";
 };
-type apiRequestSelectComment = {
+export type apiRequestSelectComment = {
   type: "selectComment";
 };
-type apiRequestStart = {
+export type apiRequestStart = {
   type: "start";
   data: Options;
 };
-type apiRequestsFromController =
+export type apiRequestsFromController =
   | apiRequestStart
   | apiRequestSelectComment
   | apiRequestSelectMovie
   | apiRequestLoad;
+
+export {};

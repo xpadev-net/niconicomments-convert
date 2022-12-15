@@ -6,6 +6,8 @@ import * as fs from "fs";
 import { sendMessageToController } from "./controllerWindow";
 import NiconiComments from "@xpadev-net/niconicomments";
 import JSDOM from "jsdom";
+import { spawnResult, v1Raw } from "@/@types/types";
+import { ffmpegOutput } from "@/@types/ffmpeg";
 
 const selectMovie = async () => {
   const path = await dialog.showOpenDialog({

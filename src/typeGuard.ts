@@ -1,3 +1,14 @@
+import type {
+  apiResponseSelectMovie,
+  apiResponseSelectComment,
+  apiResponseProgress,
+  apiResponseStartController,
+  apiResponseEnd,
+  apiResponseMessage,
+} from "@/@types/response.controller";
+import type { apiResponseStartRender } from "@/@types/response.renderer";
+import type { apiResponseDownloadProgress } from "@/@types/response.downloader";
+
 const typeGuard = {
   controller: {
     selectMovie: (i: unknown): i is apiResponseSelectMovie =>
