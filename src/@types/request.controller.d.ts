@@ -9,10 +9,7 @@ type apiRequestSelectComment = {
 };
 type apiRequestStart = {
   type: "start";
-  data: options;
-  fps: number;
-  clipStart: number | undefined;
-  clipEnd: number | undefined;
+  data: Options;
 };
 type apiRequestsFromController =
   | apiRequestStart

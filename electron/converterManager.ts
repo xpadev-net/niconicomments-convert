@@ -24,29 +24,19 @@ const convertStart = async (value: apiRequestStart) => {
     properties: ["createDirectory"],
   });
   if (outputPath.canceled) return;
-  const videoOption: Options = {},
-    fps = value.fps;
-  if (value.clipStart !== undefined) {
-    videoOption.ss = value.clipStart;
-  }
-
-  if (value.clipEnd !== undefined) {
-    videoOption.to = value.clipEnd;
-  }
-  const options = value.data;
-  setVideoOptions({ ...videoOption, fps });
-  setNiconicommentsOption(options);
+  setVideoOptions(value.data.video);
+  setNiconicommentsOption(value.data.niconicomments);
 
   sendMessageToController({
     type: "start",
   });
   setTotalFrames(
-    Math.ceil((value.clipEnd || duration) - (value.clipStart || 0)) * fps
+    Math.ceil((value.data.video.end || duration) - (value.data.video.start || 0)) * value.data.video.fps
   );
   convertedFrames = 0;
   createRendererWindow();
   try {
-    await startConverter(inputPath, outputPath.filePath, videoOption, fps);
+    await startConverter(inputPath, outputPath.filePath, value.data.video);
     sendMessageToRenderer({
       type: "end",
     });

@@ -5,7 +5,7 @@ type apiResponseStartRender = {
   type: "start";
   data: inputFormats;
   format: inputFormatTypes;
-  options: options;
+  options: Options;
   duration: number;
   fps: number;
   offset: number;

@@ -1,15 +1,15 @@
 import { Converter } from "./ffmpeg-stream/stream";
-import type { Options } from "./ffmpeg-stream/stream";
 import * as Stream from "stream";
 
 let converter, inputStream: Stream.Writable;
 const startConverter = async (
   inputPath: string,
   outputPath: string,
-  option: Options,
-  fps: number
+  option: videoOptions
 ) => {
   converter = new Converter();
+  const fps = option.fps;
+  delete option.fps;
   converter.createInputFromFile(inputPath, option);
   inputStream = converter.createInputStream({
     f: "image2pipe",

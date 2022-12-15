@@ -47,15 +47,21 @@ type Message = {
   content: string;
 };
 
-type Clip = {
-  start?: number;
-  end?: number;
+type Options = {
+  niconicomments: niconicommentsOptions;
+  video: videoOptions
 };
-
-type options = {
+type niconicommentsOptions = {
   showCollision: boolean;
   showCommentCount: boolean;
   keepCA: boolean;
   scale: number;
-};
+}
+
+type videoOptions = {
+  fps: number;
+  start?: number;
+  end?: number;
+}
+
 type spawnResult = { stdout: string; stderr: string; code: number };

@@ -1,5 +1,5 @@
 import { typeGuard } from "./typeGuard";
-import { str2time, time2str } from "./timeUtil";
+import { str2time, time2str } from "./util/time";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { useCallback, useEffect, useState } from "react";
@@ -7,9 +7,14 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
+  DialogTitle, FormControlLabel, FormGroup, Switch,
 } from "@mui/material";
 import Styles from "./controller.module.scss";
+
+const initialConfig:Options = {
+  niconicomments:{showCollision:false,showCommentCount:false,keepCA:false,scale:1},
+  video:{fps:30}
+}
 
 const Controller = () => {
   const [movie, setMovie] = useState<Movie | undefined>();
@@ -23,7 +28,7 @@ const Controller = () => {
     start: "",
     end: "",
   });
-  const [clip, setClip] = useState<Clip>({});
+  const [options,setOptions] = useState<Options>(initialConfig);
 
   const onMovieClick = useCallback(() => {
     window.api.request({
@@ -37,6 +42,14 @@ const Controller = () => {
       host: "controller",
     });
   }, []);
+
+  const convert = () => {
+    window.api.request({
+      type: "start",
+      host: "controller",
+      data: options
+    });
+  }
 
   useEffect(() => {
     const eventHandler = (_: unknown, data: apiResponseType) => {
@@ -88,13 +101,9 @@ const Controller = () => {
       {movie && commentFormat && (
         <section>
           <div>
-            <Button variant={"outlined"}>変換</Button>
-          </div>
-          <div>
             <h3>切り抜き</h3>
             <TextField
               label="開始位置"
-              defaultValue=""
               placeholder={"--:--.--"}
               variant="standard"
               value={rawClip.start}
@@ -103,23 +112,42 @@ const Controller = () => {
               }
               onBlur={(e) => {
                 const time = str2time(e.target.value);
-                setClip({ ...clip, start: time });
+                setOptions({ ...options, video: {...options.video,start: time} });
                 setRawClip({ ...rawClip, start: time2str(time) });
               }}
             />
             <TextField
               label="終了位置"
-              defaultValue=""
               placeholder={"--:--.--"}
               variant="standard"
               value={rawClip.end}
               onChange={(e) => setRawClip({ ...rawClip, end: e.target.value })}
               onBlur={(e) => {
                 const time = str2time(e.target.value);
-                setClip({ ...clip, end: time });
+                setOptions({ ...options, video: {...options.video,end: time} });
                 setRawClip({ ...rawClip, end: time2str(time) });
               }}
             />
+          </div>
+          <FormGroup>
+            <h3>設定</h3>
+            {Object.keys(options).map((key)=>{
+              const value = options.niconicomments[key as keyof niconicommentsOptions];
+              if (typeof value === "boolean"){
+                return <FormControlLabel key={key} control={<Switch key={`${key}-switch`} checked={value} onChange={()=>setOptions({...options,niconicomments: {...options.niconicomments,[key]: !value}})} />} label={key} />
+              }
+              return <TextField
+                key={key}
+                label={key}
+                variant="standard"
+                value={value}
+                type={"number"}
+                onChange={(e) => setOptions({ ...options,niconicomments: {...options.niconicomments,[key]: e.target.value} })}
+              />;
+            })}
+          </FormGroup>
+          <div>
+            <Button variant={"outlined"} onClick={convert}>変換</Button>
           </div>
         </section>
       )}

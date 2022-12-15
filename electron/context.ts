@@ -1,4 +1,4 @@
-import type { Options } from "./ffmpeg-stream/stream";
+import type { Options as StreamOptions } from "./ffmpeg-stream/stream";
 import { app } from "electron";
 
 let inputPath = "";
@@ -10,12 +10,12 @@ const setTotalFrames = (val: number) => (totalFrames = val);
 let commendData: { type: inputFormatTypes; data: inputFormats };
 const setCommentData = (val: { type: inputFormatTypes; data: inputFormats }) =>
   (commendData = val);
-let videoOption: Options;
-const setVideoOptions = (val: Options) => (videoOption = val);
+let videoOption: StreamOptions;
+const setVideoOptions = (val: StreamOptions) => (videoOption = val);
 let duration: number;
 const setDuration = (val: number) => (duration = val);
-let niconicommentsOption: options;
-const setNiconicommentsOption = (val: options) => (niconicommentsOption = val);
+let niconicommentsOption: niconicommentsOptions;
+const setNiconicommentsOption = (val: niconicommentsOptions) => (niconicommentsOption = val);
 const baseUrl = app.isPackaged
   ? `file://${__dirname}/html/index.html`
   : "http://localhost:5173";

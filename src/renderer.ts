@@ -1,5 +1,5 @@
 import NiconiComments from "@xpadev-net/niconicomments";
-import { sleep } from "./utils";
+import { sleep } from "./util/sleep";
 import { typeGuard } from "./typeGuard";
 
 const init = () => {
