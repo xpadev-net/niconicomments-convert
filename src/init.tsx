@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { Downloader } from "@/downloader";
 import { Controller } from "@/controller/controller";
+import { setupRenderer } from "@/renderer/renderer";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
@@ -23,8 +24,10 @@ const init = () => {
         <Controller />
       </ThemeProvider>
     );
-  } else if (loc === "downloader") {
+  } else if (loc === "?downloader") {
     reactRoot.render(<Downloader />);
+  } else if (loc === "?renderer") {
+    setupRenderer();
   }
 };
 init();

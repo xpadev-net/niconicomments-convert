@@ -33,7 +33,7 @@ const registerListener = () => {
     } else if (typeGuard.renderer.progress(value)) {
       setGeneratedFrames(value.data.generated);
     } else if (typeGuard.renderer.load(value)) {
-      sendMessageToRenderer({
+      return {
         type: "start",
         data: commendData.data,
         format: commendData.type,
@@ -42,7 +42,7 @@ const registerListener = () => {
         offset: Number(videoOption.ss) || 0,
         fps: Number(videoOption.fps),
         frames: totalFrames,
-      });
+      };
     } else {
       sendMessageToController({
         type: "message",
