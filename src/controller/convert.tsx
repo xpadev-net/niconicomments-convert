@@ -27,22 +27,27 @@ const initialConfig: Options = {
     showCollision: {
       value: false,
       name: "当たり判定表示",
+      type: "boolean",
     },
     showCommentCount: {
       value: false,
       name: "コメント描画数表示",
+      type: "boolean",
     },
     keepCA: {
       value: false,
       name: "CA衝突抑制",
+      type: "boolean",
     },
     scale: {
       value: 1,
       name: "スケール",
+      type: "number",
     },
     mode: {
       value: "default",
       name: "変換モード",
+      type: "string",
     },
   },
   video: {
@@ -115,6 +120,23 @@ const Convert = () => {
     if (!comment || !movie) return;
     void (async () => {
       setLoading(true);
+      const output = await window.api.request({
+        type: "selectOutput",
+        host: "controller",
+      });
+      if (typeof output !== "string") {
+        setLoading(false);
+        return;
+      }
+      const nicoOption: { [key: string]: unknown } = {};
+      for (const key in options.nico) {
+        const item = options.nico[key as keyof niconicommentsOptions];
+        if (item.type === "number") {
+          nicoOption[key] = Number(item.value);
+        } else {
+          nicoOption[key] = item.value;
+        }
+      }
       await window.api.request({
         type: "appendQueue",
         host: "controller",
@@ -125,18 +147,19 @@ const Convert = () => {
             data: comment.data,
             options: {
               format: comment.format,
+              ...nicoOption,
             },
           },
           movie: {
             path: movie.path.filePaths[0],
             duration: movie.duration,
             option: {
-              start: options.video.start,
-              end: options.video.end,
+              ss: options.video.start,
+              to: options.video.end,
             },
           },
           output: {
-            path: "",
+            path: output,
             fps: options.video.fps,
           },
           progress: {
@@ -170,7 +193,7 @@ const Convert = () => {
     return () => {
       window.api.remove(eventHandler);
     };
-  });
+  }, []);
   return (
     <div className={Styles.wrapper}>
       <div>
@@ -243,14 +266,14 @@ const Convert = () => {
             <h3>設定</h3>
             {Object.keys(options.nico).map((key) => {
               const item = options.nico[key as keyof niconicommentsOptions];
-              if (typeof item.value === "boolean") {
+              if (item.type === "boolean") {
                 return (
                   <FormControlLabel
                     key={key}
                     control={
                       <Switch
                         key={`${key}-switch`}
-                        checked={item.value}
+                        checked={item.value as boolean}
                         onChange={() =>
                           setOptions({
                             ...options,
@@ -265,7 +288,7 @@ const Convert = () => {
                     label={item.name}
                   />
                 );
-              } else if (typeof (item.value as string) === "string") {
+              } else if (item.type === "string") {
                 return (
                   <FormControl key={key} variant="standard">
                     <InputLabel>{item.name}</InputLabel>

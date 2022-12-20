@@ -1,16 +1,17 @@
 import { Convert } from "@/controller/convert";
-import { useState } from "react";
-import { Queue } from "@/@types/queue";
-import { QueueContext } from "@/controller/context/queue";
+import { QueueDisplay } from "@/controller/queue";
+import Styles from "./controller.module.scss";
 
 const Controller = () => {
-  const [queue, setQueue] = useState<Queue[]>();
   return (
-    <QueueContext value={{ queue, setQueue }}>
-      <div>
+    <div className={Styles.wrapper}>
+      <div className={Styles.convert}>
         <Convert />
       </div>
-    </QueueContext>
+      <div className={Styles.queue}>
+        <QueueDisplay />
+      </div>
+    </div>
   );
 };
 export { Controller };

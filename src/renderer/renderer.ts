@@ -1,6 +1,7 @@
 import NiconiComments from "@xpadev-net/niconicomments";
 import { sleep } from "@/util/sleep";
 import { typeGuard } from "@/typeGuard";
+import { Queue } from "@/@types/queue";
 
 const setupRenderer = async () => {
   document.title = "renderer - niconicomments-convert";
@@ -49,25 +50,33 @@ const setupRenderer = async () => {
     });
   };
 
-  const data = await window.api.request({ type: "load", host: "renderer" });
-  if (!typeGuard.renderer.start(data)) return;
+  const data = (await window.api.request({
+    type: "load",
+    host: "renderer",
+  })) as Queue;
   inProgress = true;
   message.innerText = "コメントを処理しています...";
-  if (data.format === "niconicome") {
+  if (data.comment.options.format === "niconicome") {
     const parser = new DOMParser();
-    data.data = parser.parseFromString(data.data as string, "application/xml");
+    data.comment.data = parser.parseFromString(
+      data.comment.data as string,
+      "application/xml"
+    );
   }
-  console.log(exports, module, window);
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-  const nico = new NiconiComments(canvas, data.data);
+  const nico = new NiconiComments(
+    canvas,
+    data.comment.data,
+    data.comment.options
+  );
   const emptyBuffer = canvas.toDataURL("image/png");
   message.innerText = "";
   let generatedFrames = 0,
-    offset = Math.ceil(data.offset * 100);
-  const totalFrames = data.frames;
+    offset = Math.ceil((data.movie.option.ss || 0) * 100);
+  const totalFrames = data.progress.total;
   const process = async () => {
-    for (let i = 0; i < data.fps; i++) {
-      const vpos = Math.ceil(i * (100 / data.fps)) + offset;
+    for (let i = 0; i < data.output.fps; i++) {
+      const vpos = Math.ceil(i * (100 / data.output.fps)) + offset;
       // eslint-disable-next-line
       if ((nico["timeline"][vpos]?.length || 0) === 0) {
         sendBuffer([emptyBuffer]);

@@ -26,11 +26,13 @@ const startConvert = async () => {
   processingQueue = queued[0];
   processingQueue.status = "processing";
   createRendererWindow();
+  sendProgress();
   await startConverter(queued[0]);
   sendMessageToRenderer({
     type: "end",
   });
   processingQueue.status = "completed";
+  sendProgress();
   void startConvert();
 };
 const appendBuffers = (blobs: string[]) => {
@@ -47,6 +49,7 @@ const appendBuffers = (blobs: string[]) => {
           myStream.push(null);
         };
         processingQueue.progress.converted++;
+        sendProgress();
         return myStream
           .on("end", () => fulfill())
           .on("error", () => reject())
@@ -62,7 +65,9 @@ const markAsCompleted = () => {
 };
 const updateProgress = (progress: number) => {
   processingQueue.progress.generated = progress;
-
+  sendProgress();
+};
+const sendProgress = () => {
   sendMessageToController({
     type: "progress",
     data: queueList,

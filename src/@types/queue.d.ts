@@ -13,8 +13,8 @@ type Queue = {
     path: string;
     duration: number;
     option: {
-      start: number | undefined;
-      end: number | undefined;
+      ss: number | undefined;
+      to: number | undefined;
     };
   };
   output: {

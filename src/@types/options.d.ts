@@ -23,4 +23,5 @@ type optionItem<T> = {
   value: T;
   name: string;
   tips?: string;
+  type: "number" | "string" | "boolean";
 };
