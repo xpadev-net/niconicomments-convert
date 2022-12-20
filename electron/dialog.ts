@@ -6,7 +6,8 @@ import * as fs from "fs";
 import { sendMessageToController } from "./controllerWindow";
 import NiconiComments from "@xpadev-net/niconicomments";
 import { JSDOM } from "jsdom";
-import { spawnResult, v1Raw } from "@/@types/types";
+import { v1Raw } from "@/@types/types";
+import { spawnResult } from "@/@types/spawn";
 import { ffmpegOutput } from "@/@types/ffmpeg";
 
 const selectMovie = async () => {

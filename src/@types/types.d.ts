@@ -66,5 +66,3 @@ export type v1Raw = {
     threads: v1Thread[];
   };
 };
-
-export type spawnResult = { stdout: string; stderr: string; code: number };
