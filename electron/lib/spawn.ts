@@ -1,5 +1,5 @@
 import * as child_process from "child_process";
-import { spawnResult } from "@/@types/types";
+import { spawnResult } from "@/@types/spawn";
 
 function spawn(
   cmd: string,

@@ -19,7 +19,8 @@ import {
 import Styles from "./convert.module.scss";
 import type { apiResponseType, Message, Movie } from "@/@types/types";
 import type { niconicommentsOptions, Options } from "@/@types/options";
-import { inputFormatType } from "@xpadev-net/niconicomments";
+import { inputFormat, inputFormatType } from "@xpadev-net/niconicomments";
+import { generateUuid } from "@/util/uuid";
 
 const initialConfig: Options = {
   nico: {
@@ -51,8 +52,8 @@ const initialConfig: Options = {
 
 const Convert = () => {
   const [movie, setMovie] = useState<Movie | undefined>();
-  const [commentFormat, setCommentFormat] = useState<
-    inputFormatType | undefined
+  const [comment, setComment] = useState<
+    { format: inputFormatType; data: inputFormat } | undefined
   >();
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<Message | undefined>();
@@ -105,20 +106,51 @@ const Convert = () => {
         if (!data) return;
         throw new Error();
       }
-      setCommentFormat(data.format);
+      setComment(data);
       setLoading(false);
     })();
   }, []);
 
   const convert = () => {
+    if (!comment || !movie) return;
     void (async () => {
       setLoading(true);
       await window.api.request({
-        type: "start",
+        type: "appendQueue",
         host: "controller",
-        data: options,
+        data: {
+          id: generateUuid(),
+          status: "queued",
+          comment: {
+            data: comment.data,
+            options: {
+              format: comment.format,
+            },
+          },
+          movie: {
+            path: movie.path.filePaths[0],
+            duration: movie.duration,
+            option: {
+              start: options.video.start,
+              end: options.video.end,
+            },
+          },
+          output: {
+            path: "",
+            fps: options.video.fps,
+          },
+          progress: {
+            generated: 0,
+            converted: 0,
+            total:
+              Math.ceil(
+                (options.video.end || movie.duration) -
+                  (options.video.start || 0)
+              ) * options.video.fps,
+          },
+        },
       });
-      setCommentFormat(undefined);
+      setComment(undefined);
       setMovie(undefined);
       setLoading(false);
     })();
@@ -156,9 +188,9 @@ const Convert = () => {
         <Button variant={"outlined"} onClick={onCommentClick}>
           コメントデータを選択
         </Button>
-        {commentFormat && <p>フォーマット：{commentFormat}</p>}
+        {comment && <p>フォーマット：{comment.format}</p>}
       </div>
-      {movie && commentFormat && (
+      {movie && comment && (
         <section>
           <div>
             <h3>切り抜き</h3>

@@ -96,7 +96,7 @@ const setupRenderer = async () => {
   window.api.onResponse((_, data) => {
     if (data.target !== "renderer") return;
     if (typeGuard.renderer.progress(data)) {
-      convertedFrames = data.progress.converted;
+      convertedFrames = data.data.progress.converted;
     } else if (typeGuard.renderer.end(data)) {
       window.close();
     }

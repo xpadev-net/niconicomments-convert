@@ -1,5 +1,5 @@
-import type { Options } from "./options";
 import { apiRequestLoad } from "@/@types/request.renderer";
+import { Queue } from "@/@types/queue";
 
 export type apiRequestFromController = {
   host: "controller";
@@ -10,14 +10,18 @@ export type apiRequestSelectMovie = {
 export type apiRequestSelectComment = {
   type: "selectComment";
 };
-export type apiRequestStart = {
-  type: "start";
-  data: Options;
+export type apiRequestSelectOutput = {
+  type: "selectOutput";
+};
+export type apiRequestAppendQueue = {
+  type: "appendQueue";
+  data: Queue;
 };
 export type apiRequestsFromController =
-  | apiRequestStart
+  | apiRequestAppendQueue
   | apiRequestSelectComment
   | apiRequestSelectMovie
+  | apiRequestSelectOutput
   | apiRequestLoad;
 
 export {};

@@ -1,23 +1,23 @@
 import { Converter } from "./ffmpeg-stream/stream";
 import * as Stream from "stream";
 import { videoOptions } from "@/@types/options";
+import { Queue } from "@/@types/queue";
 
 let converter, inputStream: Stream.Writable;
-const startConverter = async (
-  inputPath: string,
-  outputPath: string,
-  option: videoOptions
-) => {
+const startConverter = async (queue: Queue) => {
   converter = new Converter();
-  const fps = option.fps;
-  delete option.fps;
-  converter.createInputFromFile(inputPath, option);
+  converter.createInputFromFile(queue.movie.path, queue.movie.option);
   inputStream = converter.createInputStream({
     f: "image2pipe",
-    r: fps,
+    r: queue.output.fps,
     filter_complex: `pad=width=max(iw\\,ih*(16/9)):height=ow/(16/9):x=(ow-iw)/2:y=(oh-ih)/2,scale=1920x1080,overlay=x=0:y=0`,
   });
-  converter.output(outputPath, { vcodec: "libx264", "b:v": "0", crf: "30" }); // output to file
+  converter.output(queue.output.path, {
+    vcodec: "libx264",
+    "b:v": "0",
+    crf: "30",
+    r: queue.output.fps,
+  });
   await converter.run();
 };
 

@@ -1,10 +1,8 @@
 import type { inputFormat, inputFormatType } from "@xpadev-net/niconicomments";
 
 import type { Options } from "./options";
-import {
-  apiResponseEnd,
-  apiResponseProgress,
-} from "@/@types/response.controller";
+import { apiResponseEnd } from "@/@types/response.controller";
+import { Queue } from "@/@types/queue";
 
 export type apiResponseToRenderer = {
   target: "renderer";
@@ -19,9 +17,13 @@ export type apiResponseStartRender = {
   offset: number;
   frames: number;
 };
+export type apiResponseProgressRenderer = {
+  type: "progress";
+  data: Queue;
+};
 export type apiResponsesToRenderer =
   | apiResponseEnd
-  | apiResponseProgress
+  | apiResponseProgressRenderer
   | apiResponseStartRender;
 
 export {};

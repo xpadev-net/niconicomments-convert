@@ -2,7 +2,7 @@ import type {
   apiRequestSelectMovie,
   apiRequestFromController,
   apiRequestSelectComment,
-  apiRequestStart,
+  apiRequestSelectOutput,
 } from "@/@types/request.controller";
 import type {
   apiRequestLoad,
@@ -11,6 +11,7 @@ import type {
   apiRequestBuffer,
   apiRequestEnd,
 } from "@/@types/request.renderer";
+import { apiRequestAppendQueue } from "@/@types/request.controller";
 
 const typeGuard = {
   controller: {
@@ -22,10 +23,14 @@ const typeGuard = {
       typeof i === "object" &&
       (i as apiRequestFromController).host === "controller" &&
       (i as apiRequestSelectComment).type === "selectComment",
-    start: (i: unknown): i is apiRequestStart =>
+    selectOutput: (i: unknown): i is apiRequestSelectOutput =>
       typeof i === "object" &&
       (i as apiRequestFromController).host === "controller" &&
-      (i as apiRequestStart).type === "start",
+      (i as apiRequestSelectOutput).type === "selectOutput",
+    appendQueue: (i: unknown): i is apiRequestAppendQueue =>
+      typeof i === "object" &&
+      (i as apiRequestFromController).host === "controller" &&
+      (i as apiRequestAppendQueue).type === "appendQueue",
     load: (i: unknown): i is apiRequestLoad =>
       typeof i === "object" &&
       (i as apiRequestFromController).host === "controller" &&

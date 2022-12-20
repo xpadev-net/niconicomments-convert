@@ -1,7 +1,6 @@
 import { dialog } from "electron";
 import { spawn } from "./lib/spawn";
 import { ffprobePath } from "./ffmpeg";
-import { setCommentData, setDuration, setInputPath } from "./context";
 import * as fs from "fs";
 import { sendMessageToController } from "./controllerWindow";
 import NiconiComments from "@xpadev-net/niconicomments";
@@ -86,8 +85,6 @@ Error:${JSON.stringify(e)}`,
       message: "fail to get resolution or duration from input file",
     };
   }
-  setInputPath(path.filePaths[0]);
-  setDuration(duration);
   return {
     type: "selectMovie",
     data: { path, width, height, duration },
@@ -163,11 +160,6 @@ const selectComment = async () => {
     });
     return;
   }
-
-  setCommentData({
-    type,
-    data,
-  });
   return {
     type: "selectComment",
     data: data,
@@ -175,4 +167,12 @@ const selectComment = async () => {
   };
 };
 
-export { selectComment, selectMovie };
+const selectOutput = async () => {
+  const outputPath = await dialog.showSaveDialog({
+    filters: [{ name: "mp4", extensions: ["mp4"] }],
+    properties: ["createDirectory"],
+  });
+  return outputPath.canceled ? undefined : outputPath.filePath;
+};
+
+export { selectComment, selectMovie, selectOutput };
