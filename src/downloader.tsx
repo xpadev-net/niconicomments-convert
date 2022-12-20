@@ -8,7 +8,7 @@ const Downloader = () => {
   useEffect(() => {
     const eventHandler = (_: unknown, data: apiResponseType) => {
       if (data.target !== "downloader") return;
-      if (typeGuard.downloader.progress(data)) {
+      if (typeGuard.binaryDownloader.progress(data)) {
         setProgress(`step: ${data.step} / ${Math.floor(data.progress * 100)}%`);
       }
     };
@@ -22,7 +22,7 @@ const Downloader = () => {
     <div className={Styles.wrapper}>
       <p>必要なファイルをダウンロードしています...</p>
       <p>環境によっては5分ほどかかる場合があります</p>
-      <p>{progress}</p>Å{" "}
+      <p>{progress}</p>
     </div>
   );
 };

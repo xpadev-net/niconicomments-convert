@@ -24,7 +24,7 @@ const init = () => {
         <Controller />
       </ThemeProvider>
     );
-  } else if (loc === "?downloader") {
+  } else if (loc === "?binary-downloader") {
     reactRoot.render(<Downloader />);
   } else if (loc === "?renderer") {
     setupRenderer();

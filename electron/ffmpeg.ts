@@ -2,10 +2,10 @@ import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import {
-  createDownloaderWindow,
-  downloaderWindow,
-  sendMessageToDownloader,
-} from "./downloaderWindow";
+  createBinaryDownloaderWindow,
+  binaryDownloaderWindow,
+  sendMessageToBinaryDownloader,
+} from "./binaryDownloaderWindow";
 import { app } from "electron";
 import axios from "axios";
 
@@ -51,9 +51,9 @@ const onStartUp = async () => {
       fs.existsSync(ytdlpPath)
     )
   ) {
-    await createDownloaderWindow();
+    await createBinaryDownloaderWindow();
     await downloadBinary();
-    downloaderWindow.close();
+    binaryDownloaderWindow.close();
   }
 };
 
@@ -81,7 +81,7 @@ const downloadFile = async (url: string, path: string, step: number) => {
     url,
     responseType: "stream",
     onDownloadProgress: (progress) => {
-      sendMessageToDownloader({
+      sendMessageToBinaryDownloader({
         type: "downloadProgress",
         step: step,
         progress: (step - 1 + progress.loaded / progress.total) / 3,

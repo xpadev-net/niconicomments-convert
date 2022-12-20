@@ -15,9 +15,9 @@ import type {
   apiResponseToRenderer,
 } from "./response.renderer";
 import type {
-  apiResponsesToDownloader,
-  apiResponseToDownloader,
-} from "./response.downloader";
+  apiResponsesToBinaryDownloader,
+  apiResponseToBinaryDownloader,
+} from "./response.binaryDownloader";
 import type { v1Thread } from "@xpadev-net/niconicomments";
 
 declare global {
@@ -38,7 +38,7 @@ type apiRequestType =
 type apiResponseType =
   | (apiResponsesToController & apiResponseToController)
   | (apiResponsesToRenderer & apiResponseToRenderer)
-  | (apiResponsesToDownloader & apiResponseToDownloader);
+  | (apiResponsesToBinaryDownloader & apiResponseToBinaryDownloader);
 
 type Movie = {
   path: Electron.OpenDialogReturnValue;

@@ -1,4 +1,4 @@
-export type apiResponseToDownloader = {
+export type apiResponseToBinaryDownloader = {
   target: "downloader";
 };
 export type apiResponseDownloadProgress = {
@@ -7,6 +7,6 @@ export type apiResponseDownloadProgress = {
   progress: number;
 };
 
-export type apiResponsesToDownloader = apiResponseDownloadProgress;
+export type apiResponsesToBinaryDownloader = apiResponseDownloadProgress;
 
 export {};

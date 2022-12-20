@@ -7,7 +7,7 @@ import type {
   apiResponseMessage,
 } from "@/@types/response.controller";
 import type { apiResponseStartRender } from "@/@types/response.renderer";
-import type { apiResponseDownloadProgress } from "@/@types/response.downloader";
+import type { apiResponseDownloadProgress } from "@/@types/response.binaryDownloader";
 
 const typeGuard = {
   controller: {
@@ -35,7 +35,7 @@ const typeGuard = {
     end: (i: unknown): i is apiResponseEnd =>
       typeof i === "object" && (i as apiResponseEnd).type === "end",
   },
-  downloader: {
+  binaryDownloader: {
     progress: (i: unknown): i is apiResponseDownloadProgress =>
       typeof i === "object" &&
       (i as apiResponseDownloadProgress).type === "downloadProgress",
