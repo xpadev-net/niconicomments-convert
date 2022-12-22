@@ -3,8 +3,16 @@
   flex-direction: row;
   user-select: none;
   height: 100%;
-  .convert {
+  .main {
     flex: 1;
+    overflow-y: scroll;
+    .tabItem {
+      display: none;
+      margin: 15px 10px;
+      &.active {
+        display: block;
+      }
+    }
   }
   .queue {
     width: 10vw;

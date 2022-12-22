@@ -1,17 +1,9 @@
-import { ConvertQueue, Queue } from "@/@types/queue";
+import { ConvertQueue } from "@/@types/queue";
 import Styles from "./queueItem.module.scss";
 
-import styled from "styled-components";
 import { useMemo } from "react";
 import { LinearProgress } from "@mui/material";
 
-type progress = {
-  width: number;
-};
-
-const ProgressItem = styled.div<progress>`
-  width: ${(p) => p.width}%;
-`;
 type props = {
   queue: ConvertQueue;
 };
