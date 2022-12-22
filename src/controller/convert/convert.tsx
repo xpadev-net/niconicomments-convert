@@ -141,6 +141,7 @@ const Convert = () => {
         type: "appendQueue",
         host: "controller",
         data: {
+          type: "convert",
           id: generateUuid(),
           status: "queued",
           comment: {

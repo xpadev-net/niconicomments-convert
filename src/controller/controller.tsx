@@ -1,5 +1,5 @@
-import { Convert } from "@/controller/convert";
-import { QueueDisplay } from "@/controller/queue";
+import { Convert } from "@/controller/convert/convert";
+import { QueueDisplay } from "@/controller/queue/queue";
 import Styles from "./controller.module.scss";
 
 const Controller = () => {
