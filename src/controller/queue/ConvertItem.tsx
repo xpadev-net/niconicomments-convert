@@ -1,5 +1,5 @@
 import { ConvertQueue } from "@/@types/queue";
-import Styles from "./queueItem.module.scss";
+import Styles from "./ConvertItem.module.scss";
 
 import { useMemo } from "react";
 import { LinearProgress } from "@mui/material";
@@ -32,6 +32,7 @@ const ConvertItem = ({ queue }: props) => {
             variant="buffer"
             value={(pg.converted / pg.total) * 100}
             valueBuffer={(pg.generated / pg.total) * 100}
+            className={Styles.progress}
           />
           <span className={Styles.text}>
             {Math.floor((pg.converted / pg.total) * 100)}%
