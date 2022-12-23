@@ -7,7 +7,6 @@ import {
   appendQueue,
   markAsCompleted,
   processingQueue,
-  queueList,
   updateProgress,
 } from "./queue";
 

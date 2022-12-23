@@ -7,7 +7,8 @@ import {
   sendMessageToBinaryDownloader,
 } from "./binaryDownloaderWindow";
 import { app } from "electron";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
+import * as Stream from "stream";
 
 const ext = process.platform === "win32" ? ".exe" : "";
 
@@ -87,7 +88,7 @@ const downloadFile = async (url: string, path: string, step: number) => {
         progress: (step - 1 + progress.loaded / progress.total) / 3,
       });
     },
-  }).then((res) => {
+  }).then((res: AxiosResponse<Stream>) => {
     return new Promise<void>((resolve, reject) => {
       res.data.pipe(file);
       let error = null;

@@ -27,7 +27,7 @@ const init = () => {
   } else if (loc === "?binary-downloader") {
     reactRoot.render(<Downloader />);
   } else if (loc === "?renderer") {
-    setupRenderer();
+    void setupRenderer();
   }
 };
 init();

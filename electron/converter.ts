@@ -1,6 +1,5 @@
 import { Converter } from "./ffmpeg-stream/stream";
 import * as Stream from "stream";
-import { videoOptions } from "@/@types/options";
 import { Queue } from "@/@types/queue";
 
 let converter, inputStream: Stream.Writable;
