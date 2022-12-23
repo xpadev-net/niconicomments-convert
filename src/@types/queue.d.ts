@@ -2,7 +2,7 @@ import type { inputFormat, Options } from "@xpadev-net/niconicomments";
 
 type status = "queued" | "processing" | "completed";
 
-export type Queue = ConvertQueue; // | MovieQueue | CommentQueue;
+export type Queue = ConvertQueue | MovieQueue | CommentQueue;
 
 type BaseQueue = {
   id: string;

@@ -1,4 +1,4 @@
-import { Queue } from "@/@types/queue";
+import { ConvertQueue, Queue } from "@/@types/queue";
 import { inputStream, startConverter } from "./converter";
 import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
 import { base64ToUint8Array } from "./utils";
@@ -7,7 +7,7 @@ import { sendMessageToController } from "./controllerWindow";
 
 const queueList: Queue[] = [];
 let convertQueue = Promise.resolve();
-let processingQueue: Queue;
+let processingQueue: ConvertQueue;
 const appendQueue = (queue: Queue) => {
   queueList.push(queue);
   if (queueList.filter((i) => i.status !== "completed").length === 1) {
@@ -23,17 +23,19 @@ const startConvert = async () => {
     !queued[0]
   )
     return;
-  processingQueue = queued[0];
-  processingQueue.status = "processing";
-  createRendererWindow();
-  sendProgress();
-  await startConverter(queued[0]);
-  sendMessageToRenderer({
-    type: "end",
-  });
-  processingQueue.status = "completed";
-  sendProgress();
-  void startConvert();
+  if (queued[0].type == "convert") {
+    processingQueue = queued[0];
+    processingQueue.status = "processing";
+    createRendererWindow();
+    sendProgress();
+    await startConverter(queued[0]);
+    sendMessageToRenderer({
+      type: "end",
+    });
+    processingQueue.status = "completed";
+    sendProgress();
+    void startConvert();
+  }
 };
 const appendBuffers = (blobs: string[]) => {
   for (const key in blobs) {

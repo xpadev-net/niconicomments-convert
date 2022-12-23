@@ -1,0 +1,21 @@
+.wrapper {
+  .url {
+    display: flex;
+    align-items: center;
+    .input {
+      flex: 1;
+      margin-right: 10px;
+    }
+    margin-bottom: 10px;
+  }
+}
+.loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  line-height: 100vh;
+  text-align: center;
+}

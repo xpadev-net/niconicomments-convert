@@ -3,6 +3,7 @@ import type {
   apiRequestFromController,
   apiRequestSelectComment,
   apiRequestSelectOutput,
+  apiRequestSelectFile,
 } from "@/@types/request.controller";
 import type {
   apiRequestLoad,
@@ -27,6 +28,10 @@ const typeGuard = {
       typeof i === "object" &&
       (i as apiRequestFromController).host === "controller" &&
       (i as apiRequestSelectOutput).type === "selectOutput",
+    selectFile: (i: unknown): i is apiRequestSelectFile =>
+      typeof i === "object" &&
+      (i as apiRequestFromController).host === "controller" &&
+      (i as apiRequestSelectFile).type === "selectFile",
     appendQueue: (i: unknown): i is apiRequestAppendQueue =>
       typeof i === "object" &&
       (i as apiRequestFromController).host === "controller" &&

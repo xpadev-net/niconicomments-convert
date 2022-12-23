@@ -1,7 +1,7 @@
 import NiconiComments from "@xpadev-net/niconicomments";
 import { sleep } from "@/util/sleep";
 import { typeGuard } from "@/typeGuard";
-import { Queue } from "@/@types/queue";
+import { ConvertQueue } from "@/@types/queue";
 
 const setupRenderer = async () => {
   document.title = "renderer - niconicomments-convert";
@@ -53,7 +53,7 @@ const setupRenderer = async () => {
   const data = (await window.api.request({
     type: "load",
     host: "renderer",
-  })) as Queue;
+  })) as ConvertQueue;
   inProgress = true;
   message.innerText = "コメントを処理しています...";
   if (data.comment.options.format === "niconicome") {
@@ -105,7 +105,8 @@ const setupRenderer = async () => {
   window.api.onResponse((_, data) => {
     if (data.target !== "renderer") return;
     if (typeGuard.renderer.progress(data)) {
-      convertedFrames = data.data.progress.converted;
+      convertedFrames =
+        data.data.type === "convert" ? data.data.progress.converted : 0;
     } else if (typeGuard.renderer.end(data)) {
       window.close();
     }

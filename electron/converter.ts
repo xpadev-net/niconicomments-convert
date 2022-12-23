@@ -1,9 +1,9 @@
 import { Converter } from "./ffmpeg-stream/stream";
 import * as Stream from "stream";
-import { Queue } from "@/@types/queue";
+import { ConvertQueue } from "@/@types/queue";
 
 let converter, inputStream: Stream.Writable;
-const startConverter = async (queue: Queue) => {
+const startConverter = async (queue: ConvertQueue) => {
   converter = new Converter();
   converter.createInputFromFile(queue.movie.path, queue.movie.option);
   inputStream = converter.createInputStream({

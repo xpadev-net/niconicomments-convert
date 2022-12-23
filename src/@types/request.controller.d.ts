@@ -13,6 +13,10 @@ export type apiRequestSelectComment = {
 export type apiRequestSelectOutput = {
   type: "selectOutput";
 };
+export type apiRequestSelectFile = {
+  type: "selectFile";
+  pattern: Electron.FileFilter[];
+};
 export type apiRequestAppendQueue = {
   type: "appendQueue";
   data: Queue;
@@ -22,6 +26,7 @@ export type apiRequestsFromController =
   | apiRequestSelectComment
   | apiRequestSelectMovie
   | apiRequestSelectOutput
-  | apiRequestLoad;
+  | apiRequestLoad
+  | apiRequestSelectFile;
 
 export {};

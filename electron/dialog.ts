@@ -9,6 +9,13 @@ import { v1Raw } from "@/@types/types";
 import { spawnResult } from "@/@types/spawn";
 import { ffmpegOutput } from "@/@types/ffmpeg";
 
+const selectFile = async (pattern: Electron.FileFilter[]) => {
+  return await dialog.showOpenDialog({
+    properties: ["openFile"],
+    filters: pattern,
+  });
+};
+
 const selectMovie = async () => {
   const path = await dialog.showOpenDialog({
     properties: ["openFile"],
@@ -175,4 +182,4 @@ const selectOutput = async () => {
   return outputPath.canceled ? undefined : outputPath.filePath;
 };
 
-export { selectComment, selectMovie, selectOutput };
+export { selectComment, selectMovie, selectOutput, selectFile };
