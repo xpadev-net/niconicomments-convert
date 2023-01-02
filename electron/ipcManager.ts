@@ -9,6 +9,7 @@ import {
   processingQueue,
   updateProgress,
 } from "./queue";
+import { store } from "./store";
 
 const registerListener = () => {
   ipcMain.handle("request", async (IpcMainEvent, args) => {
@@ -27,6 +28,10 @@ const registerListener = () => {
       return await selectFile(value.pattern);
     } else if (typeGuard.controller.appendQueue(value)) {
       return appendQueue(value.data);
+    } else if (typeGuard.controller.getSetting(value)) {
+      return store.get(value.key);
+    } else if (typeGuard.controller.setSetting(value)) {
+      return store.set(value.key, value.data);
     } else if (typeGuard.renderer.progress(value)) {
       updateProgress(value.data.generated);
     } else if (typeGuard.renderer.load(value)) {

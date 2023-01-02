@@ -30,6 +30,7 @@
     "@xpadev-net/niconicomments": "^0.2.42",
     "axios": "^1.2.0",
     "debug": "^4.3.4",
+    "electron-store": "^8.1.0",
     "jsdom": "^20.0.3"
   },
   "devDependencies": {

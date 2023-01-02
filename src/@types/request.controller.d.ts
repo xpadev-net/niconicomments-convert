@@ -21,12 +21,23 @@ export type apiRequestAppendQueue = {
   type: "appendQueue";
   data: Queue;
 };
+export type apiRequestGetSetting = {
+  type: "getSetting";
+  key: string;
+};
+export type apiRequestSetSetting = {
+  type: "setSetting";
+  key: string;
+  data: unknown;
+};
 export type apiRequestsFromController =
   | apiRequestAppendQueue
   | apiRequestSelectComment
   | apiRequestSelectMovie
   | apiRequestSelectOutput
   | apiRequestLoad
-  | apiRequestSelectFile;
+  | apiRequestSelectFile
+  | apiRequestGetSetting
+  | apiRequestSetSetting;
 
 export {};

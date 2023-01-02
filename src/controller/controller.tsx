@@ -27,8 +27,8 @@ const Controller = () => {
         <div className={`${Styles.tabItem} ${tab === 1 && Styles.active}`}>
           <Movie />
         </div>
-        <div className={`${Styles.tabItem} ${tab === 3 && Styles.active}`}>
-          <Setting />
+        <div className={`${Styles.tabItem} ${Styles.active}`}>
+          {tab === 3 && <Setting />}
         </div>
       </div>
       <div className={Styles.queue}>

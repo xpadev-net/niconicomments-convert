@@ -4,6 +4,8 @@ import type {
   apiRequestSelectComment,
   apiRequestSelectOutput,
   apiRequestSelectFile,
+  apiRequestGetSetting,
+  apiRequestSetSetting,
 } from "@/@types/request.controller";
 import type {
   apiRequestLoad,
@@ -40,6 +42,14 @@ const typeGuard = {
       typeof i === "object" &&
       (i as apiRequestFromController).host === "controller" &&
       (i as apiRequestLoad).type === "load",
+    getSetting: (i: unknown): i is apiRequestGetSetting =>
+      typeof i === "object" &&
+      (i as apiRequestFromController).host === "controller" &&
+      (i as apiRequestGetSetting).type === "getSetting",
+    setSetting: (i: unknown): i is apiRequestSetSetting =>
+      typeof i === "object" &&
+      (i as apiRequestFromController).host === "controller" &&
+      (i as apiRequestSetSetting).type === "setSetting",
   },
   renderer: {
     progress: (i: unknown): i is apiRequestProgress =>
