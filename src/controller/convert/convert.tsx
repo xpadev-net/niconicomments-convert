@@ -2,12 +2,8 @@ import { typeGuard } from "@/typeGuard";
 import { str2time, time2str } from "@/util/time";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   FormControl,
   FormControlLabel,
   FormGroup,
@@ -21,6 +17,8 @@ import type { apiResponseType, Message, Movie } from "@/@types/types";
 import type { niconicommentsOptions, Options } from "@/@types/options";
 import { inputFormat, inputFormatType } from "@xpadev-net/niconicomments";
 import { generateUuid } from "@/util/uuid";
+import { loadingContext } from "@/controller/context/Loading";
+import { messageContext } from "@/controller/context/Message";
 
 const initialConfig: Options = {
   nico: {
@@ -60,23 +58,23 @@ const Convert = () => {
   const [comment, setComment] = useState<
     { format: inputFormatType; data: inputFormat } | undefined
   >();
-  const [loading, setLoading] = useState<boolean>(false);
-  const [message, setMessage] = useState<Message | undefined>();
   const [rawClip, setRawClip] = useState<{ start: string; end: string }>({
     start: "",
     end: "",
   });
   const [options, setOptions] = useState<Options>(initialConfig);
-
+  const { setIsLoading } = useContext(loadingContext);
+  const { setMessage } = useContext(messageContext);
+  if (!setIsLoading || !setMessage) return <></>;
   const onMovieClick = useCallback(() => {
     void (async () => {
-      setLoading(true);
+      setIsLoading(true);
       const data = await window.api.request({
         type: "selectMovie",
         host: "controller",
       });
       if (!typeGuard.controller.selectMovie(data)) {
-        setLoading(false);
+        setIsLoading(false);
         if (typeGuard.controller.message(data)) {
           setMessage({
             title: data.title || "未知のエラーが発生しました",
@@ -88,19 +86,19 @@ const Convert = () => {
         throw new Error();
       }
       setMovie(data.data);
-      setLoading(false);
+      setIsLoading(false);
     })();
   }, []);
   const onCommentClick = useCallback(() => {
     void (async () => {
-      setLoading(true);
+      setIsLoading(true);
       const data = await window.api.request({
         type: "selectComment",
         host: "controller",
       });
 
       if (!typeGuard.controller.selectComment(data)) {
-        setLoading(false);
+        setIsLoading(false);
         if (typeGuard.controller.message(data)) {
           setMessage({
             title: data.title || "未知のエラーが発生しました",
@@ -112,20 +110,20 @@ const Convert = () => {
         throw new Error();
       }
       setComment(data);
-      setLoading(false);
+      setIsLoading(false);
     })();
   }, []);
 
   const convert = () => {
     if (!comment || !movie) return;
     void (async () => {
-      setLoading(true);
+      setIsLoading(true);
       const output = await window.api.request({
         type: "selectOutput",
         host: "controller",
       });
       if (typeof output !== "string") {
-        setLoading(false);
+        setIsLoading(false);
         return;
       }
       const nicoOption: { [key: string]: unknown } = {};
@@ -176,7 +174,7 @@ const Convert = () => {
       });
       setComment(undefined);
       setMovie(undefined);
-      setLoading(false);
+      setIsLoading(false);
     })();
   };
 
@@ -339,18 +337,6 @@ const Convert = () => {
           </div>
         </section>
       )}
-      <Dialog open={!!message} onClose={() => setMessage(undefined)}>
-        <DialogTitle>{message?.title}</DialogTitle>
-        <DialogContent>
-          <pre>{message?.content}</pre>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setMessage(undefined)} autoFocus>
-            OK
-          </Button>
-        </DialogActions>
-      </Dialog>
-      {loading && <div className={Styles.loading}>処理中...</div>}
     </div>
   );
 };

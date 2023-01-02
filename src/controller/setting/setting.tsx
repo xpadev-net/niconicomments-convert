@@ -1,4 +1,4 @@
-import { ChangeEvent, useLayoutEffect, useState } from "react";
+import { ChangeEvent, useContext, useLayoutEffect, useState } from "react";
 import {
   authByBrowserCookie,
   authByCookieFile,
@@ -14,9 +14,10 @@ import {
 import { Replay } from "@mui/icons-material";
 import Styles from "./setting.module.scss";
 import type { OpenDialogReturnValue } from "electron";
+import { loadingContext } from "@/controller/context/Loading";
 
 const Setting = () => {
-  const [loading, setLoading] = useState(false);
+  const { setIsLoading } = useContext(loadingContext);
   const [authSetting, setAuthSetting] = useState<Partial<authType>>();
   useLayoutEffect(() => {
     void (async () => {
@@ -28,6 +29,7 @@ const Setting = () => {
       setAuthSetting(data || { type: "browser", browser: "chrome" });
     })();
   }, [0]);
+  if (!setIsLoading) return <></>;
 
   const onAuthTypeChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (authSetting?.type === e.target.value) return;
@@ -39,7 +41,7 @@ const Setting = () => {
   };
   const onSelectCookieFile = () => {
     void (async () => {
-      setLoading(true);
+      setIsLoading(true);
       const path = (await window.api.request({
         type: "selectFile",
         host: "controller",
@@ -56,11 +58,11 @@ const Setting = () => {
       })) as OpenDialogReturnValue;
       const cookiePath = path.filePaths[0];
       if (path.canceled || !cookiePath) {
-        setLoading(false);
+        setIsLoading(false);
         return;
       }
       setAuthSetting({ ...authSetting, path: cookiePath } as authByCookieFile);
-      setLoading(false);
+      setIsLoading(false);
     })();
   };
   const onAuthBrowserChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -77,26 +79,26 @@ const Setting = () => {
   };
   const onReset = () => {
     void (async () => {
-      setLoading(true);
+      setIsLoading(true);
       const data = (await window.api.request({
         type: "getSetting",
         key: "auth",
         host: "controller",
       })) as authType | undefined;
       setAuthSetting(data || { type: "browser", browser: "chrome" });
-      setLoading(false);
+      setIsLoading(false);
     })();
   };
   const onSave = () => {
     void (async () => {
-      setLoading(true);
+      setIsLoading(true);
       await window.api.request({
         type: "setSetting",
         key: "auth",
         data: authSetting,
         host: "controller",
       });
-      setLoading(false);
+      setIsLoading(false);
     })();
   };
   if (!authSetting) return <></>;
@@ -157,7 +159,6 @@ const Setting = () => {
       <Button variant={"outlined"} onClick={onSave}>
         保存
       </Button>
-      {loading && <div className={Styles.loading}>処理中...</div>}
     </div>
   );
 };
