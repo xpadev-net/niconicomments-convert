@@ -1,20 +1,16 @@
-import { useState } from "react";
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-} from "@mui/material";
+import { useContext, useState } from "react";
+import { TextField } from "@mui/material";
 import Styles from "./movie.module.scss";
 import Button from "@mui/material/Button";
 import { generateUuid } from "@/util/uuid";
-import { Message } from "@/@types/types";
+import { messageContext } from "@/controller/context/Message";
+import { loadingContext } from "@/controller/context/Loading";
 
 const Movie = () => {
   const [url, setUrl] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<Message | undefined>();
+  const { setMessage } = useContext(messageContext);
+  const { setIsLoading } = useContext(loadingContext);
+  if (!setMessage || !setIsLoading) return <></>;
   const download = () => {
     void (async () => {
       if (
@@ -29,13 +25,13 @@ const Movie = () => {
         });
         return;
       }
-      setLoading(true);
+      setIsLoading(true);
       const output = await window.api.request({
         type: "selectOutput",
         host: "controller",
       });
       if (typeof output !== "string") {
-        setLoading(false);
+        setIsLoading(false);
         return;
       }
       await window.api.request({
@@ -50,7 +46,7 @@ const Movie = () => {
           path: "",
         },
       });
-      setLoading(false);
+      setIsLoading(false);
     })();
   };
   return (
@@ -68,18 +64,6 @@ const Movie = () => {
           ダウンロード
         </Button>
       </div>
-      <Dialog open={!!message} onClose={() => setMessage(undefined)}>
-        <DialogTitle>{message?.title}</DialogTitle>
-        <DialogContent>
-          <pre>{message?.content}</pre>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setMessage(undefined)} autoFocus>
-            OK
-          </Button>
-        </DialogActions>
-      </Dialog>
-      {loading && <div className={Styles.loading}>処理中...</div>}
     </div>
   );
 };
