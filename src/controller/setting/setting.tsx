@@ -4,9 +4,15 @@ import {
   authByCookieFile,
   authType,
 } from "@/@types/setting";
-import { FormControlLabel, Radio, RadioGroup, TextField } from "@mui/material";
-import Button from "@mui/material/Button";
-import Styles from "@/controller/movie/movie.module.scss";
+import {
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  TextField,
+  Button,
+} from "@mui/material";
+import { Replay } from "@mui/icons-material";
+import Styles from "./setting.module.scss";
 import type { OpenDialogReturnValue } from "electron";
 
 const Setting = () => {
@@ -19,7 +25,6 @@ const Setting = () => {
         key: "auth",
         host: "controller",
       })) as authType | undefined;
-      console.log(data);
       setAuthSetting(data || { type: "browser", browser: "chrome" });
     })();
   }, [0]);
@@ -70,6 +75,18 @@ const Setting = () => {
       profile: e.target.value,
     } as authByBrowserCookie);
   };
+  const onReset = () => {
+    void (async () => {
+      setLoading(true);
+      const data = (await window.api.request({
+        type: "getSetting",
+        key: "auth",
+        host: "controller",
+      })) as authType | undefined;
+      setAuthSetting(data || { type: "browser", browser: "chrome" });
+      setLoading(false);
+    })();
+  };
   const onSave = () => {
     void (async () => {
       setLoading(true);
@@ -84,7 +101,10 @@ const Setting = () => {
   };
   if (!authSetting) return <></>;
   return (
-    <div>
+    <div className={Styles.wrapper}>
+      <div className={Styles.reset}>
+        <Replay onClick={onReset} />
+      </div>
       <h2>認証</h2>
       <RadioGroup value={authSetting.type} onChange={onAuthTypeChange} row>
         <FormControlLabel
