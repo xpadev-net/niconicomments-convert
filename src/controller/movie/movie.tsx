@@ -13,14 +13,13 @@ import { Message } from "@/@types/types";
 
 const Movie = () => {
   const [url, setUrl] = useState("");
-  //const [cookie,setCookie] = useState<string|undefined>();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<Message | undefined>();
   const download = () => {
     void (async () => {
       if (
         !url.match(
-          /^(?:https?:\/\/)?(?:nico\.ms|www.nicovideo.jp\/watch)\/((?:sm|nm|so)?[1-9][0-9]*)(?:\?.*)?$/
+          /^(?:https?:\/\/)?(?:nico\.ms|www.nicovideo.jp\/watch)\/((?:sm|nm|so)?[1-9][0-9]*)(?:.*)?$/
         )
       ) {
         setMessage({
