@@ -41,7 +41,7 @@ const appendBuffers = (blobs: string[]) => {
   for (const key in blobs) {
     const item = blobs[key];
     const base64Image = item.split(";base64,").pop();
-
+    if (!base64Image) continue;
     convertQueue = convertQueue.then(() =>
       new Promise<void>((fulfill, reject) => {
         const myStream = new Stream.Readable();

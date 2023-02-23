@@ -45,14 +45,15 @@ const selectMovie = async () => {
       "json",
       "-show_streams",
     ]);
-  } catch (e) {
+  } catch (e: unknown) {
+    const error = e as spawnResult;
     return {
       type: "message",
       title: "input file is not movie",
       message: `fail to execute ffprobe
-code:${e.code}
-stdout:${e.stdout}
-stdout:${e.stderr}`,
+code:${error.code}
+stdout:${error.stdout}
+stdout:${error.stderr}`,
     };
   }
   try {

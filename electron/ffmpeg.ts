@@ -85,13 +85,13 @@ const downloadFile = async (url: string, path: string, step: number) => {
       sendMessageToBinaryDownloader({
         type: "downloadProgress",
         step: step,
-        progress: (step - 1 + progress.loaded / progress.total) / 3,
+        progress: (step - 1 + progress.loaded / (progress.total || 1)) / 3,
       });
     },
   }).then((res: AxiosResponse<Stream>) => {
     return new Promise<void>((resolve, reject) => {
       res.data.pipe(file);
-      let error = null;
+      let error: Error;
       file.on("error", (err) => {
         error = err;
         file.close();
