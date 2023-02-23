@@ -10,6 +10,7 @@ import {
   updateProgress,
 } from "./queue";
 import { store } from "./store";
+import { download, getFormats } from "./lib/ytdlp";
 
 const registerListener = () => {
   ipcMain.handle("request", async (IpcMainEvent, args) => {
@@ -32,6 +33,16 @@ const registerListener = () => {
       return store.get(value.key);
     } else if (typeGuard.controller.setSetting(value)) {
       return store.set(value.key, value.data);
+    } else if (typeGuard.controller.getMovieFormat(value)) {
+      return await getFormats(value.url);
+    } else if (typeGuard.controller.downloadMovie(value)) {
+      const updateProgress = (total: number, downloaded: number) =>
+        sendMessageToController({
+          type: "downloadMovieProgress",
+          total,
+          downloaded,
+        });
+      return await download(value.url, value.format, updateProgress);
     } else if (typeGuard.renderer.progress(value)) {
       updateProgress(value.data.generated);
     } else if (typeGuard.renderer.load(value)) {

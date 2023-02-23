@@ -30,6 +30,18 @@ export type apiRequestSetSetting = {
   key: string;
   data: unknown;
 };
+
+export type apiRequestGetMovieFormat = {
+  type: "getMovieFormat";
+  url: string;
+};
+
+export type apiRequestDownloadMovie = {
+  type: "downloadMovie";
+  url: string;
+  format: string;
+};
+
 export type apiRequestsFromController =
   | apiRequestAppendQueue
   | apiRequestSelectComment
@@ -38,6 +50,8 @@ export type apiRequestsFromController =
   | apiRequestLoad
   | apiRequestSelectFile
   | apiRequestGetSetting
-  | apiRequestSetSetting;
+  | apiRequestSetSetting
+  | apiRequestGetMovieFormat
+  | apiRequestDownloadMovie;
 
 export {};
