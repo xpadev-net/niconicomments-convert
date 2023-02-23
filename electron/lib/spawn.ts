@@ -4,7 +4,9 @@ import { spawnResult } from "@/@types/spawn";
 function spawn(
   cmd: string,
   args?: string[],
-  options?: child_process.SpawnOptionsWithoutStdio
+  options?: child_process.SpawnOptionsWithoutStdio,
+  onData?: (data: string) => unknown,
+  onError?: (data: string) => unknown
 ): Promise<spawnResult> {
   return new Promise<spawnResult>((resolve, reject) => {
     let stdout = "",
@@ -26,11 +28,13 @@ function spawn(
       }
     });
     p.stdout.setEncoding("utf-8");
-    p.stdout.on("data", (data) => {
+    p.stdout.on("data", (data: string) => {
       stdout += data;
+      onData && onData(data.toString().trim());
     });
-    p.stderr.on("data", (data) => {
+    p.stderr.on("data", (data: string) => {
       stderr += data;
+      onError && onError(data.toString().trim());
     });
   });
 }

@@ -5,20 +5,22 @@ import { base64ToUint8Array } from "./utils";
 import * as Stream from "stream";
 import { sendMessageToController } from "./controllerWindow";
 
-const queueList: Queue[] = [];
+const convertQueueList: ConvertQueue[] = [];
 let convertQueue = Promise.resolve();
 let processingQueue: ConvertQueue;
 const appendQueue = (queue: Queue) => {
-  queueList.push(queue);
-  if (queueList.filter((i) => i.status !== "completed").length === 1) {
-    void startConvert();
+  if (queue.type === "convert") {
+    convertQueueList.push(queue);
+    if (convertQueueList.filter((i) => i.status !== "completed").length === 1) {
+      void startConvert();
+    }
   }
 };
 
 const startConvert = async () => {
-  const queued = queueList.filter((i) => i.status === "queued");
+  const queued = convertQueueList.filter((i) => i.status === "queued");
   if (
-    queueList.filter((i) => i.status === "processing").length > 0 ||
+    convertQueueList.filter((i) => i.status === "processing").length > 0 ||
     queued.length === 0 ||
     !queued[0]
   )
@@ -72,7 +74,7 @@ const updateProgress = (progress: number) => {
 const sendProgress = () => {
   sendMessageToController({
     type: "progress",
-    data: queueList,
+    data: convertQueueList,
   });
   sendMessageToRenderer({
     type: "progress",
@@ -86,5 +88,5 @@ export {
   appendBuffers,
   updateProgress,
   processingQueue,
-  queueList,
+  convertQueueList,
 };
