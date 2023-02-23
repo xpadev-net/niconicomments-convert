@@ -9,6 +9,12 @@ import {
 import { app } from "electron";
 import axios, { AxiosResponse } from "axios";
 import * as Stream from "stream";
+import { spawn } from "./lib/spawn";
+
+type lib = "ffmpeg" | "ffprobe" | "ytdlp";
+
+let step = 0,
+  target: lib[] = [];
 
 const ext = process.platform === "win32" ? ".exe" : "";
 
@@ -20,7 +26,11 @@ const basePath = path.join(__dirname, app.isPackaged ? "../../../" : "", "bin"),
 const baseUrl = {
   ffmpeg:
     "https://github.com/descriptinc/ffmpeg-ffprobe-static/releases/download/b4.4.0-rc.11/",
-  ytdlp: "https://github.com/yt-dlp/yt-dlp/releases/download/2022.11.11/",
+  ytdlp: "https://github.com/yt-dlp/yt-dlp/releases/download/2023.02.17/",
+};
+const version = {
+  ffmpeg: "4.4.1-essentials_build-www.gyan.dev",
+  ytdlp: "2023.02.17",
 };
 const distro = (function () {
   const arch = os.arch();
@@ -45,37 +55,57 @@ const distro = (function () {
 })();
 
 const onStartUp = async () => {
+  target = [];
   if (
-    !(
-      fs.existsSync(ffmpegPath) &&
-      fs.existsSync(ffprobePath) &&
-      fs.existsSync(ytdlpPath)
-    )
+    !fs.existsSync(ffmpegPath) ||
+    !(await spawn(ffmpegPath, ["-version"])).stdout.includes(version.ffmpeg)
   ) {
-    await createBinaryDownloaderWindow();
-    await downloadBinary();
-    binaryDownloaderWindow.close();
+    target.push("ffmpeg");
   }
+  if (
+    !fs.existsSync(ffprobePath) ||
+    !(await spawn(ffprobePath, ["-version"])).stdout.includes(version.ffmpeg)
+  ) {
+    target.push("ffprobe");
+  }
+  if (
+    !fs.existsSync(ytdlpPath) ||
+    !(await spawn(ytdlpPath, ["--version"])).stdout.includes(version.ytdlp)
+  ) {
+    target.push("ytdlp");
+  }
+  if (target.length === 0) return;
+  await createBinaryDownloaderWindow();
+  await downloadBinary(target);
+  binaryDownloaderWindow.close();
 };
 
-const downloadBinary = async () => {
+const downloadBinary = async (target: lib[]) => {
   if (!fs.existsSync(basePath)) {
     await fs.promises.mkdir(basePath, { recursive: true });
   }
-  await downloadFile(`${baseUrl.ffmpeg}ffmpeg-${distro.ffmpeg}`, ffmpegPath, 1);
-  await downloadFile(
-    `${baseUrl.ffmpeg}ffprobe-${distro.ffmpeg}`,
-    ffprobePath,
-    2
-  );
-  await downloadFile(`${baseUrl.ytdlp}${distro.ytdlp}`, ytdlpPath, 3);
+  if (target.includes("ffmpeg")) {
+    step++;
+    await downloadFile(`${baseUrl.ffmpeg}ffmpeg-${distro.ffmpeg}`, ffmpegPath);
+  }
+  if (target.includes("ffprobe")) {
+    step++;
+    await downloadFile(
+      `${baseUrl.ffmpeg}ffprobe-${distro.ffmpeg}`,
+      ffprobePath
+    );
+  }
+  if (target.includes("ytdlp")) {
+    step++;
+    await downloadFile(`${baseUrl.ytdlp}${distro.ytdlp}`, ytdlpPath);
+  }
   if (process.platform === "darwin") {
     fs.chmodSync(ffmpegPath, 0o755);
     fs.chmodSync(ffprobePath, 0o755);
     fs.chmodSync(ytdlpPath, 0o755);
   }
 };
-const downloadFile = async (url: string, path: string, step: number) => {
+const downloadFile = async (url: string, path: string) => {
   const file = fs.createWriteStream(path);
   return axios({
     method: "get",
@@ -85,7 +115,8 @@ const downloadFile = async (url: string, path: string, step: number) => {
       sendMessageToBinaryDownloader({
         type: "downloadProgress",
         step: step,
-        progress: (step - 1 + progress.loaded / (progress.total || 1)) / 3,
+        progress:
+          (step - 1 + progress.loaded / (progress.total || 1)) / target.length,
       });
     },
   }).then((res: AxiosResponse<Stream>) => {
