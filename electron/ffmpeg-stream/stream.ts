@@ -6,7 +6,6 @@ source file: https://github.com/phaux/node-ffmpeg-stream/blob/master/src/index.t
  */
 import type { ChildProcess } from "child_process";
 import { spawn } from "child_process";
-import { debug } from "debug";
 import { createReadStream, createWriteStream, unlink } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
@@ -16,7 +15,7 @@ import { promisify } from "util";
 import { ffmpegPath } from "../ffmpeg";
 import { sendMessageToController } from "../controllerWindow";
 
-const dbg = debug("ffmpeg-stream");
+const dbg = console.debug;
 const { FFMPEG_PATH = ffmpegPath } = process.env;
 const EXIT_CODES = [0, 255];
 
