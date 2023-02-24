@@ -60,6 +60,7 @@ const startMovieDownload = async () => {
     targetQueue.format,
     targetQueue.path,
     (total, downloaded) => {
+      console.log(total, downloaded);
       targetQueue.progress = downloaded / total;
       sendProgress();
     }

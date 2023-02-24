@@ -54,8 +54,8 @@ const download = async (
     let match;
     if ((match = data.match(/^progress,([^,]*),([^,]*)/))) {
       const arr = data.split(",");
-      total = Number(arr[1]);
-      downloaded = Number(arr[2]);
+      downloaded = Number(arr[1]);
+      total = Number(arr[2] === "NA" ? arr[3] : arr[2]);
     } else if ((match = data.match(/Duration: ([0-9:.]+),/))) {
       total = time2num(match[1]);
     } else if ((match = data.match(/time=([0-9:.]+) /))) {
@@ -72,7 +72,7 @@ const download = async (
       "--output",
       path,
       "--progress-template",
-      "progress,%(progress.downloaded_bytes)s,%(progress.total_bytes_estimate)s",
+      "progress,%(progress.downloaded_bytes)s,%(progress.total_bytes_estimate)s,%(progress.total_bytes)s",
       ...getAuthConfig(),
     ],
     undefined,
