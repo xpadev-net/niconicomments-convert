@@ -45,6 +45,7 @@ const getFormats = async (url: string): Promise<ytdlpFormat[]> => {
 const download = async (
   url: string,
   format: string,
+  path: string,
   progress: (total: number, downloaded: number) => void
 ) => {
   let total = 0,
@@ -68,6 +69,8 @@ const download = async (
       url,
       "--format",
       format,
+      "--output",
+      path,
       "--progress-template",
       "progress,%(progress.downloaded_bytes)s,%(progress.total_bytes_estimate)s",
       ...getAuthConfig(),
