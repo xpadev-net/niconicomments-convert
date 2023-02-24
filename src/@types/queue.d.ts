@@ -37,7 +37,8 @@ export type ConvertQueue = BaseQueue & {
 
 export type MovieQueue = BaseQueue & {
   type: "movie";
-  target: string; //nicovideo url
+  url: string; //nicovideo url
+  format: string;
   progress: number;
   path: string;
 };
@@ -59,4 +60,10 @@ export type CommentQueue = BaseQueue & {
   limit?: CommentDate | CommentCount;
   progress: number;
   path: string;
+};
+
+export type QueueLists = {
+  convert: ConvertQueue[];
+  movie: MovieQueue[];
+  comment: CommentQueue[];
 };

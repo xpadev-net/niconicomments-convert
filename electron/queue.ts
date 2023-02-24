@@ -1,43 +1,95 @@
-import { ConvertQueue, Queue } from "@/@types/queue";
+import {
+  CommentQueue,
+  ConvertQueue,
+  MovieQueue,
+  Queue,
+  QueueLists,
+} from "@/@types/queue";
 import { inputStream, startConverter } from "./converter";
 import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
 import { base64ToUint8Array } from "./utils";
 import * as Stream from "stream";
 import { sendMessageToController } from "./controllerWindow";
+import { download } from "./lib/ytdlp";
 
-const convertQueueList: ConvertQueue[] = [];
+const queueList: Queue[] = [];
+const queueLists: QueueLists = {
+  convert: [],
+  movie: [],
+  comment: [],
+};
 let convertQueue = Promise.resolve();
 let processingQueue: ConvertQueue;
 const appendQueue = (queue: Queue) => {
+  queueList.push(queue);
   if (queue.type === "convert") {
-    convertQueueList.push(queue);
-    if (convertQueueList.filter((i) => i.status !== "completed").length === 1) {
+    queueLists.convert.push(queue);
+    if (
+      queueLists.convert.filter((i) => i.status !== "completed").length === 1
+    ) {
       void startConvert();
+    }
+  } else if (queue.type === "movie") {
+    queueLists.movie.push(queue);
+    if (queueLists.movie.filter((i) => i.status !== "completed").length === 1) {
+      void startMovieDownload();
+    }
+  } else if (queue.type === "comment") {
+    queueLists.comment.push(queue);
+    if (
+      queueLists.comment.filter((i) => i.status !== "completed").length === 1
+    ) {
+      void startCommentDownload();
     }
   }
 };
 
-const startConvert = async () => {
-  const queued = convertQueueList.filter((i) => i.status === "queued");
+const startMovieDownload = async () => {
+  const queued = queueLists.movie.filter((i) => i.status === "queued");
   if (
-    convertQueueList.filter((i) => i.status === "processing").length > 0 ||
+    queueLists.movie.filter((i) => i.status === "processing").length > 0 ||
     queued.length === 0 ||
     !queued[0]
   )
     return;
-  if (queued[0].type == "convert") {
-    processingQueue = queued[0];
-    processingQueue.status = "processing";
-    createRendererWindow();
-    sendProgress();
-    await startConverter(queued[0]);
-    sendMessageToRenderer({
-      type: "end",
-    });
-    processingQueue.status = "completed";
-    sendProgress();
-    void startConvert();
-  }
+  const targetQueue = queued[0];
+  targetQueue.status = "processing";
+  sendProgress();
+  await download(
+    targetQueue.url,
+    targetQueue.format,
+    targetQueue.path,
+    (total, downloaded) => {
+      targetQueue.progress = downloaded / total;
+      sendProgress();
+    }
+  );
+  targetQueue.status = "completed";
+  sendProgress();
+  void startMovieDownload();
+};
+
+const startCommentDownload = () => {};
+
+const startConvert = async () => {
+  const queued = queueLists.convert.filter((i) => i.status === "queued");
+  if (
+    queueLists.convert.filter((i) => i.status === "processing").length > 0 ||
+    queued.length === 0 ||
+    !queued[0]
+  )
+    return;
+  processingQueue = queued[0];
+  processingQueue.status = "processing";
+  createRendererWindow();
+  sendProgress();
+  await startConverter(queued[0]);
+  sendMessageToRenderer({
+    type: "end",
+  });
+  processingQueue.status = "completed";
+  sendProgress();
+  void startConvert();
 };
 const appendBuffers = (blobs: string[]) => {
   for (const key in blobs) {
@@ -74,7 +126,7 @@ const updateProgress = (progress: number) => {
 const sendProgress = () => {
   sendMessageToController({
     type: "progress",
-    data: convertQueueList,
+    data: queueList,
   });
   sendMessageToRenderer({
     type: "progress",
@@ -88,5 +140,5 @@ export {
   appendBuffers,
   updateProgress,
   processingQueue,
-  convertQueueList,
+  queueLists,
 };

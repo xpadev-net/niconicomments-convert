@@ -42,8 +42,9 @@ const Movie = () => {
           id: generateUuid(),
           status: "queued",
           progress: 0,
-          target: output,
-          path: "",
+          url: url,
+          format: "",
+          path: output,
         },
       });
       setIsLoading(false);

@@ -4,6 +4,7 @@ import { baseUrl } from "./context";
 import { apiResponsesToRenderer } from "@/@types/response.renderer";
 
 let rendererWindow: BrowserWindow;
+let isOpen = false;
 const createRendererWindow = () => {
   rendererWindow = new BrowserWindow({
     width: 640,
@@ -15,7 +16,11 @@ const createRendererWindow = () => {
       backgroundThrottling: false,
     },
   });
+  isOpen = true;
   rendererWindow.removeMenu();
+  rendererWindow.on("close", () => {
+    isOpen = false;
+  });
   void rendererWindow.loadURL(`${baseUrl}?renderer`);
 
   if (!app.isPackaged) {
@@ -23,6 +28,7 @@ const createRendererWindow = () => {
   }
 };
 const sendMessageToRenderer = (value: apiResponsesToRenderer) => {
+  if (!isOpen) return;
   rendererWindow.webContents.send("response", { ...value, target: "renderer" });
 };
 

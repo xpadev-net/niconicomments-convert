@@ -13,7 +13,7 @@ const MovieItem = ({ queue }: props) => {
     if (queue.status !== "processing") {
       return (
         <div className={Styles.queue}>
-          <p>input: {queue.target}</p>
+          <p>url: {queue.url}</p>
           <p>output: {outputName}</p>
           <p>status: {queue.status}</p>
         </div>
@@ -22,8 +22,8 @@ const MovieItem = ({ queue }: props) => {
 
     return (
       <div className={Styles.queue}>
-        <p>input: {queue.target}</p>
-        <p>output: {outputName}</p>
+        <p>url: {queue.url}</p>
+        <p>path: {outputName}</p>
         <p>status: processing</p>
         <div className={Styles.progressWrapper}>
           <LinearProgress
