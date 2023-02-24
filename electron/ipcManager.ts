@@ -42,7 +42,12 @@ const registerListener = () => {
           total,
           downloaded,
         });
-      return await download(value.url, value.format, updateProgress);
+      return await download(
+        value.url,
+        value.format,
+        value.path,
+        updateProgress
+      );
     } else if (typeGuard.renderer.progress(value)) {
       updateProgress(value.data.generated);
     } else if (typeGuard.renderer.load(value)) {

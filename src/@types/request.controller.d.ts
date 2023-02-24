@@ -40,6 +40,7 @@ export type apiRequestDownloadMovie = {
   type: "downloadMovie";
   url: string;
   format: string;
+  path: string;
 };
 
 export type apiRequestsFromController =
