@@ -1093,10 +1093,10 @@
     magic-string "^0.27.0"
     react-refresh "^0.14.0"
 
-"@xpadev-net/niconicomments@^0.2.43":
-  version "0.2.43"
-  resolved "https://registry.yarnpkg.com/@xpadev-net/niconicomments/-/niconicomments-0.2.43.tgz#741da301a80078bcf1076ffc84d220f04b2bd2f2"
-  integrity sha512-ylmfPOfTYuYWwnu7ubdjE0aRbxBuERr9QxlcbWO3ZJjM2cBRRBz1wX3Mzd59tpU6dkVHhiESZ6yb+2HKv0JzeA==
+"@xpadev-net/niconicomments@^0.2.44":
+  version "0.2.44"
+  resolved "https://registry.yarnpkg.com/@xpadev-net/niconicomments/-/niconicomments-0.2.44.tgz#1f24aa9eead91cfd3ed00cd057ee6564ec32c865"
+  integrity sha512-VLoRXvyLPyxuCcb+l5Ww2vlHyzCk9PBzBMufIYkNSXCjG0arAe8oVQwlbI1Z/10OYQxPIiCQgZgCuMxYE8SKYA==
 
 abab@^2.0.6:
   version "2.0.6"
