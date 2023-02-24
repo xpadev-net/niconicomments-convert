@@ -29,7 +29,7 @@ const baseUrl = {
   ytdlp: "https://github.com/yt-dlp/yt-dlp/releases/download/2023.02.17/",
 };
 const version = {
-  ffmpeg: "4.4.1-essentials_build-www.gyan.dev",
+  ffmpeg: "4.4",
   ytdlp: "2023.02.17",
 };
 const distro = (function () {
