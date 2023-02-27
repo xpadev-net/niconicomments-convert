@@ -12,7 +12,10 @@ const getAuthConfig = (): string[] => {
   if (cookie.type === "cookie") {
     return ["--cookies", cookie.path];
   }
-  return ["--cookies-from-browser", cookie.browser];
+  if (cookie.type === "browser") {
+    return ["--cookies-from-browser", cookie.browser];
+  }
+  return [];
 };
 
 const getFormats = async (url: string): Promise<ytdlpFormat[]> => {

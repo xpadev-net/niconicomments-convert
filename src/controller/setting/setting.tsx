@@ -37,6 +37,8 @@ const Setting = () => {
       setAuthSetting({ type: "cookie", path: "" });
     } else if (e.target.value === "browser") {
       setAuthSetting({ type: "browser", browser: "chrome" });
+    } else if (e.target.value === "noAuth") {
+      setAuthSetting({ type: "noAuth" });
     }
   };
   const onSelectCookieFile = () => {
@@ -85,7 +87,7 @@ const Setting = () => {
         key: "auth",
         host: "controller",
       })) as authType | undefined;
-      setAuthSetting(data || { type: "browser", browser: "chrome" });
+      setAuthSetting(data || { type: "noAuth" });
       setIsLoading(false);
     })();
   };
@@ -118,6 +120,11 @@ const Setting = () => {
           value={"browser"}
           control={<Radio />}
           label={"ブラウザから取得"}
+        />
+        <FormControlLabel
+          value={"noAuth"}
+          control={<Radio />}
+          label={"認証なし"}
         />
       </RadioGroup>
       {authSetting.type === "cookie" && (

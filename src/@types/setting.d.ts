@@ -1,4 +1,4 @@
-export type authType = authByBrowserCookie | authByCookieFile;
+export type authType = authByBrowserCookie | authByCookieFile | noAuth;
 
 export type authByCookieFile = {
   type: "cookie";
@@ -8,4 +8,7 @@ export type authByBrowserCookie = {
   type: "browser";
   browser: "firefox" | "chrome";
   profile?: string;
+};
+export type noAuth = {
+  type: "noAuth";
 };
