@@ -6,12 +6,7 @@ import { generateUuid } from "@/util/uuid";
 import { ytdlpFormat } from "@/@types/ytdlp";
 import { useSetAtom } from "jotai";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
-
-const isCorrectUrl = (url: string) => {
-  return !!url.match(
-    /^(?:https?:\/\/)?(?:nico\.ms|(?:www\.)?nicovideo\.jp\/watch)\/((?:sm|nm|so)?[1-9][0-9]*)(?:.*)?$/
-  );
-};
+import { isNicovideoUrl } from "@/util/niconico";
 
 const Movie = () => {
   const [url, setUrl] = useState("");
@@ -24,7 +19,7 @@ const Movie = () => {
     setUrl(e.target.value);
   };
   const getFormats = async () => {
-    if (!isCorrectUrl(url) || formats.length > 0) return;
+    if (!isNicovideoUrl(url) || formats.length > 0) return;
     setIsLoading(true);
     const targetFormats = (await window.api.request({
       type: "getMovieFormat",
@@ -37,7 +32,7 @@ const Movie = () => {
   };
   const download = () => {
     void (async () => {
-      if (!isCorrectUrl(url)) {
+      if (!isNicovideoUrl(url)) {
         setMessage({
           title: "URLが正しくありません",
           content:
