@@ -1,4 +1,4 @@
-import { ChangeEvent, useContext, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { MenuItem, Select, TextField } from "@mui/material";
 import Styles from "./movie.module.scss";
 import Button from "@mui/material/Button";
