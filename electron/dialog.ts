@@ -8,6 +8,7 @@ import { JSDOM } from "jsdom";
 import { v1Raw } from "@/@types/types";
 import { spawnResult } from "@/@types/spawn";
 import { ffmpegOutput } from "@/@types/ffmpeg";
+import SaveDialogOptions = Electron.SaveDialogOptions;
 
 const selectFile = async (pattern: Electron.FileFilter[]) => {
   return await dialog.showOpenDialog({
@@ -175,11 +176,8 @@ const selectComment = async () => {
   };
 };
 
-const selectOutput = async () => {
-  const outputPath = await dialog.showSaveDialog({
-    filters: [{ name: "mp4", extensions: ["mp4"] }],
-    properties: ["createDirectory"],
-  });
+const selectOutput = async (options: SaveDialogOptions) => {
+  const outputPath = await dialog.showSaveDialog(options);
   return outputPath.canceled ? undefined : outputPath.filePath;
 };
 

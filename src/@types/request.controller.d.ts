@@ -1,5 +1,6 @@
 import { apiRequestLoad } from "@/@types/request.renderer";
 import { Queue } from "@/@types/queue";
+import SaveDialogOptions = Electron.SaveDialogOptions;
 
 export type apiRequestFromController = {
   host: "controller";
@@ -12,6 +13,7 @@ export type apiRequestSelectComment = {
 };
 export type apiRequestSelectOutput = {
   type: "selectOutput";
+  options: SaveDialogOptions;
 };
 export type apiRequestSelectFile = {
   type: "selectFile";

@@ -25,7 +25,7 @@ const registerListener = () => {
       } else if (typeGuard.controller.selectMovie(value)) {
         return await selectMovie();
       } else if (typeGuard.controller.selectOutput(value)) {
-        return await selectOutput();
+        return await selectOutput(value.options);
       } else if (typeGuard.controller.selectFile(value)) {
         return await selectFile(value.pattern);
       } else if (typeGuard.controller.appendQueue(value)) {

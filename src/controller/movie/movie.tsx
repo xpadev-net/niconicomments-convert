@@ -57,6 +57,10 @@ const Movie = () => {
       const output = await window.api.request({
         type: "selectOutput",
         host: "controller",
+        options: {
+          filters: [{ name: "mp4", extensions: ["mp4"] }],
+          properties: ["createDirectory"],
+        },
       });
       if (typeof output !== "string") {
         setIsLoading(false);
