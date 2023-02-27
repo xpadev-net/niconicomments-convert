@@ -3,9 +3,9 @@ import { MenuItem, Select, TextField } from "@mui/material";
 import Styles from "./movie.module.scss";
 import Button from "@mui/material/Button";
 import { generateUuid } from "@/util/uuid";
-import { messageContext } from "@/controller/context/Message";
-import { loadingContext } from "@/controller/context/Loading";
 import { ytdlpFormat } from "@/@types/ytdlp";
+import { useSetAtom } from "jotai";
+import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 
 const isCorrectUrl = (url: string) => {
   return !!url.match(
@@ -17,9 +17,8 @@ const Movie = () => {
   const [url, setUrl] = useState("");
   const [formats, setFormats] = useState<ytdlpFormat[]>([]);
   const [targetFormat, setTargetFormat] = useState<string>("");
-  const { setMessage } = useContext(messageContext);
-  const { setIsLoading } = useContext(loadingContext);
-  if (!setMessage || !setIsLoading) return <></>;
+  const setMessage = useSetAtom(messageAtom);
+  const setIsLoading = useSetAtom(isLoadingAtom);
   const onUrlChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormats([]);
     setUrl(e.target.value);

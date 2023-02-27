@@ -14,10 +14,11 @@ import {
 import { Replay } from "@mui/icons-material";
 import Styles from "./setting.module.scss";
 import type { OpenDialogReturnValue } from "electron";
-import { loadingContext } from "@/controller/context/Loading";
+import { useSetAtom } from "jotai";
+import { isLoadingAtom } from "@/controller/atoms";
 
 const Setting = () => {
-  const { setIsLoading } = useContext(loadingContext);
+  const setIsLoading = useSetAtom(isLoadingAtom);
   const [authSetting, setAuthSetting] = useState<Partial<authType>>();
   useLayoutEffect(() => {
     void (async () => {
@@ -29,7 +30,6 @@ const Setting = () => {
       setAuthSetting(data || { type: "browser", browser: "chrome" });
     })();
   }, [0]);
-  if (!setIsLoading) return <></>;
 
   const onAuthTypeChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (authSetting?.type === e.target.value) return;

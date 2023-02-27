@@ -17,8 +17,8 @@ import type { apiResponseType, Message, Movie } from "@/@types/types";
 import type { niconicommentsOptions, Options } from "@/@types/options";
 import { inputFormat, inputFormatType } from "@xpadev-net/niconicomments";
 import { generateUuid } from "@/util/uuid";
-import { loadingContext } from "@/controller/context/Loading";
-import { messageContext } from "@/controller/context/Message";
+import { useSetAtom } from "jotai";
+import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 
 const initialConfig: Options = {
   nico: {
@@ -63,9 +63,8 @@ const Convert = () => {
     end: "",
   });
   const [options, setOptions] = useState<Options>(initialConfig);
-  const { setIsLoading } = useContext(loadingContext);
-  const { setMessage } = useContext(messageContext);
-  if (!setIsLoading || !setMessage) return <></>;
+  const setIsLoading = useSetAtom(isLoadingAtom);
+  const setMessage = useSetAtom(messageAtom);
   const onMovieClick = useCallback(() => {
     void (async () => {
       setIsLoading(true);
