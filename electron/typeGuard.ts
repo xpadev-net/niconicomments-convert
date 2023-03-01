@@ -17,6 +17,11 @@ import type {
   apiRequestBuffer,
   apiRequestEnd,
 } from "@/@types/request.renderer";
+import {
+  firefoxContainerDefault,
+  firefoxContainersJson,
+  firefoxContainerUser,
+} from "@/@types/cookies";
 
 const typeGuard = {
   controller: {
@@ -78,6 +83,18 @@ const typeGuard = {
       typeof i === "object" &&
       (i as apiRequestFromRenderer).host === "renderer" &&
       (i as apiRequestLoad).type === "load",
+  },
+  firefox: {
+    containers: (i: unknown): i is firefoxContainersJson =>
+      typeof i === "object" &&
+      (i as firefoxContainersJson).version === 4 &&
+      Array.isArray((i as firefoxContainersJson).identities),
+    defaultContainer: (i: unknown): i is firefoxContainerDefault =>
+      typeof i === "object" &&
+      typeof (i as firefoxContainerDefault).l10nID === "string",
+    userContainer: (i: unknown): i is firefoxContainerUser =>
+      typeof i === "object" &&
+      typeof (i as firefoxContainerUser).name === "string",
   },
 };
 export { typeGuard };
