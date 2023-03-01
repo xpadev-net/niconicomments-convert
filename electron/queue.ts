@@ -1,10 +1,4 @@
-import {
-  CommentQueue,
-  ConvertQueue,
-  MovieQueue,
-  Queue,
-  QueueLists,
-} from "@/@types/queue";
+import { ConvertQueue, Queue, QueueLists } from "@/@types/queue";
 import { inputStream, startConverter } from "./converter";
 import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
 import { base64ToUint8Array } from "./utils";
@@ -70,7 +64,9 @@ const startMovieDownload = async () => {
   void startMovieDownload();
 };
 
-const startCommentDownload = () => {};
+const startCommentDownload = () => {
+  //todo: feat comment downloader
+};
 
 const startConvert = async () => {
   const queued = queueLists.convert.filter((i) => i.status === "queued");

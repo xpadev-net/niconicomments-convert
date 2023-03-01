@@ -10,7 +10,7 @@ import {
   updateProgress,
 } from "./queue";
 import { store } from "./store";
-import { download, getFormats } from "./lib/ytdlp";
+import { getFormats } from "./lib/ytdlp";
 
 const registerListener = () => {
   ipcMain.handle("request", async (IpcMainEvent, args) => {
