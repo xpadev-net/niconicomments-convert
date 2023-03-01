@@ -18,17 +18,19 @@ const Movie = () => {
     setFormats([]);
     setUrl(e.target.value);
   };
-  const getFormats = async () => {
-    if (!isNicovideoUrl(url) || formats.length > 0) return;
-    setIsLoading(true);
-    const targetFormats = (await window.api.request({
-      type: "getMovieFormat",
-      url: url,
-      host: "controller",
-    })) as ytdlpFormat[];
-    setIsLoading(false);
-    if (!targetFormats) return;
-    setFormats(targetFormats);
+  const getFormats = () => {
+    void (async () => {
+      if (!isNicovideoUrl(url) || formats.length > 0) return;
+      setIsLoading(true);
+      const targetFormats = (await window.api.request({
+        type: "getMovieFormat",
+        url: url,
+        host: "controller",
+      })) as ytdlpFormat[];
+      setIsLoading(false);
+      if (!targetFormats) return;
+      setFormats(targetFormats);
+    })();
   };
   const download = () => {
     void (async () => {

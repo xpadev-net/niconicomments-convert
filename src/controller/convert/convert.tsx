@@ -13,7 +13,7 @@ import {
   Switch,
 } from "@mui/material";
 import Styles from "./convert.module.scss";
-import type { apiResponseType, Message, Movie } from "@/@types/types";
+import type { apiResponseType, Movie } from "@/@types/types";
 import type { niconicommentsOptions, Options } from "@/@types/options";
 import { inputFormat, inputFormatType } from "@xpadev-net/niconicomments";
 import { generateUuid } from "@/util/uuid";

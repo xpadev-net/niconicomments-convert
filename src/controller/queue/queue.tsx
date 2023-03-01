@@ -16,7 +16,6 @@ const QueueDisplay = () => {
     window.api.onResponse(callback);
     return () => window.api.remove(callback);
   }, []);
-  console.log(queue);
   return (
     <div className={Styles.wrapper}>
       {queue.map((item) =>
