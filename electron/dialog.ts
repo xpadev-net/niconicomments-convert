@@ -23,7 +23,7 @@ const selectMovie = async () => {
     filters: [
       {
         name: "Movies",
-        extensions: ["mp4", "webm", "avi", "mkv", "wmv", "mov"],
+        extensions: ["mp4", "webm", "avi", "mkv", "wmv", "mov", "ts", "m2ts"],
       },
       {
         name: "All Files",
@@ -75,8 +75,7 @@ Error:${JSON.stringify(e)}`,
     };
   }
   let width, height, duration;
-  for (const key in metadata.streams) {
-    const stream = metadata.streams[key];
+  for (const stream of metadata.streams) {
     if (stream.width) {
       width = stream.width;
     }

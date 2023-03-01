@@ -89,8 +89,7 @@ const startConvert = async () => {
   void startConvert();
 };
 const appendBuffers = (blobs: string[]) => {
-  for (const key in blobs) {
-    const item = blobs[key];
+  for (const item of blobs) {
     const base64Image = item.split(";base64,").pop();
     if (!base64Image) continue;
     convertQueue = convertQueue.then(() =>
