@@ -9,8 +9,8 @@ import type {
   moz_cookies,
 } from "@/@types/cookies";
 import * as sqlite3 from "sqlite3";
-import { fetchAll } from "#/lib/db";
-import { typeGuard } from "#/typeGuard";
+import { fetchAll } from "../db";
+import { typeGuard } from "../../typeGuard";
 
 const getFirefoxRootDir = () => {
   if (process.platform === "win32") {

@@ -18,7 +18,6 @@
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"],
-      "#/*": ["electron/*"]
     }
   },
   "include": ["src"],
