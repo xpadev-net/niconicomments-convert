@@ -2,14 +2,11 @@ import * as path from "path";
 import * as fs from "fs";
 import type {
   Cookies,
-  firefoxContainer,
-  firefoxProfile,
   firefoxProfiles,
   l10nID,
   moz_cookies,
 } from "@/@types/cookies";
-import * as sqlite3 from "sqlite3";
-import { fetchAll } from "../db";
+import { fetchAll, openClonedDB } from "../db";
 import { typeGuard } from "../../typeGuard";
 
 const getFirefoxRootDir = () => {
@@ -17,7 +14,11 @@ const getFirefoxRootDir = () => {
     if (!process.env.APPDATA) throw new Error("fail to resolve appdata");
     return path.join(process.env.APPDATA, "Mozilla/Firefox/Profiles");
   }
-  return "~/Library/Application Support/Firefox";
+  if (!process.env.HOME) throw new Error("fail to resolve home dir");
+  return path.join(
+    process.env.HOME,
+    "Library/Application Support/Firefox/Profiles"
+  );
 };
 
 const containerNames: { [key in l10nID]: string } = {
@@ -77,13 +78,25 @@ const getAvailableFirefoxProfiles = () => {
   return profiles;
 };
 
-const getFirefoxProfileCookies = async (profile: firefoxProfile) => {
-  const db = new sqlite3.Database(profile.path, sqlite3.OPEN_READONLY);
+const getFirefoxCookies = async (profile: firefoxProfiles) => {
+  const db = openClonedDB(profile.path);
   const cookies: Cookies = {};
-  const rows = (await fetchAll(
-    db,
-    `SELECT host, name, value, path, expiry, isSecure FROM moz_cookies WHERE NOT INSTR(originAttributes,"userContextId=")`
-  )) as moz_cookies;
+  const rows = (await (async () => {
+    if (profile.type === "firefoxProfile") {
+      return await fetchAll(
+        db,
+        `SELECT host, name, value, path, expiry, isSecure FROM moz_cookies WHERE NOT INSTR(originAttributes,"userContextId=")`
+      );
+    }
+    return await fetchAll(
+      db,
+      `SELECT host, name, value, path, expiry, isSecure FROM moz_cookies WHERE originAttributes LIKE ? OR originAttributes LIKE ?`,
+      [
+        `%userContextId=${profile.contextId}`,
+        `%userContextId=${profile.contextId}&%`,
+      ]
+    );
+  })()) as moz_cookies;
 
   for (const row of rows) {
     if (row.host.match(/^\.nicovideo\.jp/) && row.path === "/") {
@@ -93,27 +106,4 @@ const getFirefoxProfileCookies = async (profile: firefoxProfile) => {
   return cookies;
 };
 
-const getFirefoxContainerCookies = async (profile: firefoxContainer) => {
-  const db = new sqlite3.Database(profile.path, sqlite3.OPEN_READONLY);
-  const cookies: Cookies = {};
-  const rows = (await fetchAll(
-    db,
-    `SELECT host, name, value, path, expiry, isSecure FROM moz_cookies WHERE originAttributes LIKE ? OR originAttributes LIKE ?`,
-    [
-      `%userContextId=${profile.contextId}`,
-      `%userContextId=${profile.contextId}&%`,
-    ]
-  )) as moz_cookies;
-  for (const row of rows) {
-    if (row.host.match(/^\.nicovideo\.jp/) && row.path === "/") {
-      cookies[row.name] = row.value;
-    }
-  }
-  return cookies;
-};
-
-export {
-  getAvailableFirefoxProfiles,
-  getFirefoxProfileCookies,
-  getFirefoxContainerCookies,
-};
+export { getAvailableFirefoxProfiles, getFirefoxCookies };

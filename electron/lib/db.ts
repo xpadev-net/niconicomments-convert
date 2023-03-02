@@ -1,4 +1,18 @@
 import * as sqlite3 from "sqlite3";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import { appPrefix } from "../context";
+
+const openClonedDB = (filepath: string) => {
+  const filename = path.basename(filepath);
+  const tmpDir = path.join(os.tmpdir(), appPrefix);
+  fs.mkdirSync(tmpDir, { recursive: true });
+  const tmpFile = path.join(tmpDir, filename);
+  fs.mkdtempSync(tmpDir);
+  fs.copyFileSync(filepath, tmpFile);
+  return new sqlite3.Database(tmpFile, sqlite3.OPEN_READONLY);
+};
 
 type sqliteParam =
   | {
@@ -22,4 +36,4 @@ const fetchAll = (
   });
 };
 
-export { fetchAll };
+export { fetchAll, openClonedDB };
