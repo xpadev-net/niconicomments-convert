@@ -67,3 +67,8 @@ export type moz_cookies = {
 export type Cookies = {
   [key: string]: string;
 };
+
+export type safariProfile = {
+  type: "safari";
+  path: string;
+};
