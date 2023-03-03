@@ -99,7 +99,7 @@ const getFirefoxCookies = async (profile: firefoxProfiles) => {
   })()) as moz_cookies;
 
   for (const row of rows) {
-    if (row.host.match(/^\.nicovideo\.jp/) && row.path === "/") {
+    if (row.host.match(/\.nicovideo\.jp/)) {
       cookies[row.name] = row.value;
     }
   }

@@ -18,6 +18,7 @@ import type {
   apiRequestEnd,
 } from "@/@types/request.renderer";
 import {
+  chromiumProfilesJson,
   firefoxContainerDefault,
   firefoxContainersJson,
   firefoxContainerUser,
@@ -95,6 +96,12 @@ const typeGuard = {
     userContainer: (i: unknown): i is firefoxContainerUser =>
       typeof i === "object" &&
       typeof (i as firefoxContainerUser).name === "string",
+  },
+  chromium: {
+    profiles: (i: unknown): i is chromiumProfilesJson =>
+      typeof i === "object" &&
+      typeof (i as chromiumProfilesJson).profile === "object" &&
+      typeof (i as chromiumProfilesJson).profile.info_cache === "object",
   },
 };
 export { typeGuard };

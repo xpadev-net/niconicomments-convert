@@ -2,6 +2,10 @@ import { app, BrowserWindow, globalShortcut } from "electron";
 import { createControllerWindow } from "./controllerWindow";
 import { registerListener } from "./ipcManager";
 import { onStartUp } from "./ffmpeg";
+import {
+  getAvailableChromiumProfiles,
+  getChromiumCookies,
+} from "./lib/cookies/chromium";
 
 app.on("window-all-closed", () => {
   app.quit();
@@ -32,3 +36,10 @@ if (app.isPackaged) {
   });
 }
 registerListener();
+
+getChromiumCookies({
+  type: "chromiumProfile",
+  browser: "brave",
+  name: "プロフィール 1",
+  path: "/Users/xpa/Library/Application Support/BraveSoftware/Brave-Browser/Default/Cookies",
+});

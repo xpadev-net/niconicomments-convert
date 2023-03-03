@@ -63,6 +63,9 @@
     "typescript": "^4.9.5",
     "vite": "^4.1.4"
   },
+  "optionalDependencies": {
+    "win-dpapi": "^1.1.0"
+  },
   "browserslist": {
     "production": [
       "last 1 electron version"
