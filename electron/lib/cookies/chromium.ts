@@ -116,10 +116,14 @@ const getChromiumKeyName = (browser: chromiumBrowser) => {
   return "Chromium";
 };
 
-const getAvailableChromiumProfiles = (browser: chromiumBrowser) => {
+const getAvailableChromiumProfiles = (
+  browser: chromiumBrowser
+): chromiumProfile[] => {
   const root = getChromiumRootDir(browser);
+  const localStatePath = path.join(root, "Local State");
+  if (!fs.existsSync(localStatePath)) return [];
   const metadata = JSON.parse(
-    fs.readFileSync(path.join(root, "Local State"), "utf-8")
+    fs.readFileSync(localStatePath, "utf-8")
   ) as unknown;
   if (!typeGuard.chromium.profiles(metadata))
     throw new Error("invalid manifest file");
@@ -215,7 +219,7 @@ const getWindowsDecryptor = async (
   ) as chromiumLocalState;
   const base64_key = localState.os_crypt.encrypted_key;
   const encryptedKey = Buffer.from(base64_key, "base64");
-  const wp = (await import("win-protect")) as winProtect;
+  const wp = require("win-protect") as winProtect;
   return (value: Buffer) => {
     if (value[0] == 0x76 && value[1] == 0x31 && value[2] == 0x30) {
       const key: Buffer = wp.decrypt(
@@ -234,6 +238,7 @@ const getWindowsDecryptor = async (
     ) {
       return wp.decrypt(value).toString();
     }
+    return "";
   };
 };
 
