@@ -9,6 +9,12 @@ import type {
 import { fetchAll, openClonedDB } from "../db";
 import { typeGuard } from "../../typeGuard";
 
+/*
+reference source:
+ - https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/cookies.py
+  Released under The Unlicense
+ */
+
 const getFirefoxRootDir = () => {
   if (process.platform === "win32") {
     if (!process.env.APPDATA) throw new Error("fail to resolve appdata");
