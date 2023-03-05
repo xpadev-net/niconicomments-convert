@@ -8,15 +8,15 @@ import {
 } from "./cookies/firefox";
 import { browserProfile } from "@/@types/cookies";
 
-const getAvailableProfiles = () => {
+const getAvailableProfiles = async () => {
   return [
-    ...getAvailableFirefoxProfiles(),
-    ...getAvailableChromiumProfiles("brave"),
-    ...getAvailableChromiumProfiles("chrome"),
-    ...getAvailableChromiumProfiles("chromium"),
-    ...getAvailableChromiumProfiles("edge"),
-    ...getAvailableChromiumProfiles("opera"),
-    ...getAvailableChromiumProfiles("vivaldi"),
+    ...(await getAvailableFirefoxProfiles()),
+    ...(await getAvailableChromiumProfiles("brave")),
+    ...(await getAvailableChromiumProfiles("chrome")),
+    ...(await getAvailableChromiumProfiles("chromium")),
+    ...(await getAvailableChromiumProfiles("edge")),
+    ...(await getAvailableChromiumProfiles("opera")),
+    ...(await getAvailableChromiumProfiles("vivaldi")),
   ];
 };
 

@@ -23,5 +23,6 @@ module.exports = {
     rules: {
         "@typescript-eslint/restrict-template-expressions": "off",
         "@typescript-eslint/no-unused-vars": "error",
+        "@typescript-eslint/no-var-requires": "off"
     },
 };

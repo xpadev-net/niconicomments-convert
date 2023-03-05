@@ -13,7 +13,19 @@ const getAuthConfig = (): string[] => {
     return ["--cookies", cookie.path];
   }
   if (cookie.type === "browser") {
-    return ["--cookies-from-browser", cookie.browser];
+    if (cookie.profile.type === "chromiumProfile") {
+      return [
+        "--cookies-from-browser",
+        `${cookie.profile.browser}:${cookie.profile.profileName}`,
+      ];
+    }
+    if (cookie.profile.type === "firefoxBasicProfile") {
+      return ["--cookies-from-browser", `firefox:${cookie.profile.name}`];
+    }
+    return [
+      "--cookies-from-browser",
+      `firefox:${cookie.profile.profileName}::${cookie.profile.containerName}`,
+    ];
   }
   return [];
 };

@@ -11,6 +11,7 @@ import {
 } from "./queue";
 import { store } from "./store";
 import { getFormats } from "./lib/ytdlp";
+import { getAvailableProfiles } from "./lib/cookie";
 
 const registerListener = () => {
   ipcMain.handle("request", async (IpcMainEvent, args) => {
@@ -36,6 +37,8 @@ const registerListener = () => {
         return store.set(value.key, value.data);
       } else if (typeGuard.controller.getMovieFormat(value)) {
         return await getFormats(value.url);
+      } else if (typeGuard.controller.getAvailableProfiles(value)) {
+        return await getAvailableProfiles();
       } else if (typeGuard.renderer.progress(value)) {
         updateProgress(value.data.generated);
       } else if (typeGuard.renderer.load(value)) {

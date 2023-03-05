@@ -1,3 +1,5 @@
+import { browserProfile } from "@/@types/cookies";
+
 export type authType = authByBrowserCookie | authByCookieFile | noAuth;
 
 export type authByCookieFile = {
@@ -6,8 +8,7 @@ export type authByCookieFile = {
 };
 export type authByBrowserCookie = {
   type: "browser";
-  browser: "firefox" | "chrome";
-  profile?: string;
+  profile?: browserProfile;
 };
 export type noAuth = {
   type: "noAuth";

@@ -1,25 +1,26 @@
 import { ChangeEvent, useLayoutEffect, useState } from "react";
-import {
-  authByBrowserCookie,
-  authByCookieFile,
-  authType,
-} from "@/@types/setting";
+import { authByCookieFile, authType } from "@/@types/setting";
 import {
   FormControlLabel,
   Radio,
   RadioGroup,
-  TextField,
   Button,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { Replay } from "@mui/icons-material";
 import Styles from "./setting.module.scss";
 import type { OpenDialogReturnValue } from "electron";
 import { useSetAtom } from "jotai";
 import { isLoadingAtom } from "@/controller/atoms";
+import { browserProfile } from "@/@types/cookies";
 
 const Setting = () => {
   const setIsLoading = useSetAtom(isLoadingAtom);
   const [authSetting, setAuthSetting] = useState<Partial<authType>>();
+  const [availableProfiles, setAvailableProfiles] = useState<browserProfile[]>(
+    []
+  );
   useLayoutEffect(() => {
     void (async () => {
       const data = (await window.api.request({
@@ -27,7 +28,12 @@ const Setting = () => {
         key: "auth",
         host: "controller",
       })) as authType | undefined;
-      setAuthSetting(data || { type: "browser", browser: "chrome" });
+      setAuthSetting(data || { type: "noAuth" });
+      const profiles = (await window.api.request({
+        type: "getAvailableProfiles",
+        host: "controller",
+      })) as browserProfile[];
+      setAvailableProfiles(profiles);
     })();
   }, [0]);
 
@@ -36,7 +42,7 @@ const Setting = () => {
     if (e.target.value === "cookie") {
       setAuthSetting({ type: "cookie", path: "" });
     } else if (e.target.value === "browser") {
-      setAuthSetting({ type: "browser", browser: "chrome" });
+      setAuthSetting({ type: "browser", profile: undefined });
     } else if (e.target.value === "noAuth") {
       setAuthSetting({ type: "noAuth" });
     }
@@ -67,17 +73,14 @@ const Setting = () => {
       setIsLoading(false);
     })();
   };
-  const onAuthBrowserChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const onAuthBrowserChange = (name: string) => {
     setAuthSetting({
       type: "browser",
-      browser: e.target.value as "firefox" | "chrome",
+      profile: availableProfiles.reduce<browserProfile | undefined>(
+        (pv, val) => (val.name === name ? val : pv),
+        undefined
+      ),
     });
-  };
-  const onAuthBrowserProfileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setAuthSetting({
-      ...authSetting,
-      profile: e.target.value,
-    } as authByBrowserCookie);
   };
   const onReset = () => {
     void (async () => {
@@ -138,29 +141,24 @@ const Setting = () => {
       {authSetting.type === "browser" && (
         <div>
           <h3>ブラウザ</h3>
-          <RadioGroup
-            value={authSetting.browser}
-            onChange={onAuthBrowserChange}
-            row
+          <Select
+            label={"プロファイル"}
+            variant={"standard"}
+            className={Styles.input}
+            value={authSetting.profile?.name || ""}
+            onChange={(e) => onAuthBrowserChange(e.target.value)}
           >
-            <FormControlLabel
-              value={"chrome"}
-              control={<Radio />}
-              label={"Chrome"}
-            />
-            <FormControlLabel
-              value={"firefox"}
-              control={<Radio />}
-              label={"Firefox"}
-            />
-          </RadioGroup>
-          <TextField
-            label={"プロファイル名"}
-            variant="standard"
-            placeholder={"default"}
-            value={authSetting.profile}
-            onChange={onAuthBrowserProfileChange}
-          />
+            <MenuItem disabled value="">
+              <em>認証に使用するブラウザを選択してください</em>
+            </MenuItem>
+            {availableProfiles.map((val) => {
+              return (
+                <MenuItem key={val.name} value={val.name}>
+                  {val.browser} ({val.name})
+                </MenuItem>
+              );
+            })}
+          </Select>
         </div>
       )}
       <Button variant={"outlined"} onClick={onSave}>

@@ -9,6 +9,7 @@ import type {
   apiRequestGetMovieFormat,
   apiRequestDownloadMovie,
   apiRequestAppendQueue,
+  apiRequestGetAvailableProfiles,
 } from "@/@types/request.controller";
 import type {
   apiRequestLoad,
@@ -66,6 +67,10 @@ const typeGuard = {
       typeof i === "object" &&
       (i as apiRequestFromController).host === "controller" &&
       (i as apiRequestDownloadMovie).type === "downloadMovie",
+    getAvailableProfiles: (i: unknown): i is apiRequestGetAvailableProfiles =>
+      typeof i === "object" &&
+      (i as apiRequestFromController).host === "controller" &&
+      (i as apiRequestGetAvailableProfiles).type === "getAvailableProfiles",
   },
   renderer: {
     progress: (i: unknown): i is apiRequestProgress =>

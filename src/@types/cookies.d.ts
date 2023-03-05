@@ -12,14 +12,18 @@ export type firefoxProfile = firefoxBasicProfile | firefoxContainer;
 
 export type firefoxBasicProfile = {
   type: "firefoxBasicProfile";
+  browser: "firefox";
   name: string;
   path: string;
 };
 
 export type firefoxContainer = {
   type: "firefoxContainer";
+  browser: "firefox";
   name: string;
   path: string;
+  profileName: string;
+  containerName: string;
   contextId: number;
 };
 
@@ -94,6 +98,7 @@ export type chromiumProfilesJson = {
 export type chromiumProfile = {
   type: "chromiumProfile";
   browser: chromiumBrowser;
+  profileName: string;
   name: string;
   path: string;
 };

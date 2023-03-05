@@ -45,6 +45,10 @@ export type apiRequestDownloadMovie = {
   path: string;
 };
 
+export type apiRequestGetAvailableProfiles = {
+  type: "getAvailableProfiles";
+};
+
 export type apiRequestsFromController =
   | apiRequestAppendQueue
   | apiRequestSelectComment
@@ -55,6 +59,7 @@ export type apiRequestsFromController =
   | apiRequestGetSetting
   | apiRequestSetSetting
   | apiRequestGetMovieFormat
-  | apiRequestDownloadMovie;
+  | apiRequestDownloadMovie
+  | apiRequestGetAvailableProfiles;
 
 export {};

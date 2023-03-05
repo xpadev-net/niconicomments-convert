@@ -34,20 +34,27 @@ const containerNames: { [key in l10nID]: string } = {
   "userContextShopping.label": "ショッピング",
 };
 
-const getAvailableFirefoxProfiles = () => {
+const getAvailableFirefoxProfiles = async () => {
   const rootDir = getFirefoxRootDir();
   if (!fs.existsSync(rootDir)) {
     return [];
   }
   const files = fs.readdirSync(rootDir);
   const profiles: firefoxProfile[] = [];
+  const addProfile = async (profile: firefoxProfile) =>
+    (await isLoggedIn(profile)) && profiles.push(profile);
   for (const item of files) {
     const directoryName = path.join(rootDir, item);
     const dbPath = path.join(directoryName, "cookies.sqlite");
     if (!fs.existsSync(dbPath)) {
       continue;
     }
-    profiles.push({ type: "firefoxBasicProfile", name: item, path: dbPath });
+    await addProfile({
+      type: "firefoxBasicProfile",
+      browser: "firefox",
+      name: item,
+      path: dbPath,
+    });
     const containersPath = path.join(directoryName, "containers.json");
     if (!fs.existsSync(containersPath)) {
       continue;
@@ -62,18 +69,24 @@ const getAvailableFirefoxProfiles = () => {
           continue;
         }
         if (typeGuard.firefox.defaultContainer(container)) {
-          profiles.push({
+          await addProfile({
             type: "firefoxContainer",
+            browser: "firefox",
             name: `${item} (${containerNames[container.l10nID]})`,
             path: dbPath,
+            profileName: item,
+            containerName: container.l10nID,
             contextId: container.userContextId,
           });
           continue;
         }
-        profiles.push({
+        await addProfile({
           type: "firefoxContainer",
+          browser: "firefox",
           name: `${item} (${container.name})`,
           path: dbPath,
+          profileName: item,
+          containerName: container.name,
           contextId: container.userContextId,
         });
       }
@@ -82,6 +95,11 @@ const getAvailableFirefoxProfiles = () => {
     }
   }
   return profiles;
+};
+
+const isLoggedIn = async (profile: firefoxProfile) => {
+  const cookies = await getFirefoxCookies(profile);
+  return !!(cookies["user_session"] && cookies["user_session_secure"]);
 };
 
 const getFirefoxCookies = async (profile: firefoxProfile) => {

@@ -116,9 +116,9 @@ const getChromiumKeyName = (browser: chromiumBrowser) => {
   return "Chromium";
 };
 
-const getAvailableChromiumProfiles = (
+const getAvailableChromiumProfiles = async (
   browser: chromiumBrowser
-): chromiumProfile[] => {
+): Promise<chromiumProfile[]> => {
   const root = getChromiumRootDir(browser);
   const localStatePath = path.join(root, "Local State");
   if (!fs.existsSync(localStatePath)) return [];
@@ -127,19 +127,28 @@ const getAvailableChromiumProfiles = (
   ) as unknown;
   if (!typeGuard.chromium.profiles(metadata))
     throw new Error("invalid manifest file");
-  const result: chromiumProfile[] = [];
+  const profiles: chromiumProfile[] = [];
+  const addProfile = async (profile: chromiumProfile) =>
+    (await isLoggedIn(profile)) && profiles.push(profile);
   for (const key of Object.keys(metadata.profile.info_cache)) {
     const value = metadata.profile.info_cache[key];
     const profilePath = path.join(root, key);
     if (!fs.existsSync(profilePath)) continue;
-    result.push({
+    await addProfile({
       type: "chromiumProfile",
       browser: browser,
+      profileName: key,
       name: value.name,
       path: profilePath,
     });
   }
-  return result;
+  return profiles;
+};
+
+const isLoggedIn = async (profile: chromiumProfile) => {
+  if (process.platform === "darwin") return true;
+  const cookies = await getChromiumCookies(profile);
+  return !!(cookies["user_session"] && cookies["user_session_secure"]);
 };
 
 const getChromiumCookies = async (profile: chromiumProfile) => {
@@ -174,7 +183,6 @@ const getChromiumCookies = async (profile: chromiumProfile) => {
       cookies[row.name] = decryptor(row.encrypted_value);
     }
   }
-  console.log(cookies);
   return cookies;
 };
 
@@ -211,9 +219,9 @@ const decryptAES256GCM = (
   return str;
 };
 
-const getWindowsDecryptor = async (
+const getWindowsDecryptor = (
   profile: chromiumProfile
-): Promise<(value: Buffer) => string> => {
+): ((value: Buffer) => string) => {
   const localState = JSON.parse(
     fs.readFileSync(path.join(profile.path, "../", "Local State"), "utf-8")
   ) as chromiumLocalState;
