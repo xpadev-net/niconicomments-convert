@@ -12,6 +12,16 @@ import { typeGuard } from "../../typeGuard";
 import { fetchAll, openClonedDB } from "../db";
 import { spawn } from "../spawn";
 import * as crypto from "crypto";
+import { winProtect } from "@/@types/win-protect";
+
+/*
+reference source:
+ - https://github.com/bertrandom/chrome-cookies-secure/blob/master/index.js
+  Copyright (c) 2015 Yahoo! Inc.
+  Released under the MIT License.
+ - https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/cookies.py
+  Released under The Unlicense
+ */
 
 const salt = "saltysalt",
   integrations = 1003,
@@ -129,7 +139,14 @@ const getAvailableChromiumProfiles = (browser: chromiumBrowser) => {
 };
 
 const getChromiumCookies = async (profile: chromiumProfile) => {
-  const db = openClonedDB(path.join(profile.path, "Cookies"));
+  const cookiesPath = (() => {
+    const basePath = path.join(profile.path, "Cookies");
+    if (fs.existsSync(basePath)) {
+      return basePath;
+    }
+    return path.join(profile.path, "Network", "Cookies");
+  })();
+  const db = openClonedDB(cookiesPath);
   const columns = (await fetchAll(
     db,
     "PRAGMA table_info(`cookies`)"
@@ -153,10 +170,11 @@ const getChromiumCookies = async (profile: chromiumProfile) => {
       cookies[row.name] = decryptor(row.encrypted_value);
     }
   }
+  console.log(cookies);
   return cookies;
 };
 
-const pbkdf2 = (input: string) => {
+const pbkdf2 = (input: string): Promise<Buffer> => {
   return new Promise((resolve, reject) => {
     crypto.pbkdf2(
       input,
@@ -175,48 +193,53 @@ const pbkdf2 = (input: string) => {
   });
 };
 
-const decryptAES256GCM = (key, enc, nonce, tag) => {
+const decryptAES256GCM = (
+  key: Buffer,
+  enc: Buffer,
+  nonce: Buffer,
+  tag: Buffer
+) => {
   const algorithm = "aes-256-gcm";
   const decipher = crypto.createDecipheriv(algorithm, key, nonce);
   decipher.setAuthTag(tag);
-  let str = decipher.update(enc, "base64", "utf8");
+  let str = decipher.update(enc, undefined, "utf8");
   str += decipher.final("utf-8");
   return str;
 };
 
-const getWindowsDecryptor = async (profile: chromiumProfile) => {
+const getWindowsDecryptor = async (
+  profile: chromiumProfile
+): Promise<(value: Buffer) => string> => {
   const localState = JSON.parse(
-    fs.readFileSync(path.join(profile.path, "Local State"), "utf-8")
+    fs.readFileSync(path.join(profile.path, "../", "Local State"), "utf-8")
   ) as chromiumLocalState;
   const base64_key = localState.os_crypt.encrypted_key;
-  if (!base64_key.startsWith("DPAPI")) {
-    throw new Error("invalid key");
-  }
   const encryptedKey = Buffer.from(base64_key, "base64");
-  const dpapi = require("win-dpapi");
+  const wp = (await import("win-protect")) as winProtect;
   return (value: Buffer) => {
+    if (value[0] == 0x76 && value[1] == 0x31 && value[2] == 0x30) {
+      const key: Buffer = wp.decrypt(
+        encryptedKey.slice(5, encryptedKey.length)
+      );
+      const nonce: Buffer = value.slice(3, 15);
+      const tag: Buffer = value.slice(value.length - 16, value.length);
+      value = value.slice(15, value.length - 16);
+      return decryptAES256GCM(key, value, nonce, tag);
+    }
     if (
       value[0] == 0x01 &&
       value[1] == 0x00 &&
       value[2] == 0x00 &&
       value[3] == 0x00
     ) {
-      return dpapi.unprotectData(value, null, "CurrentUser").toString("utf-8");
-    } else if (value[0] == 0x76 && value[1] == 0x31 && value[2] == 0x30) {
-      const key = dpapi.unprotectData(
-        encryptedKey.slice(5, encryptedKey.length),
-        null,
-        "CurrentUser"
-      );
-      const nonce = value.slice(3, 15);
-      const tag = value.slice(value.length - 16, value.length);
-      value = value.slice(15, value.length - 16);
-      return decryptAES256GCM(key, value, nonce, tag);
+      return wp.decrypt(value).toString();
     }
   };
 };
 
-const getMacDecryptor = async (profile: chromiumProfile) => {
+const getMacDecryptor = async (
+  profile: chromiumProfile
+): Promise<(value: Buffer) => string> => {
   const keyName = getChromiumKeyName(profile.browser);
   const keyResult = await spawn("security", [
     "find-generic-password",
@@ -230,14 +253,13 @@ const getMacDecryptor = async (profile: chromiumProfile) => {
   const key = await pbkdf2(keyResult.stdout.trim());
   return (value: Buffer) => {
     const iv = Buffer.from(" ".repeat(keyLength), "binary");
-    // @ts-ignore
     const decipher = crypto.createDecipheriv("aes-128-cbc", key, iv);
     decipher.setAutoPadding(false);
     const encryptedData = value.slice(3);
     let decoded = decipher.update(encryptedData);
     const final = decipher.final();
     final.copy(decoded, decoded.length - 1);
-    let padding = decoded[decoded.length - 1];
+    const padding = decoded[decoded.length - 1];
     if (padding) {
       decoded = decoded.slice(0, decoded.length - padding);
     }

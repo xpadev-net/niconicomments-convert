@@ -37,9 +37,11 @@ if (app.isPackaged) {
 }
 registerListener();
 
-getChromiumCookies({
+console.log(getAvailableChromiumProfiles("brave"));
+
+void getChromiumCookies({
   type: "chromiumProfile",
   browser: "brave",
   name: "プロフィール 1",
-  path: "/Users/xpa/Library/Application Support/BraveSoftware/Brave-Browser/Default/Cookies",
+  path: "C:\\Users\\xpadev\\AppData\\Local\\BraveSoftware\\Brave-Browser\\User Data\\Default",
 });

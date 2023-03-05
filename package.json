@@ -64,7 +64,7 @@
     "vite": "^4.1.4"
   },
   "optionalDependencies": {
-    "win-dpapi": "^1.1.0"
+    "win-protect": "^1.0.0"
   },
   "browserslist": {
     "production": [
