@@ -8,10 +8,10 @@ export type chromiumBrowser =
 export type browser = chromiumBrowser | "firefox" | "safari";
 export type platform = "win32" | "darwin";
 
-export type firefoxProfiles = firefoxProfile | firefoxContainer;
+export type firefoxProfile = firefoxBasicProfile | firefoxContainer;
 
-export type firefoxProfile = {
-  type: "firefoxProfile";
+export type firefoxBasicProfile = {
+  type: "firefoxBasicProfile";
   name: string;
   path: string;
 };
@@ -122,3 +122,5 @@ export type chromiumLocalState = {
     encrypted_key: string;
   };
 };
+
+export type browserProfile = firefoxProfile | chromiumProfile;

@@ -2,7 +2,7 @@ import * as path from "path";
 import * as fs from "fs";
 import type {
   Cookies,
-  firefoxProfiles,
+  firefoxProfile,
   l10nID,
   moz_cookies,
 } from "@/@types/cookies";
@@ -34,14 +34,14 @@ const getAvailableFirefoxProfiles = () => {
     return [];
   }
   const files = fs.readdirSync(rootDir);
-  const profiles: firefoxProfiles[] = [];
+  const profiles: firefoxProfile[] = [];
   for (const item of files) {
     const directoryName = path.join(rootDir, item);
     const dbPath = path.join(directoryName, "cookies.sqlite");
     if (!fs.existsSync(dbPath)) {
       continue;
     }
-    profiles.push({ type: "firefoxProfile", name: item, path: dbPath });
+    profiles.push({ type: "firefoxBasicProfile", name: item, path: dbPath });
     const containersPath = path.join(directoryName, "containers.json");
     if (!fs.existsSync(containersPath)) {
       continue;
@@ -78,11 +78,11 @@ const getAvailableFirefoxProfiles = () => {
   return profiles;
 };
 
-const getFirefoxCookies = async (profile: firefoxProfiles) => {
+const getFirefoxCookies = async (profile: firefoxProfile) => {
   const db = openClonedDB(profile.path);
   const cookies: Cookies = {};
   const rows = (await (async () => {
-    if (profile.type === "firefoxProfile") {
+    if (profile.type === "firefoxBasicProfile") {
       return await fetchAll(
         db,
         `SELECT host, name, value, path, expiry, isSecure FROM moz_cookies WHERE NOT INSTR(originAttributes,"userContextId=")`
