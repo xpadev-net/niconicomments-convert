@@ -20,11 +20,18 @@ const getAuthConfig = (): string[] => {
       ];
     }
     if (cookie.profile.type === "firefoxBasicProfile") {
-      return ["--cookies-from-browser", `firefox:${cookie.profile.name}`];
+      return [
+        "--cookies-from-browser",
+        `firefox:"${cookie.profile.path
+          .replace("\\", "\\\\")
+          .replace('"', '\\"')}"`,
+      ];
     }
     return [
       "--cookies-from-browser",
-      `firefox:${cookie.profile.profileName}::${cookie.profile.containerName}`,
+      `firefox:"${cookie.profile.path
+        .replace("\\", "\\\\")
+        .replace('"', '\\"')}"::"${cookie.profile.containerName}"`,
     ];
   }
   return [];

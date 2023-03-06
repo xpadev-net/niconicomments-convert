@@ -77,7 +77,7 @@ const Setting = () => {
     setAuthSetting({
       type: "browser",
       profile: availableProfiles.reduce<browserProfile | undefined>(
-        (pv, val) => (val.name === name ? val : pv),
+        (pv, val) => (`${val.browser}:${val.name}` === name ? val : pv),
         undefined
       ),
     });
@@ -106,6 +106,7 @@ const Setting = () => {
       setIsLoading(false);
     })();
   };
+  console.log(availableProfiles);
   if (!authSetting) return <></>;
   return (
     <div className={Styles.wrapper}>
@@ -145,7 +146,11 @@ const Setting = () => {
             label={"プロファイル"}
             variant={"standard"}
             className={Styles.input}
-            value={authSetting.profile?.name || ""}
+            value={
+              authSetting.profile
+                ? `${authSetting.profile.browser}:${authSetting.profile.name}`
+                : ""
+            }
             onChange={(e) => onAuthBrowserChange(e.target.value)}
           >
             <MenuItem disabled value="">
@@ -153,7 +158,10 @@ const Setting = () => {
             </MenuItem>
             {availableProfiles.map((val) => {
               return (
-                <MenuItem key={val.name} value={val.name}>
+                <MenuItem
+                  key={`${val.browser}:${val.name}`}
+                  value={`${val.browser}:${val.name}`}
+                >
                   {val.browser} ({val.name})
                 </MenuItem>
               );

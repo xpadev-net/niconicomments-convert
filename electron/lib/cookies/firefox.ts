@@ -53,7 +53,7 @@ const getAvailableFirefoxProfiles = async () => {
       type: "firefoxBasicProfile",
       browser: "firefox",
       name: item,
-      path: dbPath,
+      path: directoryName,
     });
     const containersPath = path.join(directoryName, "containers.json");
     if (!fs.existsSync(containersPath)) {
@@ -73,7 +73,7 @@ const getAvailableFirefoxProfiles = async () => {
             type: "firefoxContainer",
             browser: "firefox",
             name: `${item} (${containerNames[container.l10nID]})`,
-            path: dbPath,
+            path: directoryName,
             profileName: item,
             containerName: container.l10nID,
             contextId: container.userContextId,
@@ -84,7 +84,7 @@ const getAvailableFirefoxProfiles = async () => {
           type: "firefoxContainer",
           browser: "firefox",
           name: `${item} (${container.name})`,
-          path: dbPath,
+          path: directoryName,
           profileName: item,
           containerName: container.name,
           contextId: container.userContextId,
@@ -103,7 +103,7 @@ const isLoggedIn = async (profile: firefoxProfile) => {
 };
 
 const getFirefoxCookies = async (profile: firefoxProfile) => {
-  const db = openClonedDB(profile.path);
+  const db = openClonedDB(path.join(profile.path, "cookies.sqlite"));
   const cookies: Cookies = {};
   const rows = (await (async () => {
     if (profile.type === "firefoxBasicProfile") {
