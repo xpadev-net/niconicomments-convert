@@ -12,6 +12,7 @@ import {
 import { store } from "./store";
 import { getFormats } from "./lib/ytdlp";
 import { getAvailableProfiles } from "./lib/cookie";
+import { getMetadata } from "./lib/niconico";
 
 const registerListener = () => {
   ipcMain.handle("request", async (IpcMainEvent, args) => {
@@ -39,6 +40,8 @@ const registerListener = () => {
         return await getFormats(value.url);
       } else if (typeGuard.controller.getAvailableProfiles(value)) {
         return await getAvailableProfiles();
+      } else if (typeGuard.controller.getNiconicoMovieMetadata(value)) {
+        return await getMetadata(value.nicoId);
       } else if (typeGuard.renderer.progress(value)) {
         updateProgress(value.data.generated);
       } else if (typeGuard.renderer.load(value)) {

@@ -10,6 +10,7 @@ import type {
   apiRequestDownloadMovie,
   apiRequestAppendQueue,
   apiRequestGetAvailableProfiles,
+  apiRequestGetNiconicoMovieMetadata,
 } from "@/@types/request.controller";
 import type {
   apiRequestLoad,
@@ -24,6 +25,7 @@ import {
   firefoxContainersJson,
   firefoxContainerUser,
 } from "@/@types/cookies";
+import { createSessionResponse, watchV3Metadata } from "@/@types/niconico";
 
 const typeGuard = {
   controller: {
@@ -71,6 +73,13 @@ const typeGuard = {
       typeof i === "object" &&
       (i as apiRequestFromController).host === "controller" &&
       (i as apiRequestGetAvailableProfiles).type === "getAvailableProfiles",
+    getNiconicoMovieMetadata: (
+      i: unknown
+    ): i is apiRequestGetNiconicoMovieMetadata =>
+      typeof i === "object" &&
+      (i as apiRequestFromController).host === "controller" &&
+      (i as apiRequestGetNiconicoMovieMetadata).type ===
+        "getNiconicoMovieMetadata",
   },
   renderer: {
     progress: (i: unknown): i is apiRequestProgress =>
@@ -107,6 +116,19 @@ const typeGuard = {
       typeof i === "object" &&
       typeof (i as chromiumProfilesJson).profile === "object" &&
       typeof (i as chromiumProfilesJson).profile.info_cache === "object",
+  },
+  niconico: {
+    watchV3Metadata: (i: unknown): i is watchV3Metadata =>
+      typeof i === "object" &&
+      (i as watchV3Metadata).meta.status === 200 &&
+      typeof (i as watchV3Metadata).data === "object",
+    createSessionResponse: (i: unknown): i is createSessionResponse =>
+      typeof i === "object" &&
+      ((i as createSessionResponse).meta.status === 201 ||
+        (i as createSessionResponse).meta.status === 200) &&
+      ((i as createSessionResponse).meta.message === "created" ||
+        (i as createSessionResponse).meta.message === "ok") &&
+      typeof (i as createSessionResponse).data === "object",
   },
 };
 export { typeGuard };

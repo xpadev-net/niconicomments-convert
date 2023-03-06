@@ -4,7 +4,7 @@ import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
 import { base64ToUint8Array } from "./utils";
 import * as Stream from "stream";
 import { sendMessageToController } from "./controllerWindow";
-import { download } from "./lib/ytdlp";
+import { download } from "./lib/niconico";
 
 const queueList: Queue[] = [];
 const queueLists: QueueLists = {

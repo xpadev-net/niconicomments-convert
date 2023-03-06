@@ -37,10 +37,15 @@ export type ConvertQueue = BaseQueue & {
 
 export type MovieQueue = BaseQueue & {
   type: "movie";
-  url: string; //nicovideo url
-  format: string;
+  url: string; //nicoId
+  format: NicovideoFormat;
   progress: number;
   path: string;
+};
+
+export type NicovideoFormat = {
+  video: string;
+  audio: string;
 };
 
 type CommentDate = {

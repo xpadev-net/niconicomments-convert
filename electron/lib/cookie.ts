@@ -6,7 +6,7 @@ import {
   getAvailableFirefoxProfiles,
   getFirefoxCookies,
 } from "./cookies/firefox";
-import { browserProfile } from "@/@types/cookies";
+import { browserProfile, Cookies } from "@/@types/cookies";
 
 const getAvailableProfiles = async () => {
   return [
@@ -27,4 +27,14 @@ const getCookies = (profile: browserProfile) => {
   return getFirefoxCookies(profile);
 };
 
-export { getAvailableProfiles, getCookies };
+const convertToEncodedCookie = (cookie: Cookies) => {
+  let cookieString = "";
+  for (const key in cookie) {
+    const value = cookie[key];
+    if (cookieString) cookieString += "; ";
+    cookieString += `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+  }
+  return cookieString;
+};
+
+export { getAvailableProfiles, getCookies, convertToEncodedCookie };

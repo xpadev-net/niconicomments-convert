@@ -11,15 +11,12 @@ const MovieItem = ({ queue }: props) => {
   return useMemo(() => {
     const outputName = queue.path.split(/\/|\\/g).reverse()[0];
     const url = queue.url.split(/\/|\\/g).reverse()[0];
-    const format = queue.format.split("-");
     if (queue.status !== "processing") {
       return (
         <div className={Styles.queue}>
           <p>id: {url}</p>
-          <p>
-            codec: {format[0]}/{format[1]}
-          </p>
-          <p>proto: {format[2]}</p>
+          <p>video: {queue.format.video.slice(8)}</p>
+          <p>audio: {queue.format.audio.slice(8)}</p>
           <p>output: {outputName}</p>
           <p>status: {queue.status}</p>
         </div>
@@ -29,10 +26,8 @@ const MovieItem = ({ queue }: props) => {
     return (
       <div className={Styles.queue}>
         <p>id: {url}</p>
-        <p>
-          codec: {format[0]}/{format[1]}
-        </p>
-        <p>proto: {format[2]}</p>
+        <p>video: {queue.format.video.slice(8)}</p>
+        <p>audio: {queue.format.audio.slice(8)}</p>
         <p>path: {outputName}</p>
         <p>status: processing</p>
         <div className={Styles.progressWrapper}>

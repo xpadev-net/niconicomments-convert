@@ -49,6 +49,11 @@ export type apiRequestGetAvailableProfiles = {
   type: "getAvailableProfiles";
 };
 
+export type apiRequestGetNiconicoMovieMetadata = {
+  type: "getNiconicoMovieMetadata";
+  nicoId: string;
+};
+
 export type apiRequestsFromController =
   | apiRequestAppendQueue
   | apiRequestSelectComment
@@ -60,6 +65,7 @@ export type apiRequestsFromController =
   | apiRequestSetSetting
   | apiRequestGetMovieFormat
   | apiRequestDownloadMovie
-  | apiRequestGetAvailableProfiles;
+  | apiRequestGetAvailableProfiles
+  | apiRequestGetNiconicoMovieMetadata;
 
 export {};

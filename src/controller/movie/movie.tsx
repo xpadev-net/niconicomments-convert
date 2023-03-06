@@ -3,38 +3,56 @@ import { MenuItem, Select, TextField } from "@mui/material";
 import Styles from "./movie.module.scss";
 import Button from "@mui/material/Button";
 import { generateUuid } from "@/util/uuid";
-import { ytdlpFormat } from "@/@types/ytdlp";
 import { useSetAtom } from "jotai";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
-import { isNicovideoUrl } from "@/util/niconico";
+import { getNicoId, isNicovideoUrl } from "@/util/niconico";
+import { watchV3Metadata } from "@/@types/niconico";
+import { SelectField } from "@/components/SelectField";
 
 const Movie = () => {
   const [url, setUrl] = useState("");
-  const [formats, setFormats] = useState<ytdlpFormat[]>([]);
-  const [targetFormat, setTargetFormat] = useState<string>("");
+  const [metadata, setMetadata] = useState<watchV3Metadata | undefined>();
+  const [selectedVideo, setSelectedVideo] = useState<string>("");
+  const [selectedAudio, setSelectedAudio] = useState<string>("");
   const setMessage = useSetAtom(messageAtom);
   const setIsLoading = useSetAtom(isLoadingAtom);
   const onUrlChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setFormats([]);
+    setMetadata(undefined);
     setUrl(e.target.value);
   };
   const getFormats = () => {
     void (async () => {
-      if (!isNicovideoUrl(url) || formats.length > 0) return;
+      const nicoId = getNicoId(url);
+      if (!isNicovideoUrl(url) || metadata || !nicoId) return;
       setIsLoading(true);
-      const targetFormats = (await window.api.request({
-        type: "getMovieFormat",
-        url: url,
+      const targetMetadata = (await window.api.request({
+        type: "getNiconicoMovieMetadata",
+        nicoId: nicoId,
         host: "controller",
-      })) as ytdlpFormat[];
+      })) as watchV3Metadata;
+      console.log(targetMetadata);
       setIsLoading(false);
-      if (!targetFormats) return;
-      setFormats(targetFormats);
+      if (!targetMetadata) {
+        setMessage({
+          title: "動画情報の取得に失敗しました",
+          content: "動画が削除などされていないか確認してください",
+        });
+        return;
+      }
+      if (!targetMetadata.data.media.delivery) {
+        setMessage({
+          title: "動画情報の取得に失敗しました",
+          content: "未購入の有料動画などの可能性があります",
+        });
+        return;
+      }
+      setMetadata(targetMetadata);
     })();
   };
   const download = () => {
     void (async () => {
-      if (!isNicovideoUrl(url)) {
+      const nicoId = getNicoId(url);
+      if (!nicoId) {
         setMessage({
           title: "URLが正しくありません",
           content:
@@ -42,7 +60,7 @@ const Movie = () => {
         });
         return;
       }
-      if (!targetFormat) {
+      if (!selectedVideo || !selectedAudio) {
         setMessage({
           title: "フォーマットを選択してください",
           content: "",
@@ -70,14 +88,18 @@ const Movie = () => {
           id: generateUuid(),
           status: "queued",
           progress: 0,
-          url: url,
-          format: targetFormat,
+          url: nicoId,
+          format: {
+            audio: selectedAudio,
+            video: selectedVideo,
+          },
           path: output,
         },
       });
       setUrl("");
-      setFormats([]);
-      setTargetFormat("");
+      setMetadata(undefined);
+      setSelectedVideo("");
+      setSelectedAudio("");
       setIsLoading(false);
     })();
   };
@@ -93,30 +115,55 @@ const Movie = () => {
         onBlur={getFormats}
         fullWidth={true}
       />
-      {formats.length > 0 && (
-        <Select
-          label={"フォーマット"}
-          variant={"standard"}
-          className={Styles.input}
-          value={targetFormat}
-          onChange={(e) => setTargetFormat(e.target.value)}
-        >
-          <MenuItem disabled value="">
-            <em>ダウンロードフォーマットを選択してください</em>
-          </MenuItem>
-          {formats.map((val) => {
-            return (
-              <MenuItem key={val.id} value={val.id}>
-                {val.id}
+      {metadata && (
+        <>
+          <SelectField label={"動画"} className={Styles.input}>
+            <Select
+              label={"動画"}
+              variant={"standard"}
+              value={selectedVideo}
+              className={Styles.input}
+              onChange={(e) => setSelectedVideo(e.target.value)}
+            >
+              <MenuItem disabled value="">
+                <em>動画を選択してください</em>
               </MenuItem>
-            );
-          })}
-        </Select>
+              {metadata.data.media.delivery.movie.videos.map((val) => {
+                if (!val.isAvailable) return <></>;
+                return (
+                  <MenuItem key={val.id} value={val.id}>
+                    {val.id}
+                  </MenuItem>
+                );
+              })}
+            </Select>
+          </SelectField>
+          <SelectField label={"音声"} className={Styles.input}>
+            <Select
+              label={"音声"}
+              variant={"standard"}
+              className={Styles.input}
+              value={selectedAudio}
+              onChange={(e) => setSelectedAudio(e.target.value)}
+            >
+              <MenuItem disabled value="">
+                <em>音声を選択してください</em>
+              </MenuItem>
+              {metadata.data.media.delivery.movie.audios.map((val) => {
+                return (
+                  <MenuItem key={val.id} value={val.id}>
+                    {val.id}
+                  </MenuItem>
+                );
+              })}
+            </Select>
+          </SelectField>
+        </>
       )}
       <Button
         variant={"outlined"}
         onClick={download}
-        disabled={!targetFormat}
+        disabled={!selectedAudio || !selectedVideo}
         className={Styles.input}
       >
         ダウンロード
