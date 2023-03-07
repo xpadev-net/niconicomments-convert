@@ -25,7 +25,11 @@ import {
   firefoxContainersJson,
   firefoxContainerUser,
 } from "@/@types/cookies";
-import { createSessionResponse, watchV3Metadata } from "@/@types/niconico";
+import {
+  createSessionResponse,
+  UserData,
+  watchV3Metadata,
+} from "@/@types/niconico";
 
 const typeGuard = {
   controller: {
@@ -118,6 +122,10 @@ const typeGuard = {
       typeof (i as chromiumProfilesJson).profile.info_cache === "object",
   },
   niconico: {
+    userData: (i: unknown): i is UserData =>
+      typeof i === "object" &&
+      (i as UserData).meta.status === 200 &&
+      typeof (i as UserData).data.userId === "string",
     watchV3Metadata: (i: unknown): i is watchV3Metadata =>
       typeof i === "object" &&
       (i as watchV3Metadata).meta.status === 200 &&

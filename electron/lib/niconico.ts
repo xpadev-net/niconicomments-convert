@@ -4,9 +4,35 @@ import { typeGuard } from "../typeGuard";
 import { convertToEncodedCookie, getCookies } from "./cookie";
 import { NicovideoFormat } from "@/@types/queue";
 import { sendMessageToController } from "../controllerWindow";
-import { createSessionRequest, watchV3Metadata } from "@/@types/niconico";
+import {
+  createSessionRequest,
+  UserData,
+  watchV3Metadata,
+} from "@/@types/niconico";
 import { spawn } from "./spawn";
 import { ffmpegPath } from "../ffmpeg";
+
+const userInfoCache: { [key: string]: UserData | false } = {};
+
+const getUserInfo = async (cookies: string): Promise<UserData | false> => {
+  if (Object.prototype.hasOwnProperty.call(userInfoCache, cookies))
+    return userInfoCache[cookies];
+  const req = await fetch(
+    "https://account.nicovideo.jp/api/public/v2/user.json",
+    {
+      headers: {
+        Cookie: cookies,
+      },
+    }
+  );
+  const res = (await req.json()) as unknown;
+  if (!typeGuard.niconico.userData(res)) {
+    userInfoCache[cookies] = false;
+    return false;
+  }
+  userInfoCache[cookies] = res;
+  return res;
+};
 
 const getMetadata = async (nicoId: string) => {
   const authSetting = store.get("auth") as authType | undefined;
@@ -24,20 +50,24 @@ const getMetadata = async (nicoId: string) => {
     );
     const metadata = (await req.json()) as unknown;
     if (!typeGuard.niconico.watchV3Metadata(metadata)) {
-      throw new Error(`failed to get metadata\n${JSON.stringify(metadata)}`);
+      return getV3GuestMetadata(nicoId);
     }
     return metadata;
   }
   if (!authSetting || authSetting.type === "noAuth") {
-    const req = await fetch(
-      `https://www.nicovideo.jp/api/watch/v3_guest/${nicoId}?_frontendId=6&_frontendVersion=0&actionTrackId=AAAAAAAAAA_${new Date().getTime()}`
-    );
-    const metadata = (await req.json()) as unknown;
-    if (!typeGuard.niconico.watchV3Metadata(metadata)) {
-      throw new Error(`failed to get metadata\n${JSON.stringify(metadata)}`);
-    }
-    return metadata;
+    return getV3GuestMetadata(nicoId);
   }
+};
+
+const getV3GuestMetadata = async (nicoId: string): Promise<watchV3Metadata> => {
+  const req = await fetch(
+    `https://www.nicovideo.jp/api/watch/v3_guest/${nicoId}?_frontendId=6&_frontendVersion=0&actionTrackId=0_0`
+  );
+  const metadata = (await req.json()) as unknown;
+  if (!typeGuard.niconico.watchV3Metadata(metadata)) {
+    throw new Error(`failed to get metadata\n${JSON.stringify(metadata)}`);
+  }
+  return metadata;
 };
 
 const download = async (
@@ -133,7 +163,6 @@ const download = async (
     downloaded = 0;
   const onData = (data: string) => {
     let match;
-    console.log(data);
     if ((match = data.match(/Duration: ([0-9:.]+),/))) {
       total = time2num(match[1]);
     } else if ((match = data.match(/time=([0-9:.]+) /))) {
@@ -143,7 +172,7 @@ const download = async (
   };
   const result = await spawn(
     ffmpegPath,
-    ["-i", lastSession.session.content_uri, "-c", "copy", path],
+    ["-i", lastSession.session.content_uri, "-c", "copy", path, "-y"],
     undefined,
     onData,
     onData
@@ -253,4 +282,4 @@ const createSessionCreateRequestBody = (
   return sessionBody;
 };
 
-export { getMetadata, download };
+export { getMetadata, download, getUserInfo };

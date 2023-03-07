@@ -263,3 +263,45 @@ export type deleteSessionResponse = {
     message: "ok";
   };
 };
+
+export type UserData = {
+  meta: {
+    status: 200;
+  };
+  data: {
+    userId: string;
+    nickname: string;
+    area: string;
+    language: string;
+    locale: string;
+    timezone: string;
+    isExplicitlyLoginable: boolean;
+    description: string;
+    hasPremiumOreStrongerRights: boolean;
+    hasSuperPremiumOrStrongerRights: boolean;
+    premium: {
+      type: "regular" | "premium";
+    };
+    icons: {
+      urls: {
+        "150x150": string;
+        "50x50": string;
+      };
+    };
+    existence: {
+      residence: {
+        country: string;
+        prefecture: string;
+      };
+      birthday: string;
+      sex: string;
+    };
+    contacts: {
+      emails: {
+        address: string;
+        is_feature_phone: boolean;
+        is_confirmed: boolean;
+      }[];
+    };
+  };
+};

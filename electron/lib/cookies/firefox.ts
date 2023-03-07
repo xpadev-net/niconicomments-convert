@@ -8,6 +8,8 @@ import type {
 } from "@/@types/cookies";
 import { fetchAll, openClonedDB } from "../db";
 import { typeGuard } from "../../typeGuard";
+import { getUserInfo } from "../niconico";
+import { convertToEncodedCookie } from "../cookie";
 
 /*
 reference source:
@@ -99,7 +101,10 @@ const getAvailableFirefoxProfiles = async () => {
 
 const isLoggedIn = async (profile: firefoxProfile) => {
   const cookies = await getFirefoxCookies(profile);
-  return !!(cookies["user_session"] && cookies["user_session_secure"]);
+  if (!(cookies["user_session"] && cookies["user_session_secure"]))
+    return false;
+  const user = await getUserInfo(convertToEncodedCookie(cookies));
+  return !!user;
 };
 
 const getFirefoxCookies = async (profile: firefoxProfile) => {

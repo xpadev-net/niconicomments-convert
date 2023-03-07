@@ -6,6 +6,8 @@
   .main {
     flex: 1;
     overflow-y: scroll;
+    overflow-x: hidden;
+    word-break: break-all;
     .tabItem {
       display: none;
       margin: 15px 10px;

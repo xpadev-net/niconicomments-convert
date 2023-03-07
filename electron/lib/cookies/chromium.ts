@@ -13,6 +13,8 @@ import { fetchAll, openClonedDB } from "../db";
 import { spawn } from "../spawn";
 import * as crypto from "crypto";
 import { winProtect } from "@/@types/win-protect";
+import { getUserInfo } from "../niconico";
+import { convertToEncodedCookie } from "../cookie";
 
 /*
 reference source:
@@ -145,10 +147,13 @@ const getAvailableChromiumProfiles = async (
   return profiles;
 };
 
-const isLoggedIn = async (profile: chromiumProfile) => {
+const isLoggedIn = async (profile: chromiumProfile): Promise<boolean> => {
   if (process.platform === "darwin") return true;
   const cookies = await getChromiumCookies(profile);
-  return !!(cookies["user_session"] && cookies["user_session_secure"]);
+  if (!(cookies["user_session"] && cookies["user_session_secure"]))
+    return false;
+  const user = await getUserInfo(convertToEncodedCookie(cookies));
+  return !!user;
 };
 
 const getChromiumCookies = async (profile: chromiumProfile) => {

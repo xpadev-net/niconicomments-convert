@@ -119,6 +119,7 @@ const Setting = () => {
           value={"cookie"}
           control={<Radio />}
           label={"Cookieファイル"}
+          disabled={true}
         />
         <FormControlLabel
           value={"browser"}
