@@ -14,6 +14,7 @@ import { PassThrough } from "stream";
 import { promisify } from "util";
 import { ffmpegPath } from "../ffmpeg";
 import { sendMessageToController } from "../controllerWindow";
+import { encodeJson } from "../lib/json";
 
 const dbg = console.debug;
 const { FFMPEG_PATH = ffmpegPath } = process.env;
@@ -257,7 +258,8 @@ export class Converter {
     } catch (e) {
       sendMessageToController({
         type: "message",
-        message: `unknown error: ${JSON.stringify(e)}`,
+        title: "変換中にエラーが発生しました",
+        message: `エラー内容:\n${encodeJson(e)}`,
       });
     } finally {
       for (const pipe of pipes) {

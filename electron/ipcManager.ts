@@ -13,6 +13,7 @@ import { store } from "./store";
 import { getFormats } from "./lib/ytdlp";
 import { getAvailableProfiles } from "./lib/cookie";
 import { getMetadata } from "./lib/niconico";
+import { encodeJson } from "./lib/json";
 
 const registerListener = () => {
   ipcMain.handle("request", async (IpcMainEvent, args) => {
@@ -49,13 +50,15 @@ const registerListener = () => {
       } else {
         sendMessageToController({
           type: "message",
-          message: `unknown IPC Message: ${JSON.stringify(value)}`,
+          title: "未知のエラーが発生しました",
+          message: `未知のIPCメッセージを受信しました\n${encodeJson(value)}`,
         });
       }
     } catch (e: unknown) {
       sendMessageToController({
         type: "message",
-        message: `encountered unknown error\n${JSON.stringify(e)}`,
+        title: "予期しないエラーが発生しました",
+        message: `エラー内容:\n${encodeJson(e)}`,
       });
     }
   });

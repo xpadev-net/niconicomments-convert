@@ -11,6 +11,7 @@ import {
 } from "@/@types/niconico";
 import { spawn } from "./spawn";
 import { ffmpegPath } from "../ffmpeg";
+import { encodeJson } from "./json";
 
 const userInfoCache: { [key: string]: UserData | false } = {};
 
@@ -65,7 +66,7 @@ const getV3GuestMetadata = async (nicoId: string): Promise<watchV3Metadata> => {
   );
   const metadata = (await req.json()) as unknown;
   if (!typeGuard.niconico.watchV3Metadata(metadata)) {
-    throw new Error(`failed to get metadata\n${JSON.stringify(metadata)}`);
+    throw new Error(`failed to get metadata\n${encodeJson(metadata)}`);
   }
   return metadata;
 };

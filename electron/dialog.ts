@@ -9,6 +9,7 @@ import { v1Raw } from "@/@types/types";
 import { spawnResult } from "@/@types/spawn";
 import { ffmpegOutput } from "@/@types/ffmpeg";
 import SaveDialogOptions = Electron.SaveDialogOptions;
+import { encodeJson } from "./lib/json";
 
 const selectFile = async (pattern: Electron.FileFilter[]) => {
   return await dialog.showOpenDialog({
@@ -50,11 +51,8 @@ const selectMovie = async () => {
     const error = e as spawnResult;
     return {
       type: "message",
-      title: "input file is not movie",
-      message: `fail to execute ffprobe
-code:${error.code}
-stdout:${error.stdout}
-stdout:${error.stderr}`,
+      title: "動画ファイルの解析に失敗しました",
+      message: `ffprobeの実行に失敗しました\n終了コード:\n${error.code}\n標準出力:\n${error.stdout}\n標準エラー出力:\n${error.stderr}`,
     };
   }
   try {
@@ -62,16 +60,17 @@ stdout:${error.stderr}`,
   } catch (e) {
     return {
       type: "message",
-      title: "input file is not movie",
-      message: `fail to parse ffprobe output
-Error:${JSON.stringify(e)}`,
+      title: "動画ファイルの解析に失敗しました",
+      message: `ffprobeの出力のパースに失敗しました\nffprobeの出力:\n${
+        ffprobe.stdout
+      }\nエラー内容:\n${encodeJson(e)}`,
     };
   }
   if (!metadata.streams || !Array.isArray(metadata.streams)) {
     return {
       type: "message",
-      title: "input file is not movie",
-      message: "stream not found",
+      title: "動画ファイルの解析に失敗しました",
+      message: "動画ソースが見つかりませんでした",
     };
   }
   let width, height, duration;
@@ -89,8 +88,9 @@ Error:${JSON.stringify(e)}`,
   if (!(height && width && duration)) {
     return {
       type: "message",
-      title: "input file is not movie",
-      message: "fail to get resolution or duration from input file",
+      title: "動画ファイルの解析に失敗しました",
+      message:
+        "解像度または動画の長さを取得できませんでした\n動画ファイルが破損していないか確認してください",
     };
   }
   return {
@@ -99,6 +99,8 @@ Error:${JSON.stringify(e)}`,
   };
 };
 const selectComment = async () => {
+  const documentLink =
+    "対応しているフォーマットについては以下のリンクを御覧ください\nhttps://xpadev-net.github.io/niconicomments/#p_format\n※フォーマットの識別は拡張子をもとに行っています";
   const path = await dialog.showOpenDialog({
     properties: ["openFile"],
     filters: [
@@ -121,11 +123,12 @@ const selectComment = async () => {
     const dom = parser.parseFromString(fileData, "application/xhtml+xml");
     if (NiconiComments.typeGuard.xmlDocument(dom)) {
       data = fileData;
-      type = "niconicome";
+      type = "XMLDocument";
     } else {
       sendMessageToController({
         type: "message",
-        message: `unknown input format`,
+        title: "非対応のフォーマットです",
+        message: `入力されたデータの識別に失敗しました\nXMLはniconicomeの形式に準拠しています\nそれ以外のツールを使用したい場合は開発者までお問い合わせください\n推奨形式はv1形式のjsonファイルです\n${documentLink}`,
       });
       return;
     }
@@ -152,7 +155,8 @@ const selectComment = async () => {
       } else {
         sendMessageToController({
           type: "message",
-          message: `unknown input format`,
+          title: "非対応のフォーマットです",
+          message: `入力されたデータの識別に失敗しました\n対応していないフォーマットの可能性があります\n${documentLink}`,
         });
         return;
       }
@@ -164,7 +168,8 @@ const selectComment = async () => {
   } else {
     sendMessageToController({
       type: "message",
-      message: `unknown input format`,
+      title: "非対応のフォーマットです",
+      message: `入力されたデータの識別に失敗しました\n対応していないフォーマットの可能性があります\n${documentLink}`,
     });
     return;
   }
