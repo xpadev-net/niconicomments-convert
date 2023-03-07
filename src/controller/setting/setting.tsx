@@ -142,7 +142,7 @@ const Setting = () => {
         </div>
       )}
       {authSetting.type === "browser" && (
-        <SelectField label={"ブラウザ"}>
+        <SelectField label={"ブラウザ"} className={Styles.input}>
           <Select
             label={"ブラウザ"}
             variant={"standard"}
