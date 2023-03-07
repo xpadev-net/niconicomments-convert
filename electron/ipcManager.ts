@@ -10,7 +10,6 @@ import {
   updateProgress,
 } from "./queue";
 import { store } from "./store";
-import { getFormats } from "./lib/ytdlp";
 import { getAvailableProfiles } from "./lib/cookie";
 import { getMetadata } from "./lib/niconico";
 import { encodeJson } from "./lib/json";
@@ -37,8 +36,6 @@ const registerListener = () => {
         return store.get(value.key);
       } else if (typeGuard.controller.setSetting(value)) {
         return store.set(value.key, value.data);
-      } else if (typeGuard.controller.getMovieFormat(value)) {
-        return await getFormats(value.url);
       } else if (typeGuard.controller.getAvailableProfiles(value)) {
         return await getAvailableProfiles();
       } else if (typeGuard.controller.getNiconicoMovieMetadata(value)) {

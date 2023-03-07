@@ -6,7 +6,6 @@ import type {
   apiRequestSelectFile,
   apiRequestGetSetting,
   apiRequestSetSetting,
-  apiRequestGetMovieFormat,
   apiRequestDownloadMovie,
   apiRequestAppendQueue,
   apiRequestGetAvailableProfiles,
@@ -65,10 +64,6 @@ const typeGuard = {
       typeof i === "object" &&
       (i as apiRequestFromController).host === "controller" &&
       (i as apiRequestSetSetting).type === "setSetting",
-    getMovieFormat: (i: unknown): i is apiRequestGetMovieFormat =>
-      typeof i === "object" &&
-      (i as apiRequestFromController).host === "controller" &&
-      (i as apiRequestGetMovieFormat).type === "getMovieFormat",
     downloadMovie: (i: unknown): i is apiRequestDownloadMovie =>
       typeof i === "object" &&
       (i as apiRequestFromController).host === "controller" &&

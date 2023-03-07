@@ -1,7 +1,6 @@
 import { Movie } from "@/@types/types";
 import { inputFormat, inputFormatType } from "@xpadev-net/niconicomments";
 import { Queue } from "@/@types/queue";
-import { ytdlpFormat } from "@/@types/ytdlp";
 
 export type apiResponseToController = {
   target: "controller";
@@ -32,11 +31,6 @@ export type apiResponseMessage = {
   message: string;
 };
 
-export type apiResponseGetMovieFormat = {
-  type: "getMovieFormat";
-  formats: ytdlpFormat[];
-};
-
 export type apiResponseDownloadMovie = {
   type: "downloadMovie";
   result: number;
@@ -55,7 +49,6 @@ export type apiResponsesToController =
   | apiResponseStartController
   | apiResponseEnd
   | apiResponseMessage
-  | apiResponseGetMovieFormat
   | apiResponseDownloadMovie
   | apiResponseDownloadMovieProgress;
 

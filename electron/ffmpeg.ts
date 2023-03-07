@@ -11,7 +11,7 @@ import axios, { AxiosResponse } from "axios";
 import * as Stream from "stream";
 import { spawn } from "./lib/spawn";
 
-type lib = "ffmpeg" | "ffprobe" | "ytdlp";
+type lib = "ffmpeg" | "ffprobe";
 
 let step = 0,
   target: lib[] = [];
@@ -20,17 +20,14 @@ const ext = process.platform === "win32" ? ".exe" : "";
 
 const basePath = path.join(__dirname, app.isPackaged ? "../../../" : "", "bin"),
   ffmpegPath = path.join(basePath, `ffmpeg${ext}`),
-  ffprobePath = path.join(basePath, `ffprobe${ext}`),
-  ytdlpPath = path.join(basePath, `yt-dlp${ext}`);
+  ffprobePath = path.join(basePath, `ffprobe${ext}`);
 
 const baseUrl = {
   ffmpeg:
     "https://github.com/descriptinc/ffmpeg-ffprobe-static/releases/download/b4.4.0-rc.11/",
-  ytdlp: "https://github.com/yt-dlp/yt-dlp/releases/download/2023.02.17/",
 };
 const version = {
   ffmpeg: "4.4",
-  ytdlp: "2023.02.17",
 };
 const distro = (function () {
   const arch = os.arch();
@@ -38,17 +35,14 @@ const distro = (function () {
   if (dist === "win32" && arch === "x64") {
     return {
       ffmpeg: "win32-x64",
-      ytdlp: "yt-dlp.exe",
     };
   } else if (dist === "darwin" && arch === "arm64") {
     return {
       ffmpeg: "darwin-arm64",
-      ytdlp: "yt-dlp_macos",
     };
   } else if (dist === "darwin" && arch === "x64") {
     return {
       ffmpeg: "darwin-x64",
-      ytdlp: "yt-dlp_macos",
     };
   }
   throw new Error("unknown os or architecture");
@@ -67,12 +61,6 @@ const onStartUp = async () => {
     !(await spawn(ffprobePath, ["-version"])).stdout.includes(version.ffmpeg)
   ) {
     target.push("ffprobe");
-  }
-  if (
-    !fs.existsSync(ytdlpPath) ||
-    !(await spawn(ytdlpPath, ["--version"])).stdout.includes(version.ytdlp)
-  ) {
-    target.push("ytdlp");
   }
   if (target.length === 0) return;
   await createBinaryDownloaderWindow();
@@ -95,14 +83,9 @@ const downloadBinary = async (target: lib[]) => {
       ffprobePath
     );
   }
-  if (target.includes("ytdlp")) {
-    step++;
-    await downloadFile(`${baseUrl.ytdlp}${distro.ytdlp}`, ytdlpPath);
-  }
   if (process.platform === "darwin") {
     fs.chmodSync(ffmpegPath, 0o755);
     fs.chmodSync(ffprobePath, 0o755);
-    fs.chmodSync(ytdlpPath, 0o755);
   }
 };
 const downloadFile = async (url: string, path: string) => {
@@ -136,4 +119,4 @@ const downloadFile = async (url: string, path: string) => {
     });
   });
 };
-export { onStartUp, ffmpegPath, ffprobePath, ytdlpPath };
+export { onStartUp, ffmpegPath, ffprobePath };

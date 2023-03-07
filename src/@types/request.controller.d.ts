@@ -33,11 +33,6 @@ export type apiRequestSetSetting = {
   data: unknown;
 };
 
-export type apiRequestGetMovieFormat = {
-  type: "getMovieFormat";
-  url: string;
-};
-
 export type apiRequestDownloadMovie = {
   type: "downloadMovie";
   url: string;
@@ -63,7 +58,6 @@ export type apiRequestsFromController =
   | apiRequestSelectFile
   | apiRequestGetSetting
   | apiRequestSetSetting
-  | apiRequestGetMovieFormat
   | apiRequestDownloadMovie
   | apiRequestGetAvailableProfiles
   | apiRequestGetNiconicoMovieMetadata;
