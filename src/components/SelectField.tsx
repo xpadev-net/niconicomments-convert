@@ -1,5 +1,6 @@
 import { ReactElement } from "react";
 import { FormControl, InputLabel } from "@mui/material";
+import Styles from "./SelectField.module.scss";
 
 type props = {
   children: ReactElement;
@@ -9,7 +10,7 @@ type props = {
 
 const SelectField = ({ children, label, className }: props) => {
   return (
-    <FormControl variant="standard" className={className}>
+    <FormControl variant="standard" className={`${Styles.input} ${className}`}>
       <InputLabel>{label}</InputLabel>
       {children}
     </FormControl>

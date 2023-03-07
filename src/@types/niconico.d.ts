@@ -3,6 +3,7 @@ export type watchV3Metadata = {
     status: 200;
   };
   data: {
+    comment: v3MetadataComment;
     media: {
       delivery: {
         recipeId: string;
@@ -91,6 +92,54 @@ export type watchV3Metadata = {
       commentableUserTypeForPayment: string;
       "9d091f87": boolean;
     };
+  };
+};
+
+export type v3MetadataComment = {
+  server: {
+    url: string;
+  };
+  keys: {
+    userKey: string;
+  };
+  threads: v3MetadataCommentThread[];
+  nvComment: v3MetadataNvComment;
+};
+
+export type v3MetadataCommentThread = {
+  id: number;
+  fork: number;
+  forkLabel: "owner" | "main" | "easy";
+  videoId: string;
+  isActive: boolean;
+  isDefaultPostTarget: boolean;
+  isEasyCommentPostTarget: boolean;
+  isLeafRequired: boolean;
+  isOwnerThread: boolean;
+  isThreadkeyRequired: boolean;
+  threadkey: null | string;
+  is184Forces: boolean;
+  hasNicoscript: boolean;
+  label:
+    | "owner"
+    | "default"
+    | "community"
+    | "easy"
+    | "extra-community"
+    | "extra-easy";
+  postkeyStatus: number;
+  server: string;
+};
+
+export type v3MetadataNvComment = {
+  threadKey: string;
+  server: string;
+  params: {
+    targets: {
+      id: string;
+      fork: string;
+    }[];
+    language: string;
   };
 };
 
@@ -305,3 +354,26 @@ export type UserData = {
     };
   };
 };
+
+export type commentOption = {
+  start: string;
+  end: commentOptionEndPoint;
+  format: commentFormat;
+};
+
+export type commentFormat = "v1 json" | "legacy json" | "xml";
+export type commentOptionEndPoint =
+  | {
+      type: "count";
+      count: number;
+    }
+  | {
+      type: "date";
+      date: string;
+    };
+
+export type availableNicovideoApi =
+  | "v3+legacy"
+  | "v3+v1"
+  | "ce+legacy"
+  | "ce+v1";

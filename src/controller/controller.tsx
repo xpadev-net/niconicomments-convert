@@ -15,6 +15,7 @@ import { Setting } from "@/controller/setting/setting";
 import Button from "@mui/material/Button";
 import { useAtom, useAtomValue } from "jotai";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
+import { Comment } from "@/controller/comment/comment";
 
 const Controller = () => {
   const [tab, setTab] = useState<number>(0);
@@ -31,7 +32,7 @@ const Controller = () => {
           >
             <Tab label={"変換"} value={0} />
             <Tab label={"動画"} value={1} />
-            <Tab label={"コメント"} value={2} disabled={true} />
+            <Tab label={"コメント"} value={2} />
             <Tab label={"設定"} value={3} />
           </Tabs>
           <div className={`${Styles.tabItem} ${tab === 0 && Styles.active}`}>
@@ -39,6 +40,9 @@ const Controller = () => {
           </div>
           <div className={`${Styles.tabItem} ${tab === 1 && Styles.active}`}>
             <Movie />
+          </div>
+          <div className={`${Styles.tabItem} ${tab === 2 && Styles.active}`}>
+            <Comment />
           </div>
           <div className={`${Styles.tabItem} ${Styles.active}`}>
             {tab === 3 && <Setting />}

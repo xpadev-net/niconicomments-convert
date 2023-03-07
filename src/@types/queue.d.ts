@@ -1,4 +1,9 @@
 import type { inputFormat, Options } from "@xpadev-net/niconicomments";
+import {
+  availableNicovideoApi,
+  commentOption,
+  v3MetadataComment,
+} from "@/@types/niconico";
 
 type status = "queued" | "processing" | "completed";
 
@@ -48,21 +53,12 @@ export type NicovideoFormat = {
   audio: string;
 };
 
-type CommentDate = {
-  type: "date";
-  time: number;
-};
-
-type CommentCount = {
-  type: "count";
-  count: number;
-};
-
 export type CommentQueue = BaseQueue & {
   type: "comment";
-  target: string; //nicovideo url
-  start?: CommentDate;
-  limit?: CommentDate | CommentCount;
+  target: string; //nicoId
+  api: availableNicovideoApi;
+  metadata: v3MetadataComment;
+  option: commentOption;
   progress: number;
   path: string;
 };

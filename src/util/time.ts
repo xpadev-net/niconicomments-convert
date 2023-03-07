@@ -1,3 +1,5 @@
+import { fill } from "@/util/zerofill";
+
 /**
  * 文字列を秒数に変換
  * 厳密な数値のチェックは行っていないため、2分90秒とかの指定もできる
@@ -31,4 +33,14 @@ const time2str = (time: number | undefined): string => {
     (time % 60).toFixed(2).padStart(5, "0")
   )}`;
 };
-export { str2time, time2str };
+
+const formatDate = (_date: Date) => {
+  return `${_date.getFullYear()}-${fill(_date.getMonth() + 1, 2)}-${fill(
+    _date.getDate(),
+    2
+  )}T${fill(_date.getHours(), 2)}:${fill(_date.getMinutes(), 2)}:${fill(
+    _date.getSeconds(),
+    2
+  )}`;
+};
+export { str2time, time2str, formatDate };

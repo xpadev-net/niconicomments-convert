@@ -16,6 +16,7 @@ const QueueDisplay = () => {
     window.api.onResponse(callback);
     return () => window.api.remove(callback);
   }, []);
+  console.log(queue);
   return (
     <div className={Styles.wrapper}>
       {queue.map((item) =>
@@ -24,7 +25,7 @@ const QueueDisplay = () => {
         ) : item.type === "movie" ? (
           <MovieItem key={item.id} queue={item} />
         ) : (
-          <></>
+          <div key={item.id}></div>
         )
       )}
     </div>

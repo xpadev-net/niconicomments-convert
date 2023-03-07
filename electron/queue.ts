@@ -134,6 +134,7 @@ export {
   markAsCompleted,
   appendBuffers,
   updateProgress,
+  sendProgress,
   processingQueue,
   queueLists,
 };

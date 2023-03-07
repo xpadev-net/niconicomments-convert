@@ -7,6 +7,7 @@ import {
   appendQueue,
   markAsCompleted,
   processingQueue,
+  sendProgress,
   updateProgress,
 } from "./queue";
 import { store } from "./store";
@@ -31,7 +32,9 @@ const registerListener = () => {
       } else if (typeGuard.controller.selectFile(value)) {
         return await selectFile(value.pattern);
       } else if (typeGuard.controller.appendQueue(value)) {
-        return appendQueue(value.data);
+        appendQueue(value.data);
+        sendProgress();
+        return;
       } else if (typeGuard.controller.getSetting(value)) {
         return store.get(value.key);
       } else if (typeGuard.controller.setSetting(value)) {
