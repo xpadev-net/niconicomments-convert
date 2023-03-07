@@ -14,6 +14,7 @@ import type { OpenDialogReturnValue } from "electron";
 import { useSetAtom } from "jotai";
 import { isLoadingAtom } from "@/controller/atoms";
 import { browserProfile } from "@/@types/cookies";
+import { SelectField } from "@/components/SelectField";
 
 const Setting = () => {
   const setIsLoading = useSetAtom(isLoadingAtom);
@@ -141,10 +142,9 @@ const Setting = () => {
         </div>
       )}
       {authSetting.type === "browser" && (
-        <div>
-          <h3>ブラウザ</h3>
+        <SelectField label={"ブラウザ"}>
           <Select
-            label={"プロファイル"}
+            label={"ブラウザ"}
             variant={"standard"}
             className={Styles.input}
             value={
@@ -168,7 +168,7 @@ const Setting = () => {
               );
             })}
           </Select>
-        </div>
+        </SelectField>
       )}
       <Button variant={"outlined"} onClick={onSave}>
         保存
