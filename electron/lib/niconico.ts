@@ -1,18 +1,12 @@
 import { store } from "../store";
-import { authByBrowserCookie, authType } from "@/@types/setting";
+import { authType } from "@/@types/setting";
 import { typeGuard } from "../typeGuard";
 import { convertToEncodedCookie, getCookies } from "./cookie";
 import { NicovideoFormat } from "@/@types/queue";
 import { sendMessageToController } from "../controllerWindow";
-import {
-  createSessionRequest,
-  createSessionResponse,
-  SessionBody,
-  watchV3Metadata,
-} from "@/@types/niconico";
+import { createSessionRequest, watchV3Metadata } from "@/@types/niconico";
 import { spawn } from "./spawn";
-import { ffmpegPath, ytdlpPath } from "../ffmpeg";
-import * as fs from "fs";
+import { ffmpegPath } from "../ffmpeg";
 
 const getMetadata = async (nicoId: string) => {
   const authSetting = store.get("auth") as authType | undefined;
@@ -28,7 +22,7 @@ const getMetadata = async (nicoId: string) => {
         },
       }
     );
-    const metadata = await req.json();
+    const metadata = (await req.json()) as unknown;
     if (!typeGuard.niconico.watchV3Metadata(metadata)) {
       throw new Error(`failed to get metadata\n${JSON.stringify(metadata)}`);
     }
@@ -38,7 +32,7 @@ const getMetadata = async (nicoId: string) => {
     const req = await fetch(
       `https://www.nicovideo.jp/api/watch/v3_guest/${nicoId}?_frontendId=6&_frontendVersion=0&actionTrackId=AAAAAAAAAA_${new Date().getTime()}`
     );
-    const metadata = await req.json();
+    const metadata = (await req.json()) as unknown;
     if (!typeGuard.niconico.watchV3Metadata(metadata)) {
       throw new Error(`failed to get metadata\n${JSON.stringify(metadata)}`);
     }
@@ -69,25 +63,23 @@ const download = async (
     });
     return;
   }
-  const authSetting = store.get("auth") as authByBrowserCookie;
-  const cookies = convertToEncodedCookie(await getCookies(authSetting.profile));
-  console.log(metadata.data.media.delivery.trackingId);
-  const trackingReq = await fetch(
-    `https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=${encodeURIComponent(
-      metadata.data.media.delivery.trackingId
-    )}`,
-    {
-      headers: {
-        Cookies: cookies,
-        "X-Frontend-Id": "6",
-        "X-Frontend-Version": "0",
-        "X-Request-With": "https://www.nicovideo.jp",
-        Origin: "https://www.nicovideo.jp/",
-        Referer: "https://www.nicovideo.jp/",
-      },
+  if (metadata.data.media.delivery.trackingId) {
+    const trackingReq = await fetch(
+      `https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?${new URLSearchParams({
+        t: metadata.data.media.delivery.trackingId,
+      }).toString()}`,
+      {
+        method: "GET",
+        headers: {
+          "X-Frontend-Id": "6",
+          "X-Frontend-Version": "0",
+        },
+      }
+    );
+    if (trackingReq.status !== 200) {
+      console.warn("動画のダウンロードに失敗する可能性があります");
     }
-  );
-  console.log("res", await trackingReq.text(), trackingReq.status);
+  }
   const requestBody = createSessionCreateRequestBody(metadata, format);
   const req = await fetch("https://api.dmc.nico/api/sessions?_format=json", {
     method: "POST",
@@ -98,9 +90,8 @@ const download = async (
     },
     body: JSON.stringify(requestBody),
   });
-  const res = await req.json();
+  const res = (await req.json()) as unknown;
   if (!typeGuard.niconico.createSessionResponse(res)) {
-    console.log(res);
     sendMessageToController({
       title: "セッションの作成に失敗しました",
       message:
@@ -110,32 +101,32 @@ const download = async (
     return;
   }
   let lastSession = res.data;
-  const heartbeatInterval = setInterval(async () => {
-    console.log(lastSession);
-    const req = await fetch(
-      `https://api.dmc.nico/api/sessions/${lastSession.session.id}?_format=json&_method=PUT`,
-      {
-        method: "POST",
-        headers: {
-          Origin: "https://www.nicovideo.jp",
-          Referer: "https://www.nicovideo.jp",
-          "Content-Type": "text/plain;charset=UTF-8",
-        },
-        body: JSON.stringify(lastSession),
+  const heartbeatInterval = setInterval(() => {
+    void (async () => {
+      const req = await fetch(
+        `https://api.dmc.nico/api/sessions/${lastSession.session.id}?_format=json&_method=PUT`,
+        {
+          method: "POST",
+          headers: {
+            Origin: "https://www.nicovideo.jp",
+            Referer: "https://www.nicovideo.jp",
+            "Content-Type": "text/plain;charset=UTF-8",
+          },
+          body: JSON.stringify(lastSession),
+        }
+      );
+      const res = (await req.json()) as unknown;
+      if (!typeGuard.niconico.createSessionResponse(res)) {
+        sendMessageToController({
+          title: "セッションの更新に失敗しました",
+          message:
+            "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください",
+          type: "message",
+        });
+        throw new Error("failed to renew session");
       }
-    );
-    const res = await req.json();
-    if (!typeGuard.niconico.createSessionResponse(res)) {
-      console.log(res);
-      sendMessageToController({
-        title: "セッションの更新に失敗しました",
-        message:
-          "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください",
-        type: "message",
-      });
-      throw new Error("failed to renew session");
-    }
-    lastSession = res.data;
+      lastSession = res.data;
+    })();
   }, 30 * 1000);
 
   let total = 0,

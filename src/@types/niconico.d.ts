@@ -183,7 +183,11 @@ export type SessionBody = {
             use_ssl: "yes";
             use_well_known_port: "yes";
             media_segment_format: "mpeg2ts";
-            encryption: {};
+            encryption:
+              | {
+                  hls_encryption_v1: { encrypted_key: string; key_uri: string };
+                }
+              | Record<string, never>;
             separate_audio_stream: "yes" | "no";
           };
         };
