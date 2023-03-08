@@ -5,7 +5,7 @@ import {
   v3MetadataComment,
 } from "@/@types/niconico";
 
-type status = "queued" | "processing" | "completed";
+type status = "queued" | "processing" | "completed" | "fail";
 
 export type Queue = ConvertQueue | MovieQueue | CommentQueue;
 

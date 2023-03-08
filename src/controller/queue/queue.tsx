@@ -4,6 +4,7 @@ import { Queue } from "@/@types/queue";
 import Styles from "./queue.module.scss";
 import { ConvertItem } from "@/controller/queue/ConvertItem";
 import { MovieItem } from "@/controller/queue/MovieItem";
+import { CommentItem } from "@/controller/queue/CommentItem";
 
 const QueueDisplay = () => {
   const [queue, setQueue] = useState<Queue[]>([]);
@@ -16,7 +17,6 @@ const QueueDisplay = () => {
     window.api.onResponse(callback);
     return () => window.api.remove(callback);
   }, []);
-  console.log(queue);
   return (
     <div className={Styles.wrapper}>
       {queue.map((item) =>
@@ -25,7 +25,7 @@ const QueueDisplay = () => {
         ) : item.type === "movie" ? (
           <MovieItem key={item.id} queue={item} />
         ) : (
-          <div key={item.id}></div>
+          <CommentItem key={item.id} queue={item} />
         )
       )}
     </div>

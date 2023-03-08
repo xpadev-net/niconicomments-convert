@@ -2,6 +2,8 @@ import {
   commentFormat,
   commentOption,
   commentOptionEndPoint,
+  commentThread,
+  v3MetadataComment,
 } from "@/@types/niconico";
 import { ChangeEvent, useEffect, useState } from "react";
 import {
@@ -10,18 +12,29 @@ import {
   Radio,
   RadioGroup,
   Select,
+  Switch,
   TextField,
 } from "@mui/material";
 import Styles from "./CommentOption.module.scss";
 import { formatDate } from "@/util/time";
 import { SelectField } from "@/components/SelectField";
 
+const forkLabel: { [key: string]: string } = {
+  owner: "投稿者コメント",
+  default: "通常コメント",
+  easy: "かんたんコメント",
+  community: "コミュニティ・チャンネルコメント",
+  "extra-community": "引用コメント",
+  "extra-easy": "引用かんたんコメント",
+};
+
 type props = {
   postedDate: string;
+  metadata: v3MetadataComment;
   update: (data: commentOption) => void;
 };
 
-const CommentOption = ({ update, postedDate }: props) => {
+const CommentOption = ({ update, postedDate, metadata }: props) => {
   const _date = new Date();
   const [startPoint, setStartPoint] = useState<string>(formatDate(_date));
   const [endPoint, setEndPoint] = useState<commentOptionEndPoint>({
@@ -29,13 +42,24 @@ const CommentOption = ({ update, postedDate }: props) => {
     count: 1000,
   });
   const [format, setFormat] = useState<commentFormat>("xml");
+  const [threads, setThreads] = useState<commentThread[]>(
+    metadata.threads.map((thread) => {
+      return {
+        threadId: thread.id,
+        fork: thread.fork,
+        enable: true,
+        label: forkLabel[thread.label] ?? "その他",
+      };
+    })
+  );
   useEffect(() => {
     update({
       start: startPoint,
       end: endPoint,
       format: format,
+      threads: threads,
     });
-  }, [startPoint, endPoint, format]);
+  }, [startPoint, endPoint, format, threads]);
   const onEndPointChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.value === "count") {
       setEndPoint({
@@ -98,6 +122,28 @@ const CommentOption = ({ update, postedDate }: props) => {
             }}
           />
         )}
+      </section>
+      <section>
+        <h3>スレッド</h3>
+        {threads.map((thread) => {
+          const key = `${thread.threadId}:${thread.fork}`;
+          return (
+            <FormControlLabel
+              key={key}
+              control={
+                <Switch
+                  key={`${key}-switch`}
+                  checked={thread.enable}
+                  onChange={() => {
+                    thread.enable = !thread.enable;
+                    setThreads([...threads]);
+                  }}
+                />
+              }
+              label={thread.label}
+            />
+          );
+        })}
       </section>
       <section>
         <h3>出力</h3>

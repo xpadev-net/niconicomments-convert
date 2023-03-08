@@ -1,6 +1,6 @@
 import { ChangeEvent, useState } from "react";
 import { TextField } from "@mui/material";
-import Styles from "../movie/movie.module.scss";
+import Styles from "./comment.module.scss";
 import { useSetAtom } from "jotai";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import { getNicoId, isNicovideoUrl } from "@/util/niconico";
@@ -114,6 +114,7 @@ const MetaV3 = ({ api }: props) => {
       {metadata && (
         <CommentOption
           update={setCommentOption}
+          metadata={metadata.data.comment}
           postedDate={formatDate(new Date(metadata.data.video.registeredAt))}
         />
       )}

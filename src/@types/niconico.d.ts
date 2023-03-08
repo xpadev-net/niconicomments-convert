@@ -355,10 +355,18 @@ export type UserData = {
   };
 };
 
+export type commentThread = {
+  threadId: number;
+  fork: number;
+  enable: boolean;
+  label: string;
+};
+
 export type commentOption = {
   start: string;
   end: commentOptionEndPoint;
   format: commentFormat;
+  threads: commentThread[];
 };
 
 export type commentFormat = "v1 json" | "legacy json" | "xml";

@@ -2,7 +2,7 @@ import { store } from "../store";
 import { authType } from "@/@types/setting";
 import { typeGuard } from "../typeGuard";
 import { convertToEncodedCookie, getCookies } from "./cookie";
-import { NicovideoFormat } from "@/@types/queue";
+import { CommentQueue, NicovideoFormat } from "@/@types/queue";
 import { sendMessageToController } from "../controllerWindow";
 import {
   createSessionRequest,
@@ -12,6 +12,7 @@ import {
 import { spawn } from "./spawn";
 import { ffmpegPath } from "../ffmpeg";
 import { encodeJson } from "./json";
+import NiconiComments from "@xpadev-net/niconicomments";
 
 const userInfoCache: { [key: string]: UserData | false } = {};
 
@@ -283,4 +284,30 @@ const createSessionCreateRequestBody = (
   return sessionBody;
 };
 
-export { getMetadata, download, getUserInfo };
+const downloadComment = async (queue: CommentQueue) => {
+  if (queue.api === "v3+legacy") {
+    for (const thread of queue.option.threads) {
+      if (!thread.enable) continue;
+      const threadComments = [];
+      let when = Math.floor(new Date(queue.option.start).getTime() / 1000);
+      while (
+        (queue.option.end.type === "date" &&
+          when >
+            Math.floor(new Date(queue.option.end.date).getTime() / 1000)) ||
+        (queue.option.end.type === "count" &&
+          threadComments.length < queue.option.end.count)
+      ) {
+        const req = await fetch(
+          `${queue.metadata.threads[0].server}/api.json/thread?version=20090904&scores=1&nicoru=3&fork=${thread.fork}&language=0&thread=${thread.threadId}&res_from=-1000&when=${when}`
+        );
+        const res = (await req.json()) as unknown;
+        if (!NiconiComments.typeGuard.legacy.rawApiResponses(res))
+          throw new Error("failed to get comments");
+        when = 0;
+        return;
+      }
+    }
+  }
+};
+
+export { getMetadata, download, getUserInfo, downloadComment };

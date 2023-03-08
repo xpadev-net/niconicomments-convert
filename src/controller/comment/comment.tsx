@@ -6,12 +6,7 @@ import { MetaV3 } from "@/controller/comment/MetaV3";
 import { MetaCe } from "@/controller/comment/MetaCe";
 import { availableNicovideoApi } from "@/@types/niconico";
 
-const availableApis: availableNicovideoApi[] = [
-  "v3+legacy",
-  "v3+v1",
-  "ce+legacy",
-  "ce+v1",
-];
+const availableApis: availableNicovideoApi[] = ["v3+legacy", "v3+v1"];
 
 const Comment = () => {
   const [api, setApi] = useState<availableNicovideoApi>("v3+v1");

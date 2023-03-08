@@ -4,7 +4,7 @@ import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
 import { base64ToUint8Array } from "./utils";
 import * as Stream from "stream";
 import { sendMessageToController } from "./controllerWindow";
-import { download } from "./lib/niconico";
+import { download, downloadComment } from "./lib/niconico";
 
 const queueList: Queue[] = [];
 const queueLists: QueueLists = {
@@ -63,8 +63,15 @@ const startMovieDownload = async () => {
   void startMovieDownload();
 };
 
-const startCommentDownload = () => {
-  //todo: feat comment downloader
+const startCommentDownload = async () => {
+  const queued = queueLists.comment.filter((i) => i.status === "queued");
+  if (
+    queueLists.comment.filter((i) => i.status === "processing").length > 0 ||
+    queued.length === 0 ||
+    !queued[0]
+  )
+    return;
+  await downloadComment(queued[0]);
 };
 
 const startConvert = async () => {
