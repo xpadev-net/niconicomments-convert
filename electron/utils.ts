@@ -6,4 +6,13 @@ function base64ToUint8Array(base64Str: string) {
     })
   );
 }
-export { base64ToUint8Array };
+
+const sleep = (time: number) => {
+  return new Promise<void>((resolve) => {
+    setTimeout(() => {
+      resolve();
+    }, time);
+  });
+};
+
+export { base64ToUint8Array, sleep };

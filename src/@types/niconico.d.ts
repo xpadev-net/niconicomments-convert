@@ -360,16 +360,15 @@ export type commentThread = {
   fork: number;
   enable: boolean;
   label: string;
+  forkLabel: "owner" | "main" | "easy";
 };
 
 export type commentOption = {
   start: string;
   end: commentOptionEndPoint;
-  format: commentFormat;
   threads: commentThread[];
 };
 
-export type commentFormat = "v1 json" | "legacy json" | "xml";
 export type commentOptionEndPoint =
   | {
       type: "count";

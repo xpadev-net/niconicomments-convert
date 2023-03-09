@@ -1,5 +1,4 @@
 import {
-  commentFormat,
   commentOption,
   commentOptionEndPoint,
   commentThread,
@@ -8,16 +7,13 @@ import {
 import { ChangeEvent, useEffect, useState } from "react";
 import {
   FormControlLabel,
-  MenuItem,
   Radio,
   RadioGroup,
-  Select,
   Switch,
   TextField,
 } from "@mui/material";
 import Styles from "./CommentOption.module.scss";
 import { formatDate } from "@/util/time";
-import { SelectField } from "@/components/SelectField";
 
 const forkLabel: { [key: string]: string } = {
   owner: "投稿者コメント",
@@ -41,7 +37,6 @@ const CommentOption = ({ update, postedDate, metadata }: props) => {
     type: "count",
     count: 1000,
   });
-  const [format, setFormat] = useState<commentFormat>("xml");
   const [threads, setThreads] = useState<commentThread[]>(
     metadata.threads.map((thread) => {
       return {
@@ -49,6 +44,7 @@ const CommentOption = ({ update, postedDate, metadata }: props) => {
         fork: thread.fork,
         enable: true,
         label: forkLabel[thread.label] ?? "その他",
+        forkLabel: thread.forkLabel,
       };
     })
   );
@@ -56,10 +52,9 @@ const CommentOption = ({ update, postedDate, metadata }: props) => {
     update({
       start: startPoint,
       end: endPoint,
-      format: format,
       threads: threads,
     });
-  }, [startPoint, endPoint, format, threads]);
+  }, [startPoint, endPoint, threads]);
   const onEndPointChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.value === "count") {
       setEndPoint({
@@ -144,25 +139,6 @@ const CommentOption = ({ update, postedDate, metadata }: props) => {
             />
           );
         })}
-      </section>
-      <section>
-        <h3>出力</h3>
-        <SelectField label={"フォーマット"}>
-          <Select
-            label={"フォーマット"}
-            variant={"standard"}
-            className={Styles.input}
-            value={format}
-            onChange={(e) => setFormat(e.target.value as commentFormat)}
-          >
-            <MenuItem disabled value="">
-              出力するフォーマットを選択してください
-            </MenuItem>
-            <MenuItem value="xml">xml</MenuItem>
-            <MenuItem value="v1 json">v1 JSON</MenuItem>
-            <MenuItem value="legacy json">旧JSON</MenuItem>
-          </Select>
-        </SelectField>
       </section>
     </div>
   );

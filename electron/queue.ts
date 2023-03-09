@@ -71,7 +71,16 @@ const startCommentDownload = async () => {
     !queued[0]
   )
     return;
-  await downloadComment(queued[0]);
+  const targetQueue = queued[0];
+  targetQueue.status = "processing";
+  sendProgress();
+  await downloadComment(targetQueue, (total, downloaded) => {
+    targetQueue.progress = downloaded / total;
+    sendProgress();
+  });
+  targetQueue.status = "completed";
+  sendProgress();
+  void startCommentDownload();
 };
 
 const startConvert = async () => {

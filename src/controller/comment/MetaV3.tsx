@@ -64,7 +64,7 @@ const MetaV3 = ({ api }: props) => {
     if (!nicoId || !metadata || !commentOption) return;
     void (async () => {
       setIsLoading(true);
-      const ext = commentOption.format === "xml" ? "xml" : "json";
+      const ext = "xml";
       const output = await window.api.request({
         type: "selectOutput",
         host: "controller",
