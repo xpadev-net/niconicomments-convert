@@ -1146,10 +1146,10 @@
     magic-string "^0.27.0"
     react-refresh "^0.14.0"
 
-"@xpadev-net/niconicomments@^0.2.46":
-  version "0.2.46"
-  resolved "https://registry.yarnpkg.com/@xpadev-net/niconicomments/-/niconicomments-0.2.46.tgz#2520f9ed9ba5bd6632c192d151503761e693d6ff"
-  integrity sha512-/lVlbFMXNWJMGL5gicLNqa+LajkJaVTYKnqrdftmv4VyyfH7OkNaktcIx+rKQnYsYHTfn7lZARluHSJuokt2GA==
+"@xpadev-net/niconicomments@^0.2.47":
+  version "0.2.47"
+  resolved "https://registry.yarnpkg.com/@xpadev-net/niconicomments/-/niconicomments-0.2.47.tgz#e62f9ec325654d4e8f2324e82cf6df86be2479ff"
+  integrity sha512-Qp0awWI3nXYXVEkTE3zZ54Q/LH5sD38PzAXYK3nRtHsCMVCbDYQDpPHRRG5WyHvQkr68T6kXQlnEp9Qn4bYUYQ==
 
 abab@^2.0.6:
   version "2.0.6"
