@@ -107,7 +107,6 @@ const Setting = () => {
       setIsLoading(false);
     })();
   };
-  console.log(availableProfiles);
   if (!authSetting) return <></>;
   return (
     <div className={Styles.wrapper}>
@@ -125,6 +124,7 @@ const Setting = () => {
         <FormControlLabel
           value={"browser"}
           control={<Radio />}
+          disabled={availableProfiles.length < 1}
           label={"ブラウザから取得"}
         />
         <FormControlLabel
