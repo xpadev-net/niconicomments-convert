@@ -56,7 +56,7 @@ const setupRenderer = async () => {
   })) as ConvertQueue;
   inProgress = true;
   message.innerText = "コメントを処理しています...";
-  if (data.comment.options.format === "niconicome") {
+  if (data.comment.options.format === "XMLDocument") {
     const parser = new DOMParser();
     data.comment.data = parser.parseFromString(
       data.comment.data as string,
