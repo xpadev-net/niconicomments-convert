@@ -2,6 +2,7 @@ import NiconiComments from "@xpadev-net/niconicomments";
 import { sleep } from "@/util/sleep";
 import { typeGuard } from "@/typeGuard";
 import { ConvertQueue } from "@/@types/queue";
+import { encodeJson } from "@/util/json";
 
 const setupRenderer = async () => {
   document.title = "renderer - niconicomments-convert";
@@ -34,6 +35,19 @@ const setupRenderer = async () => {
     padding: 0;
     box-sizing: border-box;
   }</style>`;
+  try {
+    await startRenderer();
+  } catch (e) {
+    await window.api.request({
+      type: "message",
+      title: "未知のエラーが発生しました",
+      message: `エラー内容：\n${encodeJson(e)}`,
+      host: "renderer",
+    });
+  }
+};
+
+const startRenderer = async () => {
   const message = document.getElementById("msg");
   if (!message) return;
   let inProgress = false;
@@ -118,4 +132,5 @@ const setupRenderer = async () => {
     }
   };
 };
+
 export { setupRenderer };

@@ -16,10 +16,15 @@ export type apiRequestEnd = {
 export type apiRequestLoad = {
   type: "load";
 };
+
+export type apiRequestMessage = {
+  type: "message";
+  title?: string;
+  message: string;
+};
 export type apiRequestsFromRenderer =
   | apiRequestProgress
   | apiRequestBuffer
   | apiRequestEnd
-  | apiRequestLoad;
-
-export {};
+  | apiRequestLoad
+  | apiRequestMessage;
