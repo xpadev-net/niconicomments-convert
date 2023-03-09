@@ -303,8 +303,13 @@ const downloadComment = async (
 };
 
 const convertToXml = (comments: formattedComment[]) => {
-  const jsdom = new JSDOM(),
-    document = jsdom.window.document;
+  const jsdom = new JSDOM();
+  const parser = new jsdom.window.DOMParser();
+  const document = parser.parseFromString(
+      `<?xml version="1.0" encoding="UTF-8"?><packet></packet>`,
+      "application/xhtml+xml"
+    ),
+    packet = document.getElementsByTagName("packet")[0];
   for (const comment of comments) {
     const chat = document.createElement("chat");
     chat.setAttribute("no", `${comment.id}`);
@@ -315,7 +320,7 @@ const convertToXml = (comments: formattedComment[]) => {
     chat.setAttribute("owner", `${comment.owner ? 1 : 0}`);
     chat.setAttribute("premium", `${comment.premium ? 1 : 0}`);
     chat.setAttribute("mail", comment.mail.join(" "));
-    document.documentElement.append(chat);
+    packet.append(chat);
   }
   return document.documentElement.outerHTML;
 };
