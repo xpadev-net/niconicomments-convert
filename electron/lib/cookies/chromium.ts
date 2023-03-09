@@ -136,6 +136,11 @@ const getAvailableChromiumProfiles = async (
     const value = metadata.profile.info_cache[key];
     const profilePath = path.join(root, key);
     if (!fs.existsSync(profilePath)) continue;
+    if (
+      !fs.existsSync(path.join(profilePath, "Cookies")) &&
+      !fs.existsSync(path.join(profilePath, "Network", "Cookies"))
+    )
+      continue;
     await addProfile({
       type: "chromiumProfile",
       browser: browser,
