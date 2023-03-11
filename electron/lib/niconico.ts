@@ -84,16 +84,18 @@ const download = async (
   const metadata = await getMetadata(nicoId);
   if (!metadata) {
     sendMessageToController({
-      title: "動画情報の取得に失敗しました",
-      message: "動画が削除などされていないか確認してください",
       type: "message",
+      title: "動画情報の取得に失敗しました",
+      message:
+        "動画が削除などされていないか確認してください\nniconico / download / failed to get metadata",
     });
     return;
   }
   if (!metadata.data.media.delivery) {
     sendMessageToController({
       title: "動画情報の取得に失敗しました",
-      message: "未購入の有料動画などの可能性があります",
+      message:
+        "未購入の有料動画などの可能性があります\nniconico / download / invalid metadata",
       type: "message",
     });
     return;
@@ -130,7 +132,7 @@ const download = async (
     sendMessageToController({
       title: "セッションの作成に失敗しました",
       message:
-        "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください",
+        "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください\nniconico / download / failed to create session",
       type: "message",
     });
     return;
@@ -155,7 +157,7 @@ const download = async (
         sendMessageToController({
           title: "セッションの更新に失敗しました",
           message:
-            "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください",
+            "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください\nniconico / download / failed to renew session",
           type: "message",
         });
         throw new Error("failed to renew session");

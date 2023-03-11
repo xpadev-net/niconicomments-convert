@@ -51,14 +51,18 @@ const registerListener = () => {
         sendMessageToController({
           type: "message",
           title: "未知のエラーが発生しました",
-          message: `未知のIPCメッセージを受信しました\n${encodeJson(value)}`,
+          message: `未知のIPCメッセージを受信しました\n${encodeJson(
+            value
+          )}\nipcManager / unknownIpcMessage`,
         });
       }
     } catch (e: unknown) {
       sendMessageToController({
         type: "message",
         title: "予期しないエラーが発生しました",
-        message: `エラー内容:\n${encodeJson(e)}`,
+        message: `IPCメッセージ:\n${encodeJson(
+          args
+        )}\nエラー内容:\n${encodeJson(e)}\nipcManager / catchError`,
       });
     }
   });

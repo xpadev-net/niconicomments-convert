@@ -52,7 +52,7 @@ const selectMovie = async () => {
     return {
       type: "message",
       title: "動画ファイルの解析に失敗しました",
-      message: `ffprobeの実行に失敗しました\n終了コード:\n${error.code}\n標準出力:\n${error.stdout}\n標準エラー出力:\n${error.stderr}`,
+      message: `ffprobeの実行に失敗しました\n終了コード:\n${error.code}\n標準出力:\n${error.stdout}\n標準エラー出力:\n${error.stderr}\ndialog / selectMovie / failed to execute ffprobe`,
     };
   }
   try {
@@ -63,14 +63,17 @@ const selectMovie = async () => {
       title: "動画ファイルの解析に失敗しました",
       message: `ffprobeの出力のパースに失敗しました\nffprobeの出力:\n${
         ffprobe.stdout
-      }\nエラー内容:\n${encodeJson(e)}`,
+      }\nエラー内容:\n${encodeJson(
+        e
+      )}\ndialog / selectMovie / failed to parse ffprobe output`,
     };
   }
   if (!metadata.streams || !Array.isArray(metadata.streams)) {
     return {
       type: "message",
       title: "動画ファイルの解析に失敗しました",
-      message: "動画ソースが見つかりませんでした",
+      message:
+        "動画ソースが見つかりませんでした\ndialog / selectMovie / empty streams",
     };
   }
   let width, height, duration;
@@ -90,7 +93,7 @@ const selectMovie = async () => {
       type: "message",
       title: "動画ファイルの解析に失敗しました",
       message:
-        "解像度または動画の長さを取得できませんでした\n動画ファイルが破損していないか確認してください",
+        "解像度または動画の長さを取得できませんでした\n動画ファイルが破損していないか確認してください\ndialog / selectMovie / incorrect input file",
     };
   }
   return {
@@ -128,7 +131,7 @@ const selectComment = async () => {
       sendMessageToController({
         type: "message",
         title: "非対応のフォーマットです",
-        message: `入力されたデータの識別に失敗しました\nXMLはniconicomeの形式に準拠しています\nそれ以外のツールを使用したい場合は開発者までお問い合わせください\n推奨形式はv1形式のjsonファイルです\n${documentLink}`,
+        message: `入力されたデータの識別に失敗しました\nXMLはniconicomeの形式に準拠しています\nそれ以外のツールを使用したい場合は開発者までお問い合わせください\n推奨形式はv1形式のjsonファイルです\n${documentLink}\ndialog / selectComment / xml`,
       });
       return;
     }
@@ -156,7 +159,7 @@ const selectComment = async () => {
         sendMessageToController({
           type: "message",
           title: "非対応のフォーマットです",
-          message: `入力されたデータの識別に失敗しました\n対応していないフォーマットの可能性があります\n${documentLink}`,
+          message: `入力されたデータの識別に失敗しました\n対応していないフォーマットの可能性があります\n${documentLink}\ndialog / selectComment / json`,
         });
         return;
       }
@@ -169,7 +172,7 @@ const selectComment = async () => {
     sendMessageToController({
       type: "message",
       title: "非対応のフォーマットです",
-      message: `入力されたデータの識別に失敗しました\n対応していないフォーマットの可能性があります\n${documentLink}`,
+      message: `入力されたデータの識別に失敗しました\n対応していないフォーマットの可能性があります\n${documentLink}\ndialog / selectComment / txt`,
     });
     return;
   }
