@@ -1,15 +1,15 @@
-import * as path from "path";
-import * as fs from "fs";
 import type {
   Cookies,
   firefoxProfile,
   l10nID,
   moz_cookies,
 } from "@/@types/cookies";
-import { fetchAll, openClonedDB } from "../db";
+import * as fs from "fs";
+import * as path from "path";
 import { typeGuard } from "../../typeGuard";
-import { getUserInfo } from "../niconico";
 import { convertToEncodedCookie } from "../cookie";
+import { fetchAll, openClonedDB } from "../db";
+import { getUserInfo } from "../niconico";
 
 /*
 reference source:

@@ -1,7 +1,7 @@
+import { apiResponsesToRenderer } from "@/@types/response.renderer";
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
 import { baseUrl } from "./context";
-import { apiResponsesToRenderer } from "@/@types/response.renderer";
 
 let rendererWindow: BrowserWindow;
 let isOpen = false;

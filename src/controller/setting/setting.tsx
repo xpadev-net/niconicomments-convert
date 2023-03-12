@@ -1,20 +1,20 @@
-import { ChangeEvent, useLayoutEffect, useState } from "react";
-import { authByCookieFile, authType } from "@/@types/setting";
+import type { browserProfile } from "@/@types/cookies";
+import type { authByCookieFile, authType } from "@/@types/setting";
+import { SelectField } from "@/components/SelectField";
+import { isLoadingAtom } from "@/controller/atoms";
+import { Replay } from "@mui/icons-material";
 import {
+  Button,
   FormControlLabel,
+  MenuItem,
   Radio,
   RadioGroup,
-  Button,
   Select,
-  MenuItem,
 } from "@mui/material";
-import { Replay } from "@mui/icons-material";
-import Styles from "./setting.module.scss";
 import type { OpenDialogReturnValue } from "electron";
 import { useSetAtom } from "jotai";
-import { isLoadingAtom } from "@/controller/atoms";
-import { browserProfile } from "@/@types/cookies";
-import { SelectField } from "@/components/SelectField";
+import { ChangeEvent, useLayoutEffect, useState } from "react";
+import Styles from "./setting.module.scss";
 
 const Setting = () => {
   const setIsLoading = useSetAtom(isLoadingAtom);

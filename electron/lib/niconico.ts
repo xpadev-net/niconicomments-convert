@@ -1,22 +1,22 @@
-import { store } from "../store";
-import { authType } from "@/@types/setting";
-import { typeGuard } from "../typeGuard";
-import { convertToEncodedCookie, getCookies } from "./cookie";
-import { CommentQueue, NicovideoFormat } from "@/@types/queue";
-import { sendMessageToController } from "../controllerWindow";
 import {
   createSessionRequest,
   UserData,
   watchV3Metadata,
 } from "@/@types/niconico";
-import { spawn } from "./spawn";
-import { ffmpegPath } from "../ffmpeg";
-import { encodeJson } from "./json";
-import NiconiComments, { formattedComment } from "@xpadev-net/niconicomments";
-import { JSDOM } from "jsdom";
+import { CommentQueue, NicovideoFormat } from "@/@types/queue";
+import { authType } from "@/@types/setting";
 import { v1Raw } from "@/@types/types";
+import NiconiComments, { formattedComment } from "@xpadev-net/niconicomments";
 import * as fs from "fs";
+import { JSDOM } from "jsdom";
+import { sendMessageToController } from "../controllerWindow";
+import { ffmpegPath } from "../ffmpeg";
+import { store } from "../store";
+import { typeGuard } from "../typeGuard";
 import { sleep } from "../utils";
+import { convertToEncodedCookie, getCookies } from "./cookie";
+import { encodeJson } from "./json";
+import { spawn } from "./spawn";
 const userInfoCache: { [key: string]: UserData | false } = {};
 
 const getUserInfo = async (cookies: string): Promise<UserData | false> => {

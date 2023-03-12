@@ -1,10 +1,10 @@
 import { ConvertQueue, Queue, QueueLists } from "@/@types/queue";
-import { inputStream, startConverter } from "./converter";
-import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
-import { base64ToUint8Array } from "./utils";
 import * as Stream from "stream";
 import { sendMessageToController } from "./controllerWindow";
+import { inputStream, startConverter } from "./converter";
 import { download, downloadComment } from "./lib/niconico";
+import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
+import { base64ToUint8Array } from "./utils";
 
 const queueList: Queue[] = [];
 const queueLists: QueueLists = {

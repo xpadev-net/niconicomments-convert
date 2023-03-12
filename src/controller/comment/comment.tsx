@@ -1,10 +1,10 @@
+import type { availableNicovideoApi } from "@/@types/niconico";
 import { SelectField } from "@/components/SelectField";
-import { MenuItem, Select } from "@mui/material";
-import Styles from "@/controller/setting/setting.module.scss";
-import { useState } from "react";
-import { MetaV3 } from "@/controller/comment/MetaV3";
 import { MetaCe } from "@/controller/comment/MetaCe";
-import { availableNicovideoApi } from "@/@types/niconico";
+import { MetaV3 } from "@/controller/comment/MetaV3";
+import Styles from "@/controller/setting/setting.module.scss";
+import { MenuItem, Select } from "@mui/material";
+import { useState } from "react";
 
 const availableApis: availableNicovideoApi[] = ["v3+legacy", "v3+v1"];
 

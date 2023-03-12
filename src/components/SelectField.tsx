@@ -1,5 +1,5 @@
-import { ReactElement } from "react";
 import { FormControl, InputLabel } from "@mui/material";
+import { ReactElement } from "react";
 import Styles from "./SelectField.module.scss";
 
 type props = {

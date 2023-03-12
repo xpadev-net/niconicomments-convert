@@ -4,7 +4,7 @@ import {
   commentThread,
   v3MetadataComment,
 } from "@/@types/niconico";
-import { ChangeEvent, useEffect, useState } from "react";
+import { formatDate } from "@/util/time";
 import {
   FormControlLabel,
   Radio,
@@ -12,8 +12,8 @@ import {
   Switch,
   TextField,
 } from "@mui/material";
+import { ChangeEvent, useEffect, useState } from "react";
 import Styles from "./CommentOption.module.scss";
-import { formatDate } from "@/util/time";
 
 const forkLabel: { [key: string]: string } = {
   owner: "投稿者コメント",

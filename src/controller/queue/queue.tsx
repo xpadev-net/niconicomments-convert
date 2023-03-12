@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import { typeGuard } from "@/typeGuard";
-import { Queue } from "@/@types/queue";
-import Styles from "./queue.module.scss";
+import type { Queue } from "@/@types/queue";
+import { CommentItem } from "@/controller/queue/CommentItem";
 import { ConvertItem } from "@/controller/queue/ConvertItem";
 import { MovieItem } from "@/controller/queue/MovieItem";
-import { CommentItem } from "@/controller/queue/CommentItem";
+import { typeGuard } from "@/typeGuard";
+import { useEffect, useState } from "react";
+import Styles from "./queue.module.scss";
 
 const QueueDisplay = () => {
   const [queue, setQueue] = useState<Queue[]>([]);

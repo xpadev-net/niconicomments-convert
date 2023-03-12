@@ -1,34 +1,34 @@
 import type {
-  apiRequestSelectMovie,
-  apiRequestFromController,
-  apiRequestSelectComment,
-  apiRequestSelectOutput,
-  apiRequestSelectFile,
-  apiRequestGetSetting,
-  apiRequestSetSetting,
-  apiRequestDownloadMovie,
-  apiRequestAppendQueue,
-  apiRequestGetAvailableProfiles,
-  apiRequestGetNiconicoMovieMetadata,
-} from "@/@types/request.controller";
-import type {
-  apiRequestLoad,
-  apiRequestProgress,
-  apiRequestFromRenderer,
-  apiRequestBuffer,
-  apiRequestEnd,
-} from "@/@types/request.renderer";
-import {
   chromiumProfilesJson,
   firefoxContainerDefault,
   firefoxContainersJson,
   firefoxContainerUser,
 } from "@/@types/cookies";
-import {
+import type {
   createSessionResponse,
   UserData,
   watchV3Metadata,
 } from "@/@types/niconico";
+import type {
+  apiRequestAppendQueue,
+  apiRequestDownloadMovie,
+  apiRequestFromController,
+  apiRequestGetAvailableProfiles,
+  apiRequestGetNiconicoMovieMetadata,
+  apiRequestGetSetting,
+  apiRequestSelectComment,
+  apiRequestSelectFile,
+  apiRequestSelectMovie,
+  apiRequestSelectOutput,
+  apiRequestSetSetting,
+} from "@/@types/request.controller";
+import type {
+  apiRequestBuffer,
+  apiRequestEnd,
+  apiRequestFromRenderer,
+  apiRequestLoad,
+  apiRequestProgress,
+} from "@/@types/request.renderer";
 
 const typeGuard = {
   controller: {

@@ -1,8 +1,8 @@
-import NiconiComments from "@xpadev-net/niconicomments";
-import { sleep } from "@/util/sleep";
+import type { ConvertQueue } from "@/@types/queue";
 import { typeGuard } from "@/typeGuard";
-import { ConvertQueue } from "@/@types/queue";
 import { encodeJson } from "@/util/json";
+import { sleep } from "@/util/sleep";
+import NiconiComments from "@xpadev-net/niconicomments";
 
 const setupRenderer = async () => {
   document.title = "renderer - niconicomments-convert";

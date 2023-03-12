@@ -1,6 +1,9 @@
+import { isLoadingAtom, messageAtom } from "@/controller/atoms";
+import { Comment } from "@/controller/comment/comment";
 import { Convert } from "@/controller/convert/convert";
+import { Movie } from "@/controller/movie/movie";
 import { QueueDisplay } from "@/controller/queue/queue";
-import Styles from "./controller.module.scss";
+import { Setting } from "@/controller/setting/setting";
 import {
   Dialog,
   DialogActions,
@@ -9,13 +12,10 @@ import {
   Tab,
   Tabs,
 } from "@mui/material";
-import { useState } from "react";
-import { Movie } from "@/controller/movie/movie";
-import { Setting } from "@/controller/setting/setting";
 import Button from "@mui/material/Button";
 import { useAtom, useAtomValue } from "jotai";
-import { isLoadingAtom, messageAtom } from "@/controller/atoms";
-import { Comment } from "@/controller/comment/comment";
+import { useState } from "react";
+import Styles from "./controller.module.scss";
 
 const Controller = () => {
   const [tab, setTab] = useState<number>(0);

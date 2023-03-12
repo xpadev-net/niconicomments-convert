@@ -1,18 +1,18 @@
-import { ChangeEvent, useState } from "react";
-import { TextField } from "@mui/material";
-import Styles from "./comment.module.scss";
-import { useSetAtom } from "jotai";
-import { isLoadingAtom, messageAtom } from "@/controller/atoms";
-import { getNicoId, isNicovideoUrl } from "@/util/niconico";
-import {
+import type {
   availableNicovideoApi,
   commentOption,
   watchV3Metadata,
 } from "@/@types/niconico";
 import { CommentOption } from "@/components/CommentOption";
+import { isLoadingAtom, messageAtom } from "@/controller/atoms";
+import { getNicoId, isNicovideoUrl } from "@/util/niconico";
 import { formatDate } from "@/util/time";
-import Button from "@mui/material/Button";
 import { generateUuid } from "@/util/uuid";
+import { TextField } from "@mui/material";
+import Button from "@mui/material/Button";
+import { useSetAtom } from "jotai";
+import { ChangeEvent, useState } from "react";
+import Styles from "./comment.module.scss";
 
 type props = {
   api: availableNicovideoApi;

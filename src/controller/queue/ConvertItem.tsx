@@ -1,8 +1,7 @@
-import { ConvertQueue } from "@/@types/queue";
-import Styles from "./ConvertItem.module.scss";
-
-import { useMemo } from "react";
+import type { ConvertQueue } from "@/@types/queue";
 import { LinearProgress } from "@mui/material";
+import { useMemo } from "react";
+import Styles from "./ConvertItem.module.scss";
 
 type props = {
   queue: ConvertQueue;

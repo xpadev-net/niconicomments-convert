@@ -1,13 +1,13 @@
-import { ChangeEvent, useState } from "react";
-import { MenuItem, Select, TextField } from "@mui/material";
-import Styles from "./movie.module.scss";
-import Button from "@mui/material/Button";
-import { generateUuid } from "@/util/uuid";
-import { useSetAtom } from "jotai";
+import type { watchV3Metadata } from "@/@types/niconico";
+import { SelectField } from "@/components/SelectField";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import { getNicoId, isNicovideoUrl } from "@/util/niconico";
-import { watchV3Metadata } from "@/@types/niconico";
-import { SelectField } from "@/components/SelectField";
+import { generateUuid } from "@/util/uuid";
+import { MenuItem, Select, TextField } from "@mui/material";
+import Button from "@mui/material/Button";
+import { useSetAtom } from "jotai";
+import { ChangeEvent, useState } from "react";
+import Styles from "./movie.module.scss";
 
 const Movie = () => {
   const [url, setUrl] = useState("");

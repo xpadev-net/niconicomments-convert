@@ -1,7 +1,7 @@
 import { app, BrowserWindow, globalShortcut } from "electron";
 import { createControllerWindow } from "./controllerWindow";
-import { registerListener } from "./ipcManager";
 import { onStartUp } from "./ffmpeg";
+import { registerListener } from "./ipcManager";
 
 app.on("window-all-closed", () => {
   app.quit();

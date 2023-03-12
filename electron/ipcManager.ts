@@ -1,7 +1,9 @@
 import { ipcMain } from "electron";
-import { typeGuard } from "./typeGuard";
 import { sendMessageToController } from "./controllerWindow";
 import { selectComment, selectFile, selectMovie, selectOutput } from "./dialog";
+import { getAvailableProfiles } from "./lib/cookie";
+import { encodeJson } from "./lib/json";
+import { getMetadata } from "./lib/niconico";
 import {
   appendBuffers,
   appendQueue,
@@ -11,9 +13,7 @@ import {
   updateProgress,
 } from "./queue";
 import { store } from "./store";
-import { getAvailableProfiles } from "./lib/cookie";
-import { getMetadata } from "./lib/niconico";
-import { encodeJson } from "./lib/json";
+import { typeGuard } from "./typeGuard";
 
 const registerListener = () => {
   ipcMain.handle("request", async (IpcMainEvent, args) => {

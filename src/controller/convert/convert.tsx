@@ -1,8 +1,9 @@
+import type { niconicommentsOptions, Options } from "@/@types/options";
+import type { apiResponseType, Movie } from "@/@types/types";
+import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import { typeGuard } from "@/typeGuard";
 import { str2time, time2str } from "@/util/time";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
-import { useCallback, useEffect, useState } from "react";
+import { generateUuid } from "@/util/uuid";
 import {
   FormControl,
   FormControlLabel,
@@ -12,13 +13,12 @@ import {
   Select,
   Switch,
 } from "@mui/material";
-import Styles from "./convert.module.scss";
-import type { apiResponseType, Movie } from "@/@types/types";
-import type { niconicommentsOptions, Options } from "@/@types/options";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
 import { inputFormat, inputFormatType } from "@xpadev-net/niconicomments";
-import { generateUuid } from "@/util/uuid";
 import { useSetAtom } from "jotai";
-import { isLoadingAtom, messageAtom } from "@/controller/atoms";
+import { useCallback, useEffect, useState } from "react";
+import Styles from "./convert.module.scss";
 
 const initialConfig: Options = {
   nico: {

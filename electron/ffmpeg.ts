@@ -1,14 +1,14 @@
+import axios, { AxiosResponse } from "axios";
+import { app } from "electron";
 import * as fs from "fs";
-import * as path from "path";
 import * as os from "os";
+import * as path from "path";
+import * as Stream from "stream";
 import {
-  createBinaryDownloaderWindow,
   binaryDownloaderWindow,
+  createBinaryDownloaderWindow,
   sendMessageToBinaryDownloader,
 } from "./binaryDownloaderWindow";
-import { app } from "electron";
-import axios, { AxiosResponse } from "axios";
-import * as Stream from "stream";
 import { spawn } from "./lib/spawn";
 
 type lib = "ffmpeg" | "ffprobe";

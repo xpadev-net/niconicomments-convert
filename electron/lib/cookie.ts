@@ -1,3 +1,4 @@
+import { browserProfile, Cookies } from "@/@types/cookies";
 import {
   getAvailableChromiumProfiles,
   getChromiumCookies,
@@ -6,7 +7,6 @@ import {
   getAvailableFirefoxProfiles,
   getFirefoxCookies,
 } from "./cookies/firefox";
-import { browserProfile, Cookies } from "@/@types/cookies";
 
 const getAvailableProfiles = async () => {
   return [

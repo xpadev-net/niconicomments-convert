@@ -1,7 +1,7 @@
+import { apiResponsesToController } from "@/@types/response.controller";
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
 import { baseUrl } from "./context";
-import { apiResponsesToController } from "@/@types/response.controller";
 
 let controllerWindow: BrowserWindow;
 const createControllerWindow = () => {

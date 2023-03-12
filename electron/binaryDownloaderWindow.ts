@@ -1,7 +1,7 @@
+import { apiResponsesToBinaryDownloader } from "@/@types/response.binaryDownloader";
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
 import { baseUrl } from "./context";
-import { apiResponsesToBinaryDownloader } from "@/@types/response.binaryDownloader";
 
 let binaryDownloaderWindow: BrowserWindow;
 const createBinaryDownloaderWindow = async () => {

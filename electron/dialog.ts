@@ -1,15 +1,15 @@
-import { dialog } from "electron";
-import { spawn } from "./lib/spawn";
-import { ffprobePath } from "./ffmpeg";
-import * as fs from "fs";
-import { sendMessageToController } from "./controllerWindow";
+import type { ffmpegOutput } from "@/@types/ffmpeg";
+import type { spawnResult } from "@/@types/spawn";
+import type { v1Raw } from "@/@types/types";
 import NiconiComments from "@xpadev-net/niconicomments";
+import { dialog } from "electron";
+import * as fs from "fs";
 import { JSDOM } from "jsdom";
-import { v1Raw } from "@/@types/types";
-import { spawnResult } from "@/@types/spawn";
-import { ffmpegOutput } from "@/@types/ffmpeg";
-import SaveDialogOptions = Electron.SaveDialogOptions;
+import { sendMessageToController } from "./controllerWindow";
+import { ffprobePath } from "./ffmpeg";
 import { encodeJson } from "./lib/json";
+import { spawn } from "./lib/spawn";
+import SaveDialogOptions = Electron.SaveDialogOptions;
 
 const selectFile = async (pattern: Electron.FileFilter[]) => {
   return await dialog.showOpenDialog({

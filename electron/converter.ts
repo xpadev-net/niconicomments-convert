@@ -1,6 +1,6 @@
-import { Converter } from "./ffmpeg-stream/stream";
-import * as Stream from "stream";
 import { ConvertQueue } from "@/@types/queue";
+import * as Stream from "stream";
+import { Converter } from "./ffmpeg-stream/stream";
 
 let converter, inputStream: Stream.Writable;
 const startConverter = async (queue: ConvertQueue) => {
