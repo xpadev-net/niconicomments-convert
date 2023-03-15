@@ -47,6 +47,8 @@ const registerListener = () => {
         updateProgress(value.data.generated);
       } else if (typeGuard.renderer.load(value)) {
         return processingQueue;
+      } else if (typeGuard.renderer.message(value)) {
+        sendMessageToController(value);
       } else {
         sendMessageToController({
           type: "message",
