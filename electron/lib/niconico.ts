@@ -316,7 +316,7 @@ const convertToXml = (comments: formattedComment[]) => {
     const chat = document.createElement("chat");
     chat.setAttribute("no", `${comment.id}`);
     chat.setAttribute("vpos", `${comment.vpos}`);
-    chat.innerHTML = comment.content;
+    chat.innerText = chat.textContent = comment.content;
     chat.setAttribute("date", `${comment.date}`);
     chat.setAttribute("date_usec", `${comment.date_usec}`);
     chat.setAttribute("owner", `${comment.owner ? 1 : 0}`);
