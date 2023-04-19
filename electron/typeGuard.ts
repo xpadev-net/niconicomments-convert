@@ -29,6 +29,7 @@ import type {
   apiRequestLoad,
   apiRequestProgress,
 } from "@/@types/request.renderer";
+import { apiRequestMessage } from "@/@types/request.renderer";
 
 const typeGuard = {
   controller: {
@@ -97,6 +98,10 @@ const typeGuard = {
       typeof i === "object" &&
       (i as apiRequestFromRenderer).host === "renderer" &&
       (i as apiRequestLoad).type === "load",
+    message: (i: unknown): i is apiRequestMessage =>
+      typeof i === "object" &&
+      (i as apiRequestFromRenderer).host === "renderer" &&
+      (i as apiRequestMessage).type === "message",
   },
   firefox: {
     containers: (i: unknown): i is firefoxContainersJson =>
