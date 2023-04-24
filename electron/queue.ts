@@ -5,6 +5,7 @@ import { inputStream, startConverter } from "./converter";
 import { download, downloadComment } from "./lib/niconico";
 import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
 import { base64ToUint8Array } from "./utils";
+import { encodeJson } from "./lib/json";
 
 const queueList: Queue[] = [];
 const queueLists: QueueLists = {
@@ -49,16 +50,25 @@ const startMovieDownload = async () => {
   const targetQueue = queued[0];
   targetQueue.status = "processing";
   sendProgress();
-  await download(
-    targetQueue.url,
-    targetQueue.format,
-    targetQueue.path,
-    (total, downloaded) => {
-      targetQueue.progress = downloaded / total;
-      sendProgress();
-    }
-  );
-  targetQueue.status = "completed";
+  try {
+    await download(
+      targetQueue.url,
+      targetQueue.format,
+      targetQueue.path,
+      (total, downloaded) => {
+        targetQueue.progress = downloaded / total;
+        sendProgress();
+      }
+    );
+    targetQueue.status = "completed";
+  } catch (e) {
+    targetQueue.status = "fail";
+    sendMessageToController({
+      type: "message",
+      title: "動画のダウンロード中にエラーが発生しました",
+      message: `エラー内容:\n${encodeJson(e)}`,
+    });
+  }
   sendProgress();
   void startMovieDownload();
 };
@@ -74,11 +84,20 @@ const startCommentDownload = async () => {
   const targetQueue = queued[0];
   targetQueue.status = "processing";
   sendProgress();
-  await downloadComment(targetQueue, (total, downloaded) => {
-    targetQueue.progress = downloaded / total;
-    sendProgress();
-  });
-  targetQueue.status = "completed";
+  try {
+    await downloadComment(targetQueue, (total, downloaded) => {
+      targetQueue.progress = downloaded / total;
+      sendProgress();
+    });
+    targetQueue.status = "completed";
+  } catch (e) {
+    targetQueue.status = "fail";
+    sendMessageToController({
+      type: "message",
+      title: "コメントのダウンロード中にエラーが発生しました",
+      message: `エラー内容:\n${encodeJson(e)}`,
+    });
+  }
   sendProgress();
   void startCommentDownload();
 };
