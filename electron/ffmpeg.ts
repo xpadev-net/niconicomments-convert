@@ -13,8 +13,7 @@ import { spawn } from "./lib/spawn";
 
 type lib = "ffmpeg" | "ffprobe";
 
-let step = 0,
-  target: lib[] = [];
+let target: lib[] = [];
 
 const ext = process.platform === "win32" ? ".exe" : "";
 
@@ -73,12 +72,15 @@ const downloadBinary = async (target: lib[]) => {
     await fs.promises.mkdir(basePath, { recursive: true });
   }
   if (target.includes("ffmpeg")) {
-    step++;
-    await downloadFile(`${baseUrl.ffmpeg}ffmpeg-${distro.ffmpeg}`, ffmpegPath);
+    await downloadFile(
+      "ffmpeg",
+      `${baseUrl.ffmpeg}ffmpeg-${distro.ffmpeg}`,
+      ffmpegPath
+    );
   }
   if (target.includes("ffprobe")) {
-    step++;
     await downloadFile(
+      "ffprobe",
       `${baseUrl.ffmpeg}ffprobe-${distro.ffmpeg}`,
       ffprobePath
     );
@@ -88,18 +90,18 @@ const downloadBinary = async (target: lib[]) => {
     fs.chmodSync(ffprobePath, 0o755);
   }
 };
-const downloadFile = async (url: string, path: string) => {
+const downloadFile = async (name: string, url: string, path: string) => {
   const file = fs.createWriteStream(path);
   return axios({
     method: "get",
     url,
     responseType: "stream",
-    onDownloadProgress: (progress) => {
+    onDownloadProgress: (status) => {
+      const progress = status.loaded / (status.total || 1);
       sendMessageToBinaryDownloader({
         type: "downloadProgress",
-        step: step,
-        progress:
-          (step - 1 + progress.loaded / (progress.total || 1)) / target.length,
+        name: name,
+        progress: progress,
       });
     },
   }).then((res: AxiosResponse<Stream>) => {

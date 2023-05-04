@@ -9,4 +9,18 @@
   user-select: none;
   width: 100vw;
   height: 100vh;
+  .progressWrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 10px;
+    width: 100%;
+    .progress {
+      flex: 1;
+    }
+    .text {
+      margin-left: 10px;
+      width: 30px;
+    }
+  }
 }

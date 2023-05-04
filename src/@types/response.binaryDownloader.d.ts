@@ -3,7 +3,7 @@ export type apiResponseToBinaryDownloader = {
 };
 export type apiResponseDownloadProgress = {
   type: "downloadProgress";
-  step: number;
+  name: string;
   progress: number;
 };
 
