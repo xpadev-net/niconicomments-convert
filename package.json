@@ -27,7 +27,7 @@
     "@fontsource/roboto": "^4.5.8",
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.12.3",
-    "@xpadev-net/niconicomments": "^0.2.48",
+    "@xpadev-net/niconicomments": "^0.2.50",
     "axios": "^1.4.0",
     "electron-store": "^8.1.0",
     "jotai": "^2.0.4",
@@ -38,9 +38,8 @@
     "@types/body-parser": "^1.19.2",
     "@types/follow-redirects": "^1.14.1",
     "@types/jsdom": "^21.1.1",
-    "@types/react-dom": "^18.2.3",
+    "@types/react-dom": "^18.2.4",
     "@types/sqlite3": "^3.1.8",
-    "@types/styled-components": "^5.1.26",
     "@typescript-eslint/eslint-plugin": "^5.59.2",
     "@typescript-eslint/parser": "^5.59.2",
     "@vitejs/plugin-react": "^4.0.0",
@@ -51,7 +50,7 @@
     "electron": "^24.2.0",
     "electron-builder": "^23.6.0",
     "eslint": "^8.39.0",
-    "eslint-config-prettier": "^8.8.0",
+    "eslint-config-prettier": "8.8.0",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.2",
     "prettier": "^2.8.8",
@@ -59,9 +58,8 @@
     "react-dom": "^18.2.0",
     "rimraf": "^5.0.0",
     "sass": "^1.62.1",
-    "styled-components": "^5.3.10",
     "typescript": "^5.0.4",
-    "vite": "^4.3.4"
+    "vite": "^4.3.5"
   },
   "optionalDependencies": {
     "win-protect": "^1.0.0"
