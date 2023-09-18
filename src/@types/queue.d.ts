@@ -1,4 +1,4 @@
-import type { inputFormat, Options } from "@xpadev-net/niconicomments";
+import type { InputFormat, Options } from "@xpadev-net/niconicomments";
 import {
   availableNicovideoApi,
   commentOption,
@@ -18,7 +18,7 @@ type BaseQueue = {
 export type ConvertQueue = BaseQueue & {
   type: "convert";
   comment: {
-    data: inputFormat;
+    data: InputFormat;
     options: Options;
   };
   movie: {

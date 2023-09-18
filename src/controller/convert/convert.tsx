@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import { inputFormat, inputFormatType } from "@xpadev-net/niconicomments";
+import { InputFormat, InputFormatType } from "@xpadev-net/niconicomments";
 import { useSetAtom } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import Styles from "./convert.module.scss";
@@ -56,7 +56,7 @@ const initialConfig: Options = {
 const Convert = () => {
   const [movie, setMovie] = useState<Movie | undefined>();
   const [comment, setComment] = useState<
-    { format: inputFormatType; data: inputFormat } | undefined
+    { format: InputFormatType; data: InputFormat } | undefined
   >();
   const [rawClip, setRawClip] = useState<{ start: string; end: string }>({
     start: "",

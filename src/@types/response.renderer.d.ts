@@ -1,4 +1,4 @@
-import type { inputFormat, inputFormatType } from "@xpadev-net/niconicomments";
+import type { InputFormat, InputFormatType } from "@xpadev-net/niconicomments";
 
 import type { Options } from "./options";
 import { apiResponseEnd } from "@/@types/response.controller";
@@ -9,8 +9,8 @@ export type apiResponseToRenderer = {
 };
 export type apiResponseStartRender = {
   type: "start";
-  data: inputFormat;
-  format: inputFormatType;
+  data: InputFormat;
+  format: InputFormatType;
   options?: Options;
   duration: number;
   fps: number;

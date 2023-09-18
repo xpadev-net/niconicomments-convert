@@ -18,7 +18,7 @@ import type {
   apiResponsesToBinaryDownloader,
   apiResponseToBinaryDownloader,
 } from "./response.binaryDownloader";
-import type { v1Thread } from "@xpadev-net/niconicomments";
+import type { V1Thread } from "@xpadev-net/niconicomments";
 
 declare global {
   interface Window {
@@ -63,6 +63,6 @@ export type v1Raw = {
     status: 200;
   };
   data: {
-    threads: v1Thread[];
+    threads: V1Thread[];
   };
 };

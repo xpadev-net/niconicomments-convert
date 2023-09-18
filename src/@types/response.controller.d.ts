@@ -1,5 +1,5 @@
 import { Movie } from "@/@types/types";
-import { inputFormat, inputFormatType } from "@xpadev-net/niconicomments";
+import { InputFormat, InputFormatType } from "@xpadev-net/niconicomments";
 import { Queue } from "@/@types/queue";
 
 export type apiResponseToController = {
@@ -12,8 +12,8 @@ export type apiResponseSelectMovie = {
 
 export type apiResponseSelectComment = {
   type: "selectComment";
-  data: inputFormat;
-  format: inputFormatType;
+  data: InputFormat;
+  format: InputFormatType;
 };
 export type apiResponseProgress = {
   type: "progress";

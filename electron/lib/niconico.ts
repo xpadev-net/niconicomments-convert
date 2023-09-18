@@ -6,7 +6,7 @@ import {
 import { CommentQueue, NicovideoFormat } from "@/@types/queue";
 import { authType } from "@/@types/setting";
 import { v1Raw } from "@/@types/types";
-import NiconiComments, { formattedComment } from "@xpadev-net/niconicomments";
+import NiconiComments, { FormattedComment } from "@xpadev-net/niconicomments";
 import * as fs from "fs";
 import { JSDOM } from "jsdom";
 import { sendMessageToController } from "../controllerWindow";
@@ -304,7 +304,7 @@ const downloadComment = async (
   fs.writeFileSync(queue.path, xml, "utf-8");
 };
 
-const convertToXml = (comments: formattedComment[]) => {
+const convertToXml = (comments: FormattedComment[]) => {
   const jsdom = new JSDOM();
   const parser = new jsdom.window.DOMParser();
   const document = parser.parseFromString(
@@ -332,7 +332,7 @@ const downloadV3LegacyComment = async (
   updateProgress: (total, progress) => void
 ) => {
   const userList = [];
-  const comments: formattedComment[] = [];
+  const comments: FormattedComment[] = [];
   const start = Math.floor(new Date(queue.option.start).getTime() / 1000);
   const threadTotal = queue.option.threads.filter(
     (thread) => thread.enable
@@ -344,7 +344,7 @@ const downloadV3LegacyComment = async (
   let threadId = 0;
   for (const thread of queue.option.threads) {
     if (!thread.enable) continue;
-    const threadComments: formattedComment[] = [];
+    const threadComments: FormattedComment[] = [];
     let when = Math.floor(new Date(queue.option.start).getTime() / 1000);
     while (
       (queue.option.end.type === "date" &&
@@ -365,7 +365,7 @@ const downloadV3LegacyComment = async (
           if (!value) continue;
           if (!NiconiComments.typeGuard.legacy.apiChat(value)) continue;
           if (value.deleted !== 1) {
-            const tmpParam: formattedComment = {
+            const tmpParam: FormattedComment = {
               id: value.no,
               vpos: value.vpos,
               content: value.content || "",
@@ -419,7 +419,7 @@ const downloadV3V1Comment = async (
   updateProgress: (total, progress) => void
 ) => {
   const userList = [];
-  const comments: formattedComment[] = [];
+  const comments: FormattedComment[] = [];
   const start = Math.floor(new Date(queue.option.start).getTime() / 1000);
   const threadTotal = queue.option.threads.filter(
     (thread) => thread.enable
@@ -431,7 +431,7 @@ const downloadV3V1Comment = async (
   let threadId = 0;
   for (const thread of queue.option.threads) {
     if (!thread.enable) continue;
-    const threadComments: formattedComment[] = [];
+    const threadComments: FormattedComment[] = [];
     const when = Math.floor(new Date(queue.option.start).getTime() / 1000);
     const baseData = {
       threadKey: queue.metadata.nvComment.threadKey,
@@ -475,7 +475,7 @@ const downloadV3V1Comment = async (
       for (const thread of threads) {
         const forkName = thread.fork;
         for (const comment of thread.comments) {
-          const tmpParam: formattedComment = {
+          const tmpParam: FormattedComment = {
             id: comment.no,
             vpos: Math.floor(comment.vposMs / 10),
             content: comment.body,
