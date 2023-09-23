@@ -23,7 +23,7 @@ type sqliteParam =
 const fetchAll = (
   db: sqlite3.Database,
   sql: string,
-  param?: sqliteParam
+  param?: sqliteParam,
 ): Promise<unknown[]> => {
   return new Promise((resolve, reject) => {
     db.all(sql, param, (err, rows) => {

@@ -339,7 +339,7 @@ export class Converter {
       this.process.on("exit", (code, signal) => {
         dbg(`exit: code=${code ?? "unknown"} sig=${signal ?? "unknown"}`);
         console.log(
-          `exit: code=${code ?? "unknown"} sig=${signal ?? "unknown"}`
+          `exit: code=${code ?? "unknown"} sig=${signal ?? "unknown"}`,
         );
         if (code == null) return resolve();
         if (EXIT_CODES.includes(code)) return resolve();

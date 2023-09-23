@@ -20,7 +20,7 @@ const Setting = () => {
   const setIsLoading = useSetAtom(isLoadingAtom);
   const [authSetting, setAuthSetting] = useState<Partial<authType>>();
   const [availableProfiles, setAvailableProfiles] = useState<browserProfile[]>(
-    []
+    [],
   );
   useLayoutEffect(() => {
     void (async () => {
@@ -79,7 +79,7 @@ const Setting = () => {
       type: "browser",
       profile: availableProfiles.reduce<browserProfile | undefined>(
         (pv, val) => (`${val.browser}:${val.name}` === name ? val : pv),
-        undefined
+        undefined,
       ),
     });
   };

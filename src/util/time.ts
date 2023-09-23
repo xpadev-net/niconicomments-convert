@@ -30,17 +30,17 @@ const str2time = (date: string): number | undefined => {
 const time2str = (time: number | undefined): string => {
   if (!time) return "";
   return `${String(Math.floor(time / 60)).padStart(2, "0")}:${String(
-    (time % 60).toFixed(2).padStart(5, "0")
+    (time % 60).toFixed(2).padStart(5, "0"),
   )}`;
 };
 
 const formatDate = (_date: Date) => {
   return `${_date.getFullYear()}-${fill(_date.getMonth() + 1, 2)}-${fill(
     _date.getDate(),
-    2
+    2,
   )}T${fill(_date.getHours(), 2)}:${fill(_date.getMinutes(), 2)}:${fill(
     _date.getSeconds(),
-    2
+    2,
   )}`;
 };
 export { str2time, time2str, formatDate };

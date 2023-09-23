@@ -25,7 +25,7 @@ const getFirefoxRootDir = () => {
   if (!process.env.HOME) throw new Error("fail to resolve home dir");
   return path.join(
     process.env.HOME,
-    "Library/Application Support/Firefox/Profiles"
+    "Library/Application Support/Firefox/Profiles",
   );
 };
 
@@ -63,7 +63,7 @@ const getAvailableFirefoxProfiles = async () => {
     }
     try {
       const containers = JSON.parse(
-        fs.readFileSync(containersPath, "utf8")
+        fs.readFileSync(containersPath, "utf8"),
       ) as unknown;
       if (!typeGuard.firefox.containers(containers)) continue;
       for (const container of containers.identities) {
@@ -114,7 +114,7 @@ const getFirefoxCookies = async (profile: firefoxProfile) => {
     if (profile.type === "firefoxBasicProfile") {
       return await fetchAll(
         db,
-        `SELECT host, name, value, path, expiry, isSecure FROM moz_cookies WHERE NOT INSTR(originAttributes,"userContextId=")`
+        `SELECT host, name, value, path, expiry, isSecure FROM moz_cookies WHERE NOT INSTR(originAttributes,"userContextId=")`,
       );
     }
     return await fetchAll(
@@ -123,7 +123,7 @@ const getFirefoxCookies = async (profile: firefoxProfile) => {
       [
         `%userContextId=${profile.contextId}`,
         `%userContextId=${profile.contextId}&%`,
-      ]
+      ],
     );
   })()) as moz_cookies;
 

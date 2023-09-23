@@ -64,7 +64,7 @@ const selectMovie = async () => {
       message: `ffprobeの出力のパースに失敗しました\nffprobeの出力:\n${
         ffprobe.stdout
       }\nエラー内容:\n${encodeJson(
-        e
+        e,
       )}\ndialog / selectMovie / failed to parse ffprobe output`,
     };
   }

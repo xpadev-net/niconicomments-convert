@@ -37,7 +37,7 @@ const getChromiumRootDir = (browser: chromiumBrowser) => {
     if (browser === "brave") {
       return path.join(
         process.env.LOCALAPPDATA,
-        "BraveSoftware/Brave-Browser/User Data"
+        "BraveSoftware/Brave-Browser/User Data",
       );
     }
     if (browser === "chrome") {
@@ -61,13 +61,13 @@ const getChromiumRootDir = (browser: chromiumBrowser) => {
   if (browser === "brave") {
     return path.join(
       process.env.HOME,
-      "Library/Application Support/BraveSoftware/Brave-Browser"
+      "Library/Application Support/BraveSoftware/Brave-Browser",
     );
   }
   if (browser === "chrome") {
     return path.join(
       process.env.HOME,
-      "Library/Application Support/Google/Chrome"
+      "Library/Application Support/Google/Chrome",
     );
   }
   if (browser === "chromium") {
@@ -76,13 +76,13 @@ const getChromiumRootDir = (browser: chromiumBrowser) => {
   if (browser === "edge") {
     return path.join(
       process.env.HOME,
-      "Library/Application Support/Microsoft Edge"
+      "Library/Application Support/Microsoft Edge",
     );
   }
   if (browser === "opera") {
     return path.join(
       process.env.HOME,
-      "Library/Application Support/com.operasoftware.Opera"
+      "Library/Application Support/com.operasoftware.Opera",
     );
   }
   if (browser === "vivaldi") {
@@ -119,13 +119,13 @@ const getChromiumKeyName = (browser: chromiumBrowser) => {
 };
 
 const getAvailableChromiumProfiles = async (
-  browser: chromiumBrowser
+  browser: chromiumBrowser,
 ): Promise<chromiumProfile[]> => {
   const root = getChromiumRootDir(browser);
   const localStatePath = path.join(root, "Local State");
   if (!fs.existsSync(localStatePath)) return [];
   const metadata = JSON.parse(
-    fs.readFileSync(localStatePath, "utf-8")
+    fs.readFileSync(localStatePath, "utf-8"),
   ) as unknown;
   if (!typeGuard.chromium.profiles(metadata))
     throw new Error("invalid manifest file");
@@ -172,17 +172,17 @@ const getChromiumCookies = async (profile: chromiumProfile) => {
   const db = openClonedDB(cookiesPath);
   const columns = (await fetchAll(
     db,
-    "PRAGMA table_info(`cookies`)"
+    "PRAGMA table_info(`cookies`)",
   )) as columnInfo;
   const secureColumn = columns.reduce(
     (pv, val) => val.name === "is_secure" || pv,
-    false
+    false,
   )
     ? "is_secure"
     : "secure";
   const rows = (await fetchAll(
     db,
-    `SELECT host_key, name, value, encrypted_value, path, expires_utc, ${secureColumn} FROM cookies`
+    `SELECT host_key, name, value, encrypted_value, path, expires_utc, ${secureColumn} FROM cookies`,
   )) as chromiumCookies[];
   const decryptor = await (process.platform === "win32"
     ? getWindowsDecryptor
@@ -210,7 +210,7 @@ const pbkdf2 = (input: string): Promise<Buffer> => {
         } else {
           resolve(derivedKey);
         }
-      }
+      },
     );
   });
 };
@@ -219,7 +219,7 @@ const decryptAES256GCM = (
   key: Buffer,
   enc: Buffer,
   nonce: Buffer,
-  tag: Buffer
+  tag: Buffer,
 ) => {
   const algorithm = "aes-256-gcm";
   const decipher = crypto.createDecipheriv(algorithm, key, nonce);
@@ -230,10 +230,10 @@ const decryptAES256GCM = (
 };
 
 const getWindowsDecryptor = (
-  profile: chromiumProfile
+  profile: chromiumProfile,
 ): ((value: Buffer) => string) => {
   const localState = JSON.parse(
-    fs.readFileSync(path.join(profile.path, "../", "Local State"), "utf-8")
+    fs.readFileSync(path.join(profile.path, "../", "Local State"), "utf-8"),
   ) as chromiumLocalState;
   const base64_key = localState.os_crypt.encrypted_key;
   const encryptedKey = Buffer.from(base64_key, "base64");
@@ -241,7 +241,7 @@ const getWindowsDecryptor = (
   return (value: Buffer) => {
     if (value[0] == 0x76 && value[1] == 0x31 && value[2] == 0x30) {
       const key: Buffer = wp.decrypt(
-        encryptedKey.slice(5, encryptedKey.length)
+        encryptedKey.slice(5, encryptedKey.length),
       );
       const nonce: Buffer = value.slice(3, 15);
       const tag: Buffer = value.slice(value.length - 16, value.length);
@@ -261,7 +261,7 @@ const getWindowsDecryptor = (
 };
 
 const getMacDecryptor = async (
-  profile: chromiumProfile
+  profile: chromiumProfile,
 ): Promise<(value: Buffer) => string> => {
   const keyName = getChromiumKeyName(profile.browser);
   const keyResult = await spawn("security", [

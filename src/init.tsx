@@ -22,7 +22,7 @@ const init = () => {
     reactRoot.render(
       <ThemeProvider theme={darkTheme}>
         <Controller />
-      </ThemeProvider>
+      </ThemeProvider>,
     );
   } else if (loc === "?binary-downloader") {
     reactRoot.render(<Downloader />);

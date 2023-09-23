@@ -74,7 +74,7 @@ const typeGuard = {
       (i as apiRequestFromController).host === "controller" &&
       (i as apiRequestGetAvailableProfiles).type === "getAvailableProfiles",
     getNiconicoMovieMetadata: (
-      i: unknown
+      i: unknown,
     ): i is apiRequestGetNiconicoMovieMetadata =>
       typeof i === "object" &&
       (i as apiRequestFromController).host === "controller" &&

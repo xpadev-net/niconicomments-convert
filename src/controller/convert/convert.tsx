@@ -170,7 +170,7 @@ const Convert = () => {
             total:
               Math.ceil(
                 (options.video.end || movie.duration) -
-                  (options.video.start || 0)
+                  (options.video.start || 0),
               ) * options.video.fps,
           },
         },

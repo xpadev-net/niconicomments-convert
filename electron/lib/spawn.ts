@@ -6,7 +6,7 @@ function spawn(
   args?: string[],
   options?: child_process.SpawnOptionsWithoutStdio,
   onData?: (data: string) => unknown,
-  onError?: (data: string) => unknown
+  onError?: (data: string) => unknown,
 ): Promise<spawnResult> {
   return new Promise<spawnResult>((resolve, reject) => {
     let stdout = "",

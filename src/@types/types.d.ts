@@ -25,7 +25,7 @@ declare global {
     api: {
       request: (data: apiRequestType) => Promise<unknown>;
       onResponse: (
-        callback: (_: unknown, data: apiResponseType) => void
+        callback: (_: unknown, data: apiResponseType) => void,
       ) => void;
       remove: (callback: (_: unknown, data: apiResponseType) => void) => void;
     };

@@ -26,7 +26,7 @@ const createBinaryDownloaderWindow = async () => {
   }
 };
 const sendMessageToBinaryDownloader = (
-  value: apiResponsesToBinaryDownloader
+  value: apiResponsesToBinaryDownloader,
 ) => {
   binaryDownloaderWindow.webContents.send("response", {
     ...value,

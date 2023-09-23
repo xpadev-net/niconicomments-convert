@@ -46,7 +46,7 @@ const CommentOption = ({ update, postedDate, metadata }: props) => {
         label: forkLabel[thread.label] ?? "その他",
         forkLabel: thread.forkLabel,
       };
-    })
+    }),
   );
   useEffect(() => {
     update({

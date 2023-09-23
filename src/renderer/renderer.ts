@@ -74,14 +74,14 @@ const startRenderer = async () => {
     const parser = new DOMParser();
     data.comment.data = parser.parseFromString(
       data.comment.data as string,
-      "application/xml"
+      "application/xml",
     );
   }
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   const nico = new NiconiComments(
     canvas,
     data.comment.data,
-    data.comment.options
+    data.comment.options,
   );
   const emptyBuffer = canvas.toDataURL("image/png");
   message.innerText = "";

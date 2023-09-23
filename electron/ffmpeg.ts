@@ -75,14 +75,14 @@ const downloadBinary = async (target: lib[]) => {
     await downloadFile(
       "ffmpeg",
       `${baseUrl.ffmpeg}ffmpeg-${distro.ffmpeg}`,
-      ffmpegPath
+      ffmpegPath,
     );
   }
   if (target.includes("ffprobe")) {
     await downloadFile(
       "ffprobe",
       `${baseUrl.ffmpeg}ffprobe-${distro.ffmpeg}`,
-      ffprobePath
+      ffprobePath,
     );
   }
   if (process.platform === "darwin") {

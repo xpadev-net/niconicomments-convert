@@ -26,7 +26,7 @@ const QueueDisplay = () => {
           <MovieItem key={item.id} queue={item} />
         ) : (
           <CommentItem key={item.id} queue={item} />
-        )
+        ),
       )}
     </div>
   );

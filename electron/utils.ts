@@ -3,7 +3,7 @@ function base64ToUint8Array(base64Str: string) {
   return Uint8Array.from(
     Array.prototype.map.call(raw, (x: string) => {
       return x.charCodeAt(0);
-    })
+    }),
   );
 }
 

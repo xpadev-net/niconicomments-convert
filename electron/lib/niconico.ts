@@ -28,7 +28,7 @@ const getUserInfo = async (cookies: string): Promise<UserData | false> => {
       headers: {
         Cookie: cookies,
       },
-    }
+    },
   );
   const res = (await req.json()) as unknown;
   if (!typeGuard.niconico.userData(res)) {
@@ -43,7 +43,7 @@ const getMetadata = async (nicoId: string) => {
   const authSetting = store.get("auth") as authType | undefined;
   if (authSetting?.type === "browser" && authSetting.profile) {
     const cookies = convertToEncodedCookie(
-      await getCookies(authSetting.profile)
+      await getCookies(authSetting.profile),
     );
     const req = await fetch(
       `https://www.nicovideo.jp/api/watch/v3/${nicoId}?_frontendId=6&_frontendVersion=0&actionTrackId=0_0`,
@@ -51,7 +51,7 @@ const getMetadata = async (nicoId: string) => {
         headers: {
           Cookie: cookies,
         },
-      }
+      },
     );
     const metadata = (await req.json()) as unknown;
     if (!typeGuard.niconico.watchV3Metadata(metadata)) {
@@ -66,7 +66,7 @@ const getMetadata = async (nicoId: string) => {
 
 const getV3GuestMetadata = async (nicoId: string): Promise<watchV3Metadata> => {
   const req = await fetch(
-    `https://www.nicovideo.jp/api/watch/v3_guest/${nicoId}?_frontendId=6&_frontendVersion=0&actionTrackId=0_0`
+    `https://www.nicovideo.jp/api/watch/v3_guest/${nicoId}?_frontendId=6&_frontendVersion=0&actionTrackId=0_0`,
   );
   const metadata = (await req.json()) as unknown;
   if (!typeGuard.niconico.watchV3Metadata(metadata)) {
@@ -79,7 +79,7 @@ const download = async (
   nicoId: string,
   format: NicovideoFormat,
   path: string,
-  progress: (total: number, downloaded: number) => void
+  progress: (total: number, downloaded: number) => void,
 ) => {
   const metadata = await getMetadata(nicoId);
   if (!metadata) {
@@ -111,7 +111,7 @@ const download = async (
           "X-Frontend-Id": "6",
           "X-Frontend-Version": "0",
         },
-      }
+      },
     );
     if (trackingReq.status !== 200) {
       console.warn("動画のダウンロードに失敗する可能性があります");
@@ -150,7 +150,7 @@ const download = async (
             "Content-Type": "text/plain;charset=UTF-8",
           },
           body: JSON.stringify(lastSession),
-        }
+        },
       );
       const res = (await req.json()) as unknown;
       if (!typeGuard.niconico.createSessionResponse(res)) {
@@ -182,7 +182,7 @@ const download = async (
     ["-i", lastSession.session.content_uri, "-c", "copy", path, "-y"],
     undefined,
     onData,
-    onData
+    onData,
   );
   clearInterval(heartbeatInterval);
   const delReq = await fetch(
@@ -195,7 +195,7 @@ const download = async (
         "Content-Type": "text/plain;charset=UTF-8",
       },
       body: JSON.stringify(lastSession),
-    }
+    },
   );
   await delReq.json();
   return result;
@@ -214,7 +214,7 @@ const time2num = (time: string) => {
 
 const createSessionCreateRequestBody = (
   metadata: watchV3Metadata,
-  format: NicovideoFormat
+  format: NicovideoFormat,
 ): createSessionRequest => {
   const sessionBody: createSessionRequest = {
     session: {
@@ -291,7 +291,7 @@ const createSessionCreateRequestBody = (
 
 const downloadComment = async (
   queue: CommentQueue,
-  updateProgress: (total, progress) => void
+  updateProgress: (total, progress) => void,
 ) => {
   const formattedComments = await (async () => {
     if (queue.api === "v3+legacy") {
@@ -309,7 +309,7 @@ const convertToXml = (comments: FormattedComment[]) => {
   const parser = new jsdom.window.DOMParser();
   const document = parser.parseFromString(
       `<?xml version="1.0" encoding="UTF-8"?><packet></packet>`,
-      "application/xhtml+xml"
+      "application/xhtml+xml",
     ),
     packet = document.getElementsByTagName("packet")[0];
   for (const comment of comments) {
@@ -329,13 +329,13 @@ const convertToXml = (comments: FormattedComment[]) => {
 
 const downloadV3LegacyComment = async (
   queue: CommentQueue,
-  updateProgress: (total, progress) => void
+  updateProgress: (total, progress) => void,
 ) => {
   const userList = [];
   const comments: FormattedComment[] = [];
   const start = Math.floor(new Date(queue.option.start).getTime() / 1000);
   const threadTotal = queue.option.threads.filter(
-    (thread) => thread.enable
+    (thread) => thread.enable,
   ).length;
   const total =
     queue.option.end.type === "date"
@@ -354,7 +354,7 @@ const downloadV3LegacyComment = async (
     ) {
       await sleep(1000);
       const req = await fetch(
-        `${queue.metadata.threads[0].server}/api.json/thread?version=20090904&scores=1&nicoru=3&fork=${thread.fork}&language=0&thread=${thread.threadId}&res_from=-1000&when=${when}`
+        `${queue.metadata.threads[0].server}/api.json/thread?version=20090904&scores=1&nicoru=3&fork=${thread.fork}&language=0&thread=${thread.threadId}&res_from=-1000&when=${when}`,
       );
       const res = (await req.json()) as unknown;
       if (!NiconiComments.typeGuard.legacy.rawApiResponses(res))
@@ -402,7 +402,7 @@ const downloadV3LegacyComment = async (
       } else {
         updateProgress(
           queue.option.end.count * threadTotal,
-          queue.option.end.count * threadId + threadComments.length
+          queue.option.end.count * threadId + threadComments.length,
         );
       }
       if (res.length < 100 || threadComments[threadComments.length - 1]?.id < 5)
@@ -416,13 +416,13 @@ const downloadV3LegacyComment = async (
 
 const downloadV3V1Comment = async (
   queue: CommentQueue,
-  updateProgress: (total, progress) => void
+  updateProgress: (total, progress) => void,
 ) => {
   const userList = [];
   const comments: FormattedComment[] = [];
   const start = Math.floor(new Date(queue.option.start).getTime() / 1000);
   const threadTotal = queue.option.threads.filter(
-    (thread) => thread.enable
+    (thread) => thread.enable,
   ).length;
   const total =
     queue.option.end.type === "date"
@@ -505,7 +505,7 @@ const downloadV3V1Comment = async (
       } else {
         updateProgress(
           queue.option.end.count * threadTotal,
-          queue.option.end.count * threadId + threadComments.length
+          queue.option.end.count * threadId + threadComments.length,
         );
       }
       if (

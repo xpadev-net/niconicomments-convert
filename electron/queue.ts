@@ -58,7 +58,7 @@ const startMovieDownload = async () => {
       (total, downloaded) => {
         targetQueue.progress = downloaded / total;
         sendProgress();
-      }
+      },
     );
     targetQueue.status = "completed";
   } catch (e) {
@@ -142,7 +142,7 @@ const appendBuffers = (blobs: string[]) => {
           .pipe(inputStream, { end: false });
       }).catch((e) => {
         console.warn(e);
-      })
+      }),
     );
   }
 };

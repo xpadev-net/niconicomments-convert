@@ -22,7 +22,7 @@ const MetaV3 = ({ api }: props) => {
   const [url, setUrl] = useState("");
   const [metadata, setMetadata] = useState<watchV3Metadata | undefined>();
   const [commentOption, setCommentOption] = useState<commentOption | undefined>(
-    undefined
+    undefined,
   );
   const setMessage = useSetAtom(messageAtom);
   const setIsLoading = useSetAtom(isLoadingAtom);
