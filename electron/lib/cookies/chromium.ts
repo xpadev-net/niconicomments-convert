@@ -121,44 +121,53 @@ const getChromiumKeyName = (browser: chromiumBrowser) => {
 const getAvailableChromiumProfiles = async (
   browser: chromiumBrowser,
 ): Promise<chromiumProfile[]> => {
-  const root = getChromiumRootDir(browser);
-  const localStatePath = path.join(root, "Local State");
-  if (!fs.existsSync(localStatePath)) return [];
-  const metadata = JSON.parse(
-    fs.readFileSync(localStatePath, "utf-8"),
-  ) as unknown;
-  if (!typeGuard.chromium.profiles(metadata))
-    throw new Error("invalid manifest file");
-  const profiles: chromiumProfile[] = [];
-  const addProfile = async (profile: chromiumProfile) =>
-    (await isLoggedIn(profile)) && profiles.push(profile);
-  for (const key of Object.keys(metadata.profile.info_cache)) {
-    const value = metadata.profile.info_cache[key];
-    const profilePath = path.join(root, key);
-    if (!fs.existsSync(profilePath)) continue;
-    if (
-      !fs.existsSync(path.join(profilePath, "Cookies")) &&
-      !fs.existsSync(path.join(profilePath, "Network", "Cookies"))
-    )
-      continue;
-    await addProfile({
-      type: "chromiumProfile",
-      browser: browser,
-      profileName: key,
-      name: value.name,
-      path: profilePath,
-    });
+  try {
+    const root = getChromiumRootDir(browser);
+    const localStatePath = path.join(root, "Local State");
+    if (!fs.existsSync(localStatePath)) return [];
+    const metadata = JSON.parse(
+      fs.readFileSync(localStatePath, "utf-8"),
+    ) as unknown;
+    if (!typeGuard.chromium.profiles(metadata)) return [];
+    const profiles: chromiumProfile[] = [];
+    const addProfile = async (profile: chromiumProfile) =>
+      (await isLoggedIn(profile)) && profiles.push(profile);
+    for (const key of Object.keys(metadata.profile.info_cache)) {
+      try {
+        const value = metadata.profile.info_cache[key];
+        const profilePath = path.join(root, key);
+        if (!fs.existsSync(profilePath)) continue;
+        if (
+          !fs.existsSync(path.join(profilePath, "Cookies")) &&
+          !fs.existsSync(path.join(profilePath, "Network", "Cookies"))
+        )
+          continue;
+        await addProfile({
+          type: "chromiumProfile",
+          browser: browser,
+          profileName: key,
+          name: value.name,
+          path: profilePath,
+        });
+      } catch (_) {}
+    }
+    return profiles;
+  } catch (_) {
+    return [];
   }
-  return profiles;
 };
 
 const isLoggedIn = async (profile: chromiumProfile): Promise<boolean> => {
-  if (process.platform === "darwin") return true;
-  const cookies = await getChromiumCookies(profile);
-  if (!(cookies["user_session"] && cookies["user_session_secure"]))
+  try {
+    if (process.platform === "darwin") return true;
+    const cookies = await getChromiumCookies(profile);
+    if (!(cookies["user_session"] && cookies["user_session_secure"]))
+      return false;
+    const user = await getUserInfo(convertToEncodedCookie(cookies));
+    return !!user;
+  } catch (_) {
     return false;
-  const user = await getUserInfo(convertToEncodedCookie(cookies));
-  return !!user;
+  }
 };
 
 const getChromiumCookies = async (profile: chromiumProfile) => {
