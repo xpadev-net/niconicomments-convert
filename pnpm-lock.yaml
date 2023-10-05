@@ -88,8 +88,8 @@ devDependencies:
     specifier: ^7.0.3
     version: 7.0.3
   electron:
-    specifier: ^24.8.3
-    version: 24.8.3
+    specifier: ^24.8.5
+    version: 24.8.5
   electron-builder:
     specifier: ^23.6.0
     version: 23.6.0
@@ -2483,8 +2483,8 @@ packages:
     resolution: {integrity: sha512-h+UqpfmEr1Qkk0zp7ej/jid7CXoq4m4QzW6wNTb0ELJ/BZCpA4wgUylBIMGCe621tnr4l5VmoHjdoSx2lbnNJA==}
     dev: true
 
-  /electron@24.8.3:
-    resolution: {integrity: sha512-6YTsEOIMIQNnOz0Fj5gAWtwCuDd66iYKkuRJGyc80jKKYI49jBeH+R7ZZry9uiVu4T4bZgBN2FAN24XfCioQZA==}
+  /electron@24.8.5:
+    resolution: {integrity: sha512-CWSF0CrD1XhxyoXUcCcEoJB8orMTHuOrkj2s87XU11vjgVJHhzhCBh9TVqhMQt7U6TtcGYa5kDIiLRekxJRaRA==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
     requiresBuild: true
