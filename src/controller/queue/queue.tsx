@@ -19,6 +19,7 @@ const QueueDisplay = () => {
   }, []);
   return (
     <div className={Styles.wrapper}>
+      {queue.length < 1 && <p>タスクはまだありません</p>}
       {queue.map((item) => {
         if (item.type === "convert") {
           return (
