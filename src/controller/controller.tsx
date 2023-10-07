@@ -16,6 +16,8 @@ import Button from "@mui/material/Button";
 import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
 import Styles from "./controller.module.scss";
+import { Sidebar } from "@/controller/sidebar/sidebar";
+import { DownloadingOutlined } from "@mui/icons-material";
 
 const Controller = () => {
   const [tab, setTab] = useState<number>(0);
@@ -49,7 +51,15 @@ const Controller = () => {
           </div>
         </div>
         <div className={Styles.queue}>
-          <QueueDisplay />
+          <Sidebar
+            pages={[
+              {
+                id: "queue",
+                icon: DownloadingOutlined,
+                component: QueueDisplay,
+              },
+            ]}
+          />
         </div>
       </div>
       <Dialog open={!!message} onClose={() => setMessage(undefined)}>

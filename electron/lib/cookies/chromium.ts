@@ -149,7 +149,9 @@ const getAvailableChromiumProfiles = async (
           name: value.name,
           path: profilePath,
         });
-      } catch (_) {}
+      } catch (_) {
+        console.log(_);
+      }
     }
     return profiles;
   } catch (_) {

@@ -5,14 +5,15 @@ import Styles from "./ConvertItem.module.scss";
 
 type props = {
   queue: ConvertQueue;
+  className: string;
 };
-const ConvertItem = ({ queue }: props) => {
+const ConvertItem = ({ queue, className }: props) => {
   return useMemo(() => {
     const movieName = queue.movie.path.split(/\/|\\/g).reverse()[0];
     const outputName = queue.output.path.split(/\/|\\/g).reverse()[0];
     if (queue.status !== "processing") {
       return (
-        <div className={Styles.queue}>
+        <div className={`${Styles.queue} ${className}`}>
           <p>input: {movieName}</p>
           <p>output: {outputName}</p>
           <p>status: {queue.status}</p>
@@ -22,7 +23,7 @@ const ConvertItem = ({ queue }: props) => {
     const pg = queue.progress;
 
     return (
-      <div className={Styles.queue}>
+      <div className={`${Styles.queue} ${className}`}>
         <p>input: {movieName}</p>
         <p>output: {outputName}</p>
         <p>status: processing</p>

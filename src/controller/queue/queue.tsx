@@ -19,15 +19,21 @@ const QueueDisplay = () => {
   }, []);
   return (
     <div className={Styles.wrapper}>
-      {queue.map((item) =>
-        item.type === "convert" ? (
-          <ConvertItem key={item.id} queue={item} />
-        ) : item.type === "movie" ? (
-          <MovieItem key={item.id} queue={item} />
-        ) : (
-          <CommentItem key={item.id} queue={item} />
-        ),
-      )}
+      {queue.map((item) => {
+        if (item.type === "convert") {
+          return (
+            <ConvertItem className={Styles.item} key={item.id} queue={item} />
+          );
+        }
+        if (item.type === "movie") {
+          return (
+            <MovieItem className={Styles.item} key={item.id} queue={item} />
+          );
+        }
+        return (
+          <CommentItem className={Styles.item} key={item.id} queue={item} />
+        );
+      })}
     </div>
   );
 };

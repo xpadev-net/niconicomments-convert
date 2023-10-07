@@ -5,14 +5,15 @@ import Styles from "./ConvertItem.module.scss";
 
 type props = {
   queue: CommentQueue;
+  className: string;
 };
-const CommentItem = ({ queue }: props) => {
+const CommentItem = ({ queue, className }: props) => {
   return useMemo(() => {
     const outputName = queue.path.split(/\/|\\/g).reverse()[0];
     const url = queue.target;
     if (queue.status !== "processing") {
       return (
-        <div className={Styles.queue}>
+        <div className={`${Styles.queue} ${className}`}>
           <p>id: {url}</p>
           <p>output: {outputName}</p>
           <p>status: {queue.status}</p>
@@ -21,7 +22,7 @@ const CommentItem = ({ queue }: props) => {
     }
 
     return (
-      <div className={Styles.queue}>
+      <div className={`${Styles.queue} ${className}`}>
         <p>id: {url}</p>
         <p>path: {outputName}</p>
         <p>status: processing</p>

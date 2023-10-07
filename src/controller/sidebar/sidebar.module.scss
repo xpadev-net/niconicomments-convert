@@ -1,0 +1,40 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 50px;
+  .icon {
+    width: 50px;
+    height: 50px;
+    display: grid;
+    place-items: center;
+    &.active {
+      background: #253b40;
+    }
+  }
+  .overlay {
+    position: fixed;
+    right: 50px;
+    top: 0;
+    min-width: 300px;
+    max-width: calc(100vw - 50px);
+    width: 30vw;
+    z-index: 1;
+    display: none;
+    &.visible {
+      display: block;
+    }
+    &:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: -1;
+    }
+    .container {
+      background: #0f181a;
+    }
+  }
+}
