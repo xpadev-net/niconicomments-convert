@@ -376,6 +376,7 @@ const downloadV3LegacyComment = async (
               mail: [],
               user_id: -1,
               layer: -1,
+              is_my_post: false,
             };
             if (value.mail) {
               tmpParam.mail = value.mail.split(/\s+/g);
@@ -486,6 +487,7 @@ const downloadV3V1Comment = async (
             mail: comment.commands,
             user_id: -1,
             layer: -1,
+            is_my_post: false,
           };
           if (tmpParam.content.startsWith("/") && tmpParam.owner) {
             tmpParam.mail.push("invisible");
