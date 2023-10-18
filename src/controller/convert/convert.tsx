@@ -76,16 +76,13 @@ const Convert: FC = () => {
   const onCommentClick = (): void => setModal("comment");
 
   const onMovieChange = (val?: TMovieItem): void => {
-    console.log(val);
     setMovie(val);
     setModal(undefined);
   };
   const onCommentChange = (val?: TCommentItem): void => {
-    console.log(val);
     setComment(val);
     setModal(undefined);
   };
-  console.log(comment, movie);
 
   const convert = (): void => {
     if (!comment || !movie) return;

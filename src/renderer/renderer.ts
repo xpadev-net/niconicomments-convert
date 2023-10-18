@@ -80,11 +80,6 @@ const startRenderer = async (): Promise<void> => {
     Math.ceil(
       (queue.option.to || queue.movie.duration) - (queue.option.ss || 0),
     ) * targetFrameRate;
-  console.log({
-    totalFrames,
-    targetFrameRate,
-    queue,
-  });
   const process = async (): Promise<void> => {
     for (let i = 0; i < targetFrameRate; i++) {
       const vpos = Math.ceil(i * (100 / targetFrameRate)) + offset;

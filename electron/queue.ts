@@ -119,7 +119,6 @@ const startConvert = async (): Promise<void> => {
     !queued[0]
   )
     return;
-  console.log(queued[0].wait);
   for (const queueId of queued[0].wait ?? []) {
     const queue = queueList.filter((i) => i.id === queueId)[0];
     if (queue?.status !== "completed") return;
