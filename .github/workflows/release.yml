@@ -15,6 +15,7 @@ jobs:
           node-version: 18
       - run: npm install -g pnpm
       - run: pnpm install
+      - run: pnpm remove win-protect
       - run: npm run build:mac
       - uses: softprops/action-gh-release@v1
         with:
