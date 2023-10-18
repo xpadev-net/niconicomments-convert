@@ -166,7 +166,30 @@ const Convert: FC = () => {
       <Button variant={"outlined"} onClick={onCommentClick}>
         コメントを選択
       </Button>
-
+      {movie && (
+        <div>
+          <h3>動画</h3>
+          <p>path: {movie.path}</p>
+          <p>duration: {movie.duration}</p>
+          {movie.type === "remote" && (
+            <>
+              <p>source: {movie.ref.url}</p>
+            </>
+          )}
+        </div>
+      )}
+      {comment && (
+        <div>
+          <h3>コメント</h3>
+          <p>path: {comment.path}</p>
+          <p>format: {comment.format}</p>
+          {comment.type === "remote" && (
+            <>
+              <p>source: {comment.ref.url}</p>
+            </>
+          )}
+        </div>
+      )}
       {movie && comment && (
         <section>
           <div>
