@@ -55,8 +55,16 @@ const startRenderer = async (): Promise<void> => {
   let inProgress = false;
   let convertedFrames = 0;
 
-  const sendBuffer = (buffer: string[]): void => {
-    void window.api.request({ type: "buffer", host: "renderer", data: buffer });
+  const sendBlob = (frameId: number, blob: Blob): void => {
+    console.log("sendblob", frameId);
+    void blob.arrayBuffer().then((buffer) => {
+      void window.api.request({
+        type: "blob",
+        host: "renderer",
+        frameId: frameId + 1,
+        data: new Uint8Array(buffer),
+      });
+    });
   };
 
   const { commentData, queue } = (await window.api.request({
@@ -71,7 +79,9 @@ const startRenderer = async (): Promise<void> => {
     ...queue.option.options,
     format,
   });
-  const emptyBuffer = canvas.toDataURL("image/png");
+  const emptyBuffer: Blob | null = await new Promise((resolve) =>
+    canvas.toBlob((blob) => resolve(blob)),
+  );
   message.innerText = "";
   let generatedFrames = 0,
     offset = Math.ceil((queue.option.ss || 0) * 100);
@@ -83,16 +93,24 @@ const startRenderer = async (): Promise<void> => {
   const process = async (): Promise<void> => {
     for (let i = 0; i < targetFrameRate; i++) {
       const vpos = Math.ceil(i * (100 / targetFrameRate)) + offset;
+      const frame = generatedFrames;
       // eslint-disable-next-line
-      if ((nico["timeline"][vpos]?.length || 0) === 0) {
-        sendBuffer([emptyBuffer]);
+      if ((nico["timeline"][vpos]?.length || 0) === 0 && emptyBuffer) {
+        sendBlob(frame, emptyBuffer);
       } else {
         nico.drawCanvas(vpos);
-        sendBuffer([canvas.toDataURL("image/png")]);
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          sendBlob(frame, blob);
+        });
       }
       generatedFrames++;
       if (generatedFrames >= totalFrames) {
-        await window.api.request({ type: "end", host: "renderer" });
+        await window.api.request({
+          type: "end",
+          host: "renderer",
+          frameId: generatedFrames,
+        });
         inProgress = false;
         message.innerText = "変換の終了を待っています...";
         return;

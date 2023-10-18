@@ -29,6 +29,7 @@ import type {
   ApiRequestLoad,
 } from "@/@types/request.renderer";
 import type { ApiRequestMessage } from "@/@types/request.renderer";
+import type { ApiRequestBlob } from "@/@types/request.renderer";
 
 const typeGuard = {
   controller: {
@@ -85,6 +86,10 @@ const typeGuard = {
       typeof i === "object" &&
       (i as ApiRequestFromRenderer).host === "renderer" &&
       (i as ApiRequestBuffer).type === "buffer",
+    blob: (i: unknown): i is ApiRequestBlob =>
+      typeof i === "object" &&
+      (i as ApiRequestFromRenderer).host === "renderer" &&
+      (i as ApiRequestBlob).type === "blob",
     end: (i: unknown): i is ApiRequestEnd =>
       typeof i === "object" &&
       (i as ApiRequestFromRenderer).host === "renderer" &&

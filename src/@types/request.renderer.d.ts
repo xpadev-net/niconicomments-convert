@@ -6,8 +6,14 @@ export type ApiRequestBuffer = {
   type: "buffer";
   data: string[];
 };
+export type ApiRequestBlob = {
+  type: "blob";
+  frameId: number;
+  data: Uint8Array;
+};
 export type ApiRequestEnd = {
   type: "end";
+  frameId: number;
 };
 export type ApiRequestLoad = {
   type: "load";
@@ -22,4 +28,5 @@ export type ApiRequestsFromRenderer =
   | ApiRequestBuffer
   | ApiRequestEnd
   | ApiRequestLoad
-  | ApiRequestMessage;
+  | ApiRequestMessage
+  | ApiRequestBlob;

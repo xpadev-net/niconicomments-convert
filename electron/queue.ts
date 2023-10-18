@@ -9,7 +9,6 @@ import { inputStream, startConverter } from "./converter";
 import { encodeJson } from "./lib/json";
 import { download, downloadComment } from "./lib/niconico";
 import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
-import { base64ToUint8Array } from "./utils";
 
 const queueList: Queue[] = [];
 const queueLists: QueueLists = {
@@ -19,6 +18,9 @@ const queueLists: QueueLists = {
 };
 let convertQueue = Promise.resolve();
 let processingQueue: ConvertQueue;
+let lastFrame = 0;
+let endFrame = -1;
+const frameQueue: { [key: number]: Uint8Array } = {};
 const appendQueue = (queue: Queue): void => {
   queueList.push(queue);
   if (queue.type === "convert") {
@@ -126,6 +128,7 @@ const startConvert = async (): Promise<void> => {
   processingQueue = queued[0];
   processingQueue.status = "processing";
   processingQueue.progress = 0;
+  lastFrame = 0;
   createRendererWindow();
   sendProgress();
   await startConverter(queued[0]);
@@ -136,32 +139,45 @@ const startConvert = async (): Promise<void> => {
   sendProgress();
   void startConvert();
 };
-const appendBuffers = (blobs: string[]): void => {
-  for (const item of blobs) {
-    const base64Image = item.split(";base64,").pop();
-    if (!base64Image) continue;
-    convertQueue = convertQueue.then(() =>
-      new Promise<void>((fulfill, reject) => {
-        const myStream = new Stream.Readable();
-        myStream._read = () => {
-          const u8 = base64ToUint8Array(base64Image);
-          myStream.push(u8);
-          myStream.push(null);
-        };
-        processingQueue.progress++;
-        sendProgress();
-        return myStream
-          .on("end", () => fulfill())
-          .on("error", () => reject())
-          .pipe(inputStream, { end: false });
-      }).catch((e) => {
-        console.warn(e);
-      }),
-    );
+
+const appendFrame = (frameId: number, data: Uint8Array): void => {
+  frameQueue[frameId] = data;
+  console.log("receive: ", frameId, lastFrame, endFrame);
+  if (frameId !== lastFrame + 1) {
+    return;
+  }
+  while (frameQueue[lastFrame + 1]) {
+    lastFrame++;
+    console.log("process: ", frameId, lastFrame, endFrame);
+    processFrame(frameQueue[lastFrame]);
+    delete frameQueue[lastFrame];
+  }
+  if (lastFrame === endFrame) {
+    void convertQueue.then(() => inputStream.end());
   }
 };
-const markAsCompleted = (): void => {
-  void convertQueue.then(() => inputStream.end());
+
+const processFrame = (data: Uint8Array): void => {
+  convertQueue = convertQueue.then(() =>
+    new Promise<void>((fulfill, reject) => {
+      const myStream = new Stream.Readable();
+      myStream._read = () => {
+        myStream.push(data);
+        myStream.push(null);
+      };
+      processingQueue.progress++;
+      sendProgress();
+      return myStream
+        .on("end", () => fulfill())
+        .on("error", () => reject())
+        .pipe(inputStream, { end: false });
+    }).catch((e) => {
+      console.warn(e);
+    }),
+  );
+};
+const markAsCompleted = (frameId: number): void => {
+  endFrame = frameId;
 };
 const sendProgress = (): void => {
   sendMessageToController({
@@ -186,7 +202,7 @@ const processOnLoad = (): ApiResponseLoad => {
 };
 
 export {
-  appendBuffers,
+  appendFrame,
   appendQueue,
   markAsCompleted,
   processingQueue,

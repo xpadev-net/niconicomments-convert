@@ -6,7 +6,7 @@ import { getAvailableProfiles } from "./lib/cookie";
 import { encodeJson } from "./lib/json";
 import { getMetadata } from "./lib/niconico";
 import {
-  appendBuffers,
+  appendFrame,
   appendQueue,
   markAsCompleted,
   processOnLoad,
@@ -18,10 +18,10 @@ const registerListener = (): void => {
   ipcMain.handle("request", async (IpcMainEvent, args) => {
     try {
       const value = (args as { data: unknown[] }).data[0];
-      if (typeGuard.renderer.buffer(value)) {
-        appendBuffers(value.data);
+      if (typeGuard.renderer.blob(value)) {
+        appendFrame(value.frameId, value.data);
       } else if (typeGuard.renderer.end(value)) {
-        markAsCompleted();
+        markAsCompleted(value.frameId);
       } else if (typeGuard.controller.selectComment(value)) {
         return await selectComment();
       } else if (typeGuard.controller.selectMovie(value)) {
