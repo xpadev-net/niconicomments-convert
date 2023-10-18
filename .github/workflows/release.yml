@@ -15,7 +15,7 @@ jobs:
           node-version: 18
       - run: npm install -g pnpm
       - run: pnpm install
-      - run: pnpm run build:mac
+      - run: npm run build:mac
       - uses: softprops/action-gh-release@v1
         with:
           draft: true
@@ -33,7 +33,7 @@ jobs:
           node-version: 18
       - run: npm install -g pnpm
       - run: pnpm install
-      - run: pnpm run build:win
+      - run: npm run build:win
       - uses: softprops/action-gh-release@v1
         with:
           draft: true
