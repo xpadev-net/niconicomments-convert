@@ -69,6 +69,7 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
         options: {
           filters: [{ name: "xml", extensions: ["xml"] }],
           properties: ["createDirectory"],
+          defaultPath: `${nicoId}.xml`,
         },
       });
       setIsLoading(false);
@@ -104,21 +105,23 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
         fullWidth={true}
       />
       {metadata && (
-        <CommentOption
-          update={setCommentOption}
-          metadata={metadata.data.comment}
-          postedDate={formatDate(new Date(metadata.data.video.registeredAt))}
-        />
+        <>
+          <CommentOption
+            update={setCommentOption}
+            metadata={metadata.data.comment}
+            postedDate={formatDate(new Date(metadata.data.video.registeredAt))}
+          />
+          <div>
+            <Button
+              variant={"outlined"}
+              onClick={onClick}
+              disabled={!CommentOption || !metadata}
+            >
+              確定
+            </Button>
+          </div>
+        </>
       )}
-      <div>
-        <Button
-          variant={"outlined"}
-          onClick={onClick}
-          disabled={!CommentOption || !metadata}
-        >
-          確定
-        </Button>
-      </div>
     </div>
   );
 };

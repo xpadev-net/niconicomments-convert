@@ -94,6 +94,7 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
         options: {
           filters: [{ name: "mp4", extensions: ["mp4"] }],
           properties: ["createDirectory"],
+          defaultPath: `${nicoId}.mp4`,
         },
       });
       setIsLoading(false);
