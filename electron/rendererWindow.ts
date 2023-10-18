@@ -4,6 +4,7 @@ import * as path from "path";
 import type { ApiResponsesToRenderer } from "@/@types/response.renderer";
 
 import { baseUrl } from "./context";
+import { processingQueue } from "./queue";
 
 let rendererWindow: BrowserWindow;
 let isOpen = false;
@@ -20,7 +21,11 @@ const createRendererWindow = (): void => {
   });
   isOpen = true;
   rendererWindow.removeMenu();
-  rendererWindow.on("close", () => {
+  rendererWindow.on("close", (e) => {
+    if (processingQueue?.status === "processing") {
+      e.preventDefault();
+      return;
+    }
     isOpen = false;
   });
   void rendererWindow.loadURL(`${baseUrl}?renderer`);
