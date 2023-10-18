@@ -1,25 +1,25 @@
 export type Options = {
-  nico: niconicommentsOptions;
-  video: videoOptions;
+  nico: NiconicommentsOptions;
+  video: VideoOptions;
 };
 
-type modeType = "default" | "html5" | "flash";
+type ModeType = "default" | "html5" | "flash";
 
-export type niconicommentsOptions = {
-  showCollision: optionItem<boolean>;
-  showCommentCount: optionItem<boolean>;
-  keepCA: optionItem<boolean>;
-  scale: optionItem<number>;
-  mode: optionItem<modeType>;
+export type NiconicommentsOptions = {
+  showCollision: OptionItem<boolean>;
+  showCommentCount: OptionItem<boolean>;
+  keepCA: OptionItem<boolean>;
+  scale: OptionItem<number>;
+  mode: OptionItem<ModeType>;
 };
 
-export type videoOptions = {
+export type VideoOptions = {
   fps: number;
   start?: number;
   end?: number;
 };
 
-type optionItem<T> = {
+type OptionItem<T> = {
   value: T;
   name: string;
   tips?: string;

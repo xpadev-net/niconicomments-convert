@@ -1,4 +1,4 @@
-export type ffmpegOutput = {
+export type FfprobeOutput = {
   streams: {
     width?: number;
     height?: number;

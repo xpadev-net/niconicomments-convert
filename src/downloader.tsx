@@ -1,16 +1,19 @@
-import type { apiResponseType } from "@/@types/types";
+import { LinearProgress } from "@mui/material";
+import type { FC } from "react";
 import { useEffect, useState } from "react";
+
+import type { ApiResponseDownloadProgress } from "@/@types/response.binaryDownloader";
+import type { ApiResponseType } from "@/@types/types";
+
 import Styles from "./downloader.module.scss";
 import { typeGuard } from "./typeGuard";
-import { apiResponseDownloadProgress } from "@/@types/response.binaryDownloader";
-import { LinearProgress } from "@mui/material";
 
-const Downloader = () => {
+const Downloader: FC = () => {
   const [progress, setProgress] = useState<
-    apiResponseDownloadProgress | undefined
+    ApiResponseDownloadProgress | undefined
   >();
   useEffect(() => {
-    const eventHandler = (_: unknown, data: apiResponseType) => {
+    const eventHandler = (_: unknown, data: ApiResponseType): void => {
       if (data.target !== "downloader") return;
       if (typeGuard.binaryDownloader.progress(data)) {
         setProgress(data);

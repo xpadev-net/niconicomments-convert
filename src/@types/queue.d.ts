@@ -1,65 +1,84 @@
-import type { InputFormat, Options } from "@xpadev-net/niconicomments";
-import {
-  availableNicovideoApi,
-  commentOption,
-  v3MetadataComment,
-} from "@/@types/niconico";
+import type { Options } from "@xpadev-net/niconicomments";
+
+import type { NicoId, UUID } from "@/@types/brand";
+import type { TCommentOption, V3MetadataComment } from "@/@types/niconico";
+import type { CommentFormat } from "@/@types/niconicomments";
 
 type status = "queued" | "processing" | "completed" | "fail";
 
 export type Queue = ConvertQueue | MovieQueue | CommentQueue;
 
 type BaseQueue = {
-  id: string;
+  id: UUID;
   status: status;
   message?: string;
+  progress: number;
+};
+
+export type TCommentItem = TCommentItemLocal | TCommentItemRemote;
+
+export type TCommentItemLocal = {
+  type: "local";
+  path: string;
+  format: CommentFormat;
+};
+
+export type TCommentItemRemote = {
+  type: "remote";
+  path: string;
+  format: "XMLDocument";
+  ref: CommentQueue;
+};
+
+export type TMovieItem = TMovieItemLocal | TMovieItemRemote;
+
+export type TMovieItemLocal = {
+  type: "local";
+  path: string;
+  duration: number;
+};
+
+export type TMovieItemRemote = {
+  type: "remote";
+  path: string;
+  duration: number;
+  ref: MovieQueue;
 };
 
 export type ConvertQueue = BaseQueue & {
   type: "convert";
-  comment: {
-    data: InputFormat;
-    options: Options;
-  };
-  movie: {
-    path: string;
-    duration: number;
-    option: {
-      ss: number | undefined;
-      to: number | undefined;
-    };
-  };
+  comment: TCommentItem;
+  movie: TMovieItem;
   output: {
     path: string;
+  };
+  option: {
+    ss: number | undefined;
+    to: number | undefined;
     fps: number;
+    format: CommentFormat;
+    options: Options;
   };
-  progress: {
-    generated: number;
-    converted: number;
-    total: number;
-  };
+  wait?: UUID[];
 };
 
 export type MovieQueue = BaseQueue & {
   type: "movie";
-  url: string; //nicoId
-  format: NicovideoFormat;
-  progress: number;
+  url: NicoId;
+  format: NicovideoMovieFormat;
   path: string;
 };
 
-export type NicovideoFormat = {
+export type NicovideoMovieFormat = {
   video: string;
   audio: string;
 };
 
 export type CommentQueue = BaseQueue & {
   type: "comment";
-  target: string; //nicoId
-  api: availableNicovideoApi;
-  metadata: v3MetadataComment;
-  option: commentOption;
-  progress: number;
+  url: NicoId;
+  metadata: V3MetadataComment;
+  option: TCommentOption;
   path: string;
 };
 

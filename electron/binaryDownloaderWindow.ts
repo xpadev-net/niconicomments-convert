@@ -1,10 +1,12 @@
-import { apiResponsesToBinaryDownloader } from "@/@types/response.binaryDownloader";
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
+
+import type { ApiResponsesToBinaryDownloader } from "@/@types/response.binaryDownloader";
+
 import { baseUrl } from "./context";
 
 let binaryDownloaderWindow: BrowserWindow;
-const createBinaryDownloaderWindow = async () => {
+const createBinaryDownloaderWindow = async (): Promise<void> => {
   binaryDownloaderWindow = new BrowserWindow({
     width: 400,
     height: 200,
@@ -26,8 +28,8 @@ const createBinaryDownloaderWindow = async () => {
   }
 };
 const sendMessageToBinaryDownloader = (
-  value: apiResponsesToBinaryDownloader,
-) => {
+  value: ApiResponsesToBinaryDownloader,
+): void => {
   binaryDownloaderWindow.webContents.send("response", {
     ...value,
     target: "downloader",
@@ -35,7 +37,7 @@ const sendMessageToBinaryDownloader = (
 };
 
 export {
+  binaryDownloaderWindow,
   createBinaryDownloaderWindow,
   sendMessageToBinaryDownloader,
-  binaryDownloaderWindow,
 };

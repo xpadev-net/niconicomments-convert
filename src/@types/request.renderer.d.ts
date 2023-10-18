@@ -1,30 +1,25 @@
-export type apiRequestFromRenderer = {
+export type ApiRequestFromRenderer = {
   host: "renderer";
 };
 
-export type apiRequestProgress = {
-  type: "progress";
-  data: { generated: number };
-};
-export type apiRequestBuffer = {
+export type ApiRequestBuffer = {
   type: "buffer";
   data: string[];
 };
-export type apiRequestEnd = {
+export type ApiRequestEnd = {
   type: "end";
 };
-export type apiRequestLoad = {
+export type ApiRequestLoad = {
   type: "load";
 };
 
-export type apiRequestMessage = {
+export type ApiRequestMessage = {
   type: "message";
   title?: string;
   message: string;
 };
-export type apiRequestsFromRenderer =
-  | apiRequestProgress
-  | apiRequestBuffer
-  | apiRequestEnd
-  | apiRequestLoad
-  | apiRequestMessage;
+export type ApiRequestsFromRenderer =
+  | ApiRequestBuffer
+  | ApiRequestEnd
+  | ApiRequestLoad
+  | ApiRequestMessage;

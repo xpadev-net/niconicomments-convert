@@ -1,55 +1,55 @@
-import { Movie } from "@/@types/types";
-import { InputFormat, InputFormatType } from "@xpadev-net/niconicomments";
-import { Queue } from "@/@types/queue";
+import type { CommentFormat } from "@/@types/niconicomments";
+import type { Queue } from "@/@types/queue";
+import type { Movie } from "@/@types/types";
 
-export type apiResponseToController = {
+export type ApiResponseToController = {
   target: "controller";
 };
-export type apiResponseSelectMovie = {
+export type ApiResponseSelectMovie = {
   type: "selectMovie";
   data: Movie;
 };
 
-export type apiResponseSelectComment = {
+export type ApiResponseSelectComment = {
   type: "selectComment";
-  data: InputFormat;
-  format: InputFormatType;
+  path: string;
+  format: CommentFormat;
 };
-export type apiResponseProgress = {
+export type ApiResponseProgress = {
   type: "progress";
   data: Queue[];
 };
-export type apiResponseStartController = {
+export type ApiResponseStartController = {
   type: "start";
 };
-export type apiResponseEnd = {
+export type ApiResponseEnd = {
   type: "end";
 };
-export type apiResponseMessage = {
+export type ApiResponseMessage = {
   type: "message";
   title?: string;
   message: string;
 };
 
-export type apiResponseDownloadMovie = {
+export type ApiResponseDownloadMovie = {
   type: "downloadMovie";
   result: number;
 };
 
-export type apiResponseDownloadMovieProgress = {
+export type ApiResponseDownloadMovieProgress = {
   type: "downloadMovieProgress";
   total: number;
   downloaded: number;
 };
 
-export type apiResponsesToController =
-  | apiResponseSelectComment
-  | apiResponseSelectMovie
-  | apiResponseProgress
-  | apiResponseStartController
-  | apiResponseEnd
-  | apiResponseMessage
-  | apiResponseDownloadMovie
-  | apiResponseDownloadMovieProgress;
+export type ApiResponsesToController =
+  | ApiResponseSelectComment
+  | ApiResponseSelectMovie
+  | ApiResponseProgress
+  | ApiResponseStartController
+  | ApiResponseEnd
+  | ApiResponseMessage
+  | ApiResponseDownloadMovie
+  | ApiResponseDownloadMovieProgress;
 
 export {};

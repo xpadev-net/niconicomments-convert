@@ -1,9 +1,9 @@
-export type watchV3Metadata = {
+export type TWatchV3Metadata = {
   meta: {
     status: 200;
   };
   data: {
-    comment: v3MetadataComment;
+    comment: V3MetadataComment;
     media: {
       delivery: {
         recipeId: string;
@@ -13,28 +13,8 @@ export type watchV3Metadata = {
         };
         movie: {
           contentId: string;
-          audios: {
-            id: string;
-            isAvailable: boolean;
-            metadata: {
-              bitrate: number;
-              samplingRate: number;
-              levelIndex: number;
-            };
-          }[];
-          videos: {
-            id: string;
-            isAvailable: boolean;
-            metadata: {
-              label: string;
-              bitrate: number;
-              resolution: {
-                width: number;
-                height: number;
-              };
-              levelIndex: number;
-            };
-          }[];
+          audios: V3MetadataAudioItem[];
+          videos: V3MetadataVideoItem[];
           session: {
             recipeId: string;
             playerId: string;
@@ -42,7 +22,7 @@ export type watchV3Metadata = {
             audios: string[];
             movies: [];
             protocols: ["http", "hls"] | ["hls"];
-            authTypes: { [key in "http" | "hls"]: "ht2" };
+            AuthTypes: { [key in "http" | "hls"]: "ht2" };
             serviceUserId: string;
             token: string;
             signature: string;
@@ -71,6 +51,7 @@ export type watchV3Metadata = {
         mylist: number;
         like: number;
       };
+      duration: number;
       thumbnail: {
         url: string;
         middleUrl: string;
@@ -95,18 +76,41 @@ export type watchV3Metadata = {
   };
 };
 
-export type v3MetadataComment = {
+export type V3MetadataAudioItem = {
+  id: string;
+  isAvailable: boolean;
+  metadata: {
+    bitrate: number;
+    samplingRate: number;
+    levelIndex: number;
+  };
+};
+export type V3MetadataVideoItem = {
+  id: string;
+  isAvailable: boolean;
+  metadata: {
+    label: string;
+    bitrate: number;
+    resolution: {
+      width: number;
+      height: number;
+    };
+    levelIndex: number;
+  };
+};
+
+export type V3MetadataComment = {
   server: {
     url: string;
   };
   keys: {
     userKey: string;
   };
-  threads: v3MetadataCommentThread[];
-  nvComment: v3MetadataNvComment;
+  threads: V3MetadataCommentThread[];
+  nvComment: V3MetadataNvComment;
 };
 
-export type v3MetadataCommentThread = {
+export type V3MetadataCommentThread = {
   id: number;
   fork: number;
   forkLabel: "owner" | "main" | "easy";
@@ -131,7 +135,7 @@ export type v3MetadataCommentThread = {
   server: string;
 };
 
-export type v3MetadataNvComment = {
+export type V3MetadataNvComment = {
   threadKey: string;
   server: string;
   params: {
@@ -143,14 +147,14 @@ export type v3MetadataNvComment = {
   };
 };
 
-export type content_src_id = {
+export type ContentSrcId = {
   src_id_to_mux: {
     audio_src_ids: string[];
     video_src_ids: string[];
   };
 };
 
-export type createSessionRequest = {
+export type CreateSessionRequest = {
   session: {
     client_info: {
       player_id: string;
@@ -163,7 +167,7 @@ export type createSessionRequest = {
     };
     content_id: string;
     content_src_id_sets: {
-      content_src_ids: content_src_id[];
+      content_src_ids: ContentSrcId[];
     }[];
     content_type: "movie";
     content_uri: string;
@@ -207,7 +211,7 @@ export type SessionBody = {
   recipe_id: string;
   content_id: string;
   content_src_id_sets: {
-    content_src_ids: content_src_id[];
+    content_src_ids: ContentSrcId[];
     allow_subset: "yes";
   }[];
   content_type: "movie";
@@ -288,7 +292,7 @@ export type SessionBody = {
   content_status: string;
 };
 
-export type createSessionResponse = {
+export type CreateSessionResponse = {
   meta: {
     status: 201 | 200;
     message: "created" | "ok";
@@ -297,7 +301,7 @@ export type createSessionResponse = {
     session: SessionBody;
   };
 };
-export type updateSessionResponse = {
+export type UpdateSessionResponse = {
   meta: {
     status: 200;
     message: "ok";
@@ -306,7 +310,7 @@ export type updateSessionResponse = {
     session: SessionBody;
   };
 };
-export type deleteSessionResponse = {
+export type DeleteSessionResponse = {
   meta: {
     status: 200;
     message: "ok";
@@ -355,7 +359,7 @@ export type UserData = {
   };
 };
 
-export type commentThread = {
+export type TCommentThread = {
   threadId: number;
   fork: number;
   enable: boolean;
@@ -363,13 +367,13 @@ export type commentThread = {
   forkLabel: "owner" | "main" | "easy";
 };
 
-export type commentOption = {
+export type TCommentOption = {
   start: string;
-  end: commentOptionEndPoint;
-  threads: commentThread[];
+  end: TCommentOptionEndPoint;
+  threads: TCommentThread[];
 };
 
-export type commentOptionEndPoint =
+export type TCommentOptionEndPoint =
   | {
       type: "count";
       count: number;
@@ -378,9 +382,3 @@ export type commentOptionEndPoint =
       type: "date";
       date: string;
     };
-
-export type availableNicovideoApi =
-  | "v3+legacy"
-  | "v3+v1"
-  | "ce+legacy"
-  | "ce+v1";

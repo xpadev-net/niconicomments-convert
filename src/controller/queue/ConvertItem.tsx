@@ -1,13 +1,16 @@
-import type { ConvertQueue } from "@/@types/queue";
-import { LinearProgress } from "@mui/material";
+import type { FC } from "react";
 import { useMemo } from "react";
+
+import type { ConvertQueue } from "@/@types/queue";
+import { ProgressDisplay } from "@/controller/queue/ProgressDisplay";
+
 import Styles from "./ConvertItem.module.scss";
 
-type props = {
+type Props = {
   queue: ConvertQueue;
   className: string;
 };
-const ConvertItem = ({ queue, className }: props) => {
+const ConvertItem: FC<Props> = ({ queue, className }) => {
   return useMemo(() => {
     const movieName = queue.movie.path.split(/\/|\\/g).reverse()[0];
     const outputName = queue.output.path.split(/\/|\\/g).reverse()[0];
@@ -20,7 +23,13 @@ const ConvertItem = ({ queue, className }: props) => {
         </div>
       );
     }
-    const pg = queue.progress;
+
+    const targetFrameRate = queue.option.fps || 30;
+    const totalFrames =
+      Math.ceil(
+        (queue.option.to || queue.movie.duration) - (queue.option.ss || 0),
+      ) * targetFrameRate;
+    const progress = queue.progress ? queue.progress / totalFrames : undefined;
 
     return (
       <div className={`${Styles.queue} ${className}`}>
@@ -28,15 +37,7 @@ const ConvertItem = ({ queue, className }: props) => {
         <p>output: {outputName}</p>
         <p>status: processing</p>
         <div className={Styles.progressWrapper}>
-          <LinearProgress
-            variant="buffer"
-            value={(pg.converted / pg.total) * 100}
-            valueBuffer={(pg.generated / pg.total) * 100}
-            className={Styles.progress}
-          />
-          <span className={Styles.text}>
-            {Math.floor((pg.converted / pg.total) * 100)}%
-          </span>
+          <ProgressDisplay progress={progress} />
         </div>
       </div>
     );

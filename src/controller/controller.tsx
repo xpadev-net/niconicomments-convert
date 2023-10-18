@@ -1,9 +1,4 @@
-import { isLoadingAtom, messageAtom } from "@/controller/atoms";
-import { Comment } from "@/controller/comment/comment";
-import { Convert } from "@/controller/convert/convert";
-import { Movie } from "@/controller/movie/movie";
-import { QueueDisplay } from "@/controller/queue/queue";
-import { Setting } from "@/controller/setting/setting";
+import { DownloadingOutlined } from "@mui/icons-material";
 import {
   Dialog,
   DialogActions,
@@ -14,12 +9,20 @@ import {
 } from "@mui/material";
 import Button from "@mui/material/Button";
 import { useAtom, useAtomValue } from "jotai";
+import type { FC } from "react";
 import { useState } from "react";
-import Styles from "./controller.module.scss";
-import { Sidebar } from "@/controller/sidebar/sidebar";
-import { DownloadingOutlined } from "@mui/icons-material";
 
-const Controller = () => {
+import { isLoadingAtom, messageAtom } from "@/controller/atoms";
+import { Comment } from "@/controller/comment/comment";
+import { Convert } from "@/controller/convert/convert";
+import { Movie } from "@/controller/movie/movie";
+import { QueueDisplay } from "@/controller/queue/queue";
+import { Setting } from "@/controller/setting/setting";
+import { Sidebar } from "@/controller/sidebar/sidebar";
+
+import Styles from "./controller.module.scss";
+
+const Controller: FC = () => {
   const [tab, setTab] = useState<number>(0);
   const [message, setMessage] = useAtom(messageAtom);
   const isLoading = useAtomValue(isLoadingAtom);

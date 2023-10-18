@@ -6,4 +6,4 @@ const baseUrl = app.isPackaged
 
 const appPrefix = "niconicomments-convert";
 
-export { baseUrl, appPrefix };
+export { appPrefix, baseUrl };

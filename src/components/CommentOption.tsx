@@ -1,18 +1,21 @@
 import {
-  commentOption,
-  commentOptionEndPoint,
-  commentThread,
-  v3MetadataComment,
-} from "@/@types/niconico";
-import { formatDate } from "@/util/time";
-import {
   FormControlLabel,
   Radio,
   RadioGroup,
   Switch,
   TextField,
 } from "@mui/material";
-import { ChangeEvent, useEffect, useState } from "react";
+import type { ChangeEvent, FC } from "react";
+import { useEffect, useState } from "react";
+
+import type {
+  TCommentOptionEndPoint,
+  TCommentThread,
+  V3MetadataComment,
+} from "@/@types/niconico";
+import type { TCommentOption } from "@/@types/niconico";
+import { formatDate } from "@/util/time";
+
 import Styles from "./CommentOption.module.scss";
 
 const forkLabel: { [key: string]: string } = {
@@ -24,20 +27,20 @@ const forkLabel: { [key: string]: string } = {
   "extra-easy": "引用かんたんコメント",
 };
 
-type props = {
+type Props = {
   postedDate: string;
-  metadata: v3MetadataComment;
-  update: (data: commentOption) => void;
+  metadata: V3MetadataComment;
+  update: (data: TCommentOption) => void;
 };
 
-const CommentOption = ({ update, postedDate, metadata }: props) => {
+const CommentOption: FC<Props> = ({ update, postedDate, metadata }) => {
   const _date = new Date();
   const [startPoint, setStartPoint] = useState<string>(formatDate(_date));
-  const [endPoint, setEndPoint] = useState<commentOptionEndPoint>({
+  const [endPoint, setEndPoint] = useState<TCommentOptionEndPoint>({
     type: "count",
     count: 1000,
   });
-  const [threads, setThreads] = useState<commentThread[]>(
+  const [threads, setThreads] = useState<TCommentThread[]>(
     metadata.threads.map((thread) => {
       return {
         threadId: thread.id,
@@ -55,7 +58,7 @@ const CommentOption = ({ update, postedDate, metadata }: props) => {
       threads: threads,
     });
   }, [startPoint, endPoint, threads]);
-  const onEndPointChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const onEndPointChange = (e: ChangeEvent<HTMLInputElement>): void => {
     if (e.target.value === "count") {
       setEndPoint({
         type: "count",

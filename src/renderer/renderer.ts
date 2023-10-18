@@ -1,10 +1,12 @@
-import type { ConvertQueue } from "@/@types/queue";
+import NiconiComments from "@xpadev-net/niconicomments";
+
+import type { ApiResponseLoad } from "@/@types/response.renderer";
+import { transformComments } from "@/renderer/comment-utils";
 import { typeGuard } from "@/typeGuard";
 import { encodeJson } from "@/util/json";
 import { sleep } from "@/util/sleep";
-import NiconiComments from "@xpadev-net/niconicomments";
 
-const setupRenderer = async () => {
+const setupRenderer = async (): Promise<void> => {
   document.title = "renderer - niconicomments-convert";
   document.body.innerHTML = `<canvas width="1920" height="1080" id="canvas"></canvas><div id="msg">準備しています...</div><style>
   canvas{
@@ -47,50 +49,45 @@ const setupRenderer = async () => {
   }
 };
 
-const startRenderer = async () => {
+const startRenderer = async (): Promise<void> => {
   const message = document.getElementById("msg");
   if (!message) return;
   let inProgress = false;
   let convertedFrames = 0;
 
-  const sendBuffer = (buffer: string[]) => {
+  const sendBuffer = (buffer: string[]): void => {
     void window.api.request({ type: "buffer", host: "renderer", data: buffer });
   };
-  const updateProgress = (generatedFrames: number) => {
-    void window.api.request({
-      type: "progress",
-      host: "renderer",
-      data: { generated: generatedFrames },
-    });
-  };
 
-  const data = (await window.api.request({
+  const { commentData, queue } = (await window.api.request({
     type: "load",
     host: "renderer",
-  })) as ConvertQueue;
+  })) as ApiResponseLoad;
   inProgress = true;
   message.innerText = "コメントを処理しています...";
-  if (data.comment.options.format === "XMLDocument") {
-    const parser = new DOMParser();
-    data.comment.data = parser.parseFromString(
-      data.comment.data as string,
-      "application/xml",
-    );
-  }
+  const { format, data } = transformComments(queue.comment.format, commentData);
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-  const nico = new NiconiComments(
-    canvas,
-    data.comment.data,
-    data.comment.options,
-  );
+  const nico = new NiconiComments(canvas, data, {
+    ...queue.option.options,
+    format,
+  });
   const emptyBuffer = canvas.toDataURL("image/png");
   message.innerText = "";
   let generatedFrames = 0,
-    offset = Math.ceil((data.movie.option.ss || 0) * 100);
-  const totalFrames = data.progress.total;
-  const process = async () => {
-    for (let i = 0; i < data.output.fps; i++) {
-      const vpos = Math.ceil(i * (100 / data.output.fps)) + offset;
+    offset = Math.ceil((queue.option.ss || 0) * 100);
+  const targetFrameRate = queue.option.fps || 30;
+  const totalFrames =
+    Math.ceil(
+      (queue.option.to || queue.movie.duration) - (queue.option.ss || 0),
+    ) * targetFrameRate;
+  console.log({
+    totalFrames,
+    targetFrameRate,
+    queue,
+  });
+  const process = async (): Promise<void> => {
+    for (let i = 0; i < targetFrameRate; i++) {
+      const vpos = Math.ceil(i * (100 / targetFrameRate)) + offset;
       // eslint-disable-next-line
       if ((nico["timeline"][vpos]?.length || 0) === 0) {
         sendBuffer([emptyBuffer]);
@@ -99,7 +96,6 @@ const startRenderer = async () => {
         sendBuffer([canvas.toDataURL("image/png")]);
       }
       generatedFrames++;
-      updateProgress(generatedFrames);
       if (generatedFrames >= totalFrames) {
         await window.api.request({ type: "end", host: "renderer" });
         inProgress = false;
@@ -118,9 +114,8 @@ const startRenderer = async () => {
 
   window.api.onResponse((_, data) => {
     if (data.target !== "renderer") return;
-    if (typeGuard.renderer.progress(data)) {
-      convertedFrames =
-        data.data.type === "convert" ? data.data.progress.converted : 0;
+    if (typeGuard.renderer.reportProgress(data)) {
+      convertedFrames = data.converted;
     } else if (typeGuard.renderer.end(data)) {
       window.close();
     }

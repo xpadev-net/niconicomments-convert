@@ -1,11 +1,15 @@
-import { ConvertQueue, Queue, QueueLists } from "@/@types/queue";
+import * as fs from "fs";
 import * as Stream from "stream";
+
+import type { ConvertQueue, Queue, QueueLists } from "@/@types/queue";
+import type { ApiResponseLoad } from "@/@types/response.renderer";
+
 import { sendMessageToController } from "./controllerWindow";
 import { inputStream, startConverter } from "./converter";
+import { encodeJson } from "./lib/json";
 import { download, downloadComment } from "./lib/niconico";
 import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
 import { base64ToUint8Array } from "./utils";
-import { encodeJson } from "./lib/json";
 
 const queueList: Queue[] = [];
 const queueLists: QueueLists = {
@@ -15,40 +19,42 @@ const queueLists: QueueLists = {
 };
 let convertQueue = Promise.resolve();
 let processingQueue: ConvertQueue;
-const appendQueue = (queue: Queue) => {
+const appendQueue = (queue: Queue): void => {
   queueList.push(queue);
   if (queue.type === "convert") {
     queueLists.convert.push(queue);
-    if (
-      queueLists.convert.filter((i) => i.status !== "completed").length === 1
-    ) {
-      void startConvert();
-    }
-  } else if (queue.type === "movie") {
-    queueLists.movie.push(queue);
-    if (queueLists.movie.filter((i) => i.status !== "completed").length === 1) {
-      void startMovieDownload();
-    }
-  } else if (queue.type === "comment") {
-    queueLists.comment.push(queue);
-    if (
-      queueLists.comment.filter((i) => i.status !== "completed").length === 1
-    ) {
+    if (queue.comment.type === "remote") {
+      queueList.push(queue.comment.ref);
+      queueLists.comment.push(queue.comment.ref);
       void startCommentDownload();
     }
+    if (queue.movie.type === "remote") {
+      queueList.push(queue.movie.ref);
+      queueLists.movie.push(queue.movie.ref);
+      void startMovieDownload();
+    }
+    void startConvert();
+  } else if (queue.type === "movie") {
+    queueLists.movie.push(queue);
+    void startMovieDownload();
+  } else if (queue.type === "comment") {
+    queueLists.comment.push(queue);
+    void startCommentDownload();
   }
 };
 
-const startMovieDownload = async () => {
+const startMovieDownload = async (): Promise<void> => {
   const queued = queueLists.movie.filter((i) => i.status === "queued");
+  const targetQueue = queued[0];
   if (
     queueLists.movie.filter((i) => i.status === "processing").length > 0 ||
     queued.length === 0 ||
-    !queued[0]
+    !targetQueue
   )
     return;
-  const targetQueue = queued[0];
+
   targetQueue.status = "processing";
+  targetQueue.progress = 0;
   sendProgress();
   try {
     await download(
@@ -71,18 +77,20 @@ const startMovieDownload = async () => {
   }
   sendProgress();
   void startMovieDownload();
+  void startConvert();
 };
 
-const startCommentDownload = async () => {
+const startCommentDownload = async (): Promise<void> => {
   const queued = queueLists.comment.filter((i) => i.status === "queued");
+  const targetQueue = queued[0];
   if (
     queueLists.comment.filter((i) => i.status === "processing").length > 0 ||
     queued.length === 0 ||
-    !queued[0]
+    !targetQueue
   )
     return;
-  const targetQueue = queued[0];
   targetQueue.status = "processing";
+  targetQueue.progress = 0;
   sendProgress();
   try {
     await downloadComment(targetQueue, (total, downloaded) => {
@@ -100,9 +108,10 @@ const startCommentDownload = async () => {
   }
   sendProgress();
   void startCommentDownload();
+  void startConvert();
 };
 
-const startConvert = async () => {
+const startConvert = async (): Promise<void> => {
   const queued = queueLists.convert.filter((i) => i.status === "queued");
   if (
     queueLists.convert.filter((i) => i.status === "processing").length > 0 ||
@@ -110,8 +119,14 @@ const startConvert = async () => {
     !queued[0]
   )
     return;
+  console.log(queued[0].wait);
+  for (const queueId of queued[0].wait ?? []) {
+    const queue = queueList.filter((i) => i.id === queueId)[0];
+    if (queue?.status !== "completed") return;
+  }
   processingQueue = queued[0];
   processingQueue.status = "processing";
+  processingQueue.progress = 0;
   createRendererWindow();
   sendProgress();
   await startConverter(queued[0]);
@@ -122,7 +137,7 @@ const startConvert = async () => {
   sendProgress();
   void startConvert();
 };
-const appendBuffers = (blobs: string[]) => {
+const appendBuffers = (blobs: string[]): void => {
   for (const item of blobs) {
     const base64Image = item.split(";base64,").pop();
     if (!base64Image) continue;
@@ -134,7 +149,7 @@ const appendBuffers = (blobs: string[]) => {
           myStream.push(u8);
           myStream.push(null);
         };
-        processingQueue.progress.converted++;
+        processingQueue.progress++;
         sendProgress();
         return myStream
           .on("end", () => fulfill())
@@ -146,30 +161,37 @@ const appendBuffers = (blobs: string[]) => {
     );
   }
 };
-const markAsCompleted = () => {
+const markAsCompleted = (): void => {
   void convertQueue.then(() => inputStream.end());
 };
-const updateProgress = (progress: number) => {
-  processingQueue.progress.generated = progress;
-  sendProgress();
-};
-const sendProgress = () => {
+const sendProgress = (): void => {
   sendMessageToController({
     type: "progress",
     data: queueList,
   });
-  sendMessageToRenderer({
-    type: "progress",
-    data: processingQueue,
-  });
+  typeof processingQueue?.progress === "number" &&
+    sendMessageToRenderer({
+      type: "reportProgress",
+      converted: processingQueue.progress,
+    });
+};
+
+const processOnLoad = (): ApiResponseLoad => {
+  const queue = processingQueue;
+  const commentData = fs.readFileSync(queue.comment.path, "utf-8");
+  return {
+    type: "load",
+    commentData,
+    queue,
+  };
 };
 
 export {
+  appendBuffers,
   appendQueue,
   markAsCompleted,
-  appendBuffers,
-  updateProgress,
-  sendProgress,
   processingQueue,
+  processOnLoad,
   queueLists,
+  sendProgress,
 };

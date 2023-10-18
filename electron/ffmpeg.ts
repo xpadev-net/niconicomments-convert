@@ -1,9 +1,11 @@
-import axios, { AxiosResponse } from "axios";
+import type { AxiosResponse } from "axios";
+import axios from "axios";
 import { app } from "electron";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import * as Stream from "stream";
+import type * as Stream from "stream";
+
 import {
   binaryDownloaderWindow,
   createBinaryDownloaderWindow,
@@ -47,7 +49,7 @@ const distro = (function () {
   throw new Error("unknown os or architecture");
 })();
 
-const onStartUp = async () => {
+const onStartUp = async (): Promise<void> => {
   target = [];
   if (
     !fs.existsSync(ffmpegPath) ||
@@ -67,7 +69,7 @@ const onStartUp = async () => {
   binaryDownloaderWindow.close();
 };
 
-const downloadBinary = async (target: lib[]) => {
+const downloadBinary = async (target: lib[]): Promise<void> => {
   if (!fs.existsSync(basePath)) {
     await fs.promises.mkdir(basePath, { recursive: true });
   }
@@ -90,7 +92,11 @@ const downloadBinary = async (target: lib[]) => {
     fs.chmodSync(ffprobePath, 0o755);
   }
 };
-const downloadFile = async (name: string, url: string, path: string) => {
+const downloadFile = async (
+  name: string,
+  url: string,
+  path: string,
+): Promise<void> => {
   const file = fs.createWriteStream(path);
   return axios({
     method: "get",
@@ -121,4 +127,4 @@ const downloadFile = async (name: string, url: string, path: string) => {
     });
   });
 };
-export { onStartUp, ffmpegPath, ffprobePath };
+export { ffmpegPath, ffprobePath, onStartUp };

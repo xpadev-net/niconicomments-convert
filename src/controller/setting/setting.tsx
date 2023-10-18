@@ -1,7 +1,3 @@
-import type { browserProfile } from "@/@types/cookies";
-import type { authByCookieFile, authType } from "@/@types/setting";
-import { SelectField } from "@/components/SelectField";
-import { isLoadingAtom } from "@/controller/atoms";
 import { Replay } from "@mui/icons-material";
 import {
   Button,
@@ -13,13 +9,20 @@ import {
 } from "@mui/material";
 import type { OpenDialogReturnValue } from "electron";
 import { useSetAtom } from "jotai";
-import { ChangeEvent, useLayoutEffect, useState } from "react";
+import type { ChangeEvent, FC } from "react";
+import { useLayoutEffect, useState } from "react";
+
+import type { BrowserProfile } from "@/@types/cookies";
+import type { AuthByCookieFile, AuthType } from "@/@types/setting";
+import { SelectField } from "@/components/SelectField";
+import { isLoadingAtom } from "@/controller/atoms";
+
 import Styles from "./setting.module.scss";
 
-const Setting = () => {
+const Setting: FC = () => {
   const setIsLoading = useSetAtom(isLoadingAtom);
-  const [authSetting, setAuthSetting] = useState<Partial<authType>>();
-  const [availableProfiles, setAvailableProfiles] = useState<browserProfile[]>(
+  const [authSetting, setAuthSetting] = useState<Partial<AuthType>>();
+  const [availableProfiles, setAvailableProfiles] = useState<BrowserProfile[]>(
     [],
   );
   useLayoutEffect(() => {
@@ -28,27 +31,27 @@ const Setting = () => {
         type: "getSetting",
         key: "auth",
         host: "controller",
-      })) as authType | undefined;
-      setAuthSetting(data || { type: "noAuth" });
+      })) as AuthType | undefined;
+      setAuthSetting(data || { type: "NoAuth" });
       const profiles = (await window.api.request({
         type: "getAvailableProfiles",
         host: "controller",
-      })) as browserProfile[];
+      })) as BrowserProfile[];
       setAvailableProfiles(profiles);
     })();
   }, [0]);
 
-  const onAuthTypeChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const onAuthTypeChange = (e: ChangeEvent<HTMLInputElement>): void => {
     if (authSetting?.type === e.target.value) return;
     if (e.target.value === "cookie") {
       setAuthSetting({ type: "cookie", path: "" });
     } else if (e.target.value === "browser") {
       setAuthSetting({ type: "browser", profile: undefined });
-    } else if (e.target.value === "noAuth") {
-      setAuthSetting({ type: "noAuth" });
+    } else if (e.target.value === "NoAuth") {
+      setAuthSetting({ type: "NoAuth" });
     }
   };
-  const onSelectCookieFile = () => {
+  const onSelectCookieFile = (): void => {
     void (async () => {
       setIsLoading(true);
       const path = (await window.api.request({
@@ -70,32 +73,32 @@ const Setting = () => {
         setIsLoading(false);
         return;
       }
-      setAuthSetting({ ...authSetting, path: cookiePath } as authByCookieFile);
+      setAuthSetting({ ...authSetting, path: cookiePath } as AuthByCookieFile);
       setIsLoading(false);
     })();
   };
-  const onAuthBrowserChange = (name: string) => {
+  const onAuthBrowserChange = (name: string): void => {
     setAuthSetting({
       type: "browser",
-      profile: availableProfiles.reduce<browserProfile | undefined>(
+      profile: availableProfiles.reduce<BrowserProfile | undefined>(
         (pv, val) => (`${val.browser}:${val.name}` === name ? val : pv),
         undefined,
       ),
     });
   };
-  const onReset = () => {
+  const onReset = (): void => {
     void (async () => {
       setIsLoading(true);
       const data = (await window.api.request({
         type: "getSetting",
         key: "auth",
         host: "controller",
-      })) as authType | undefined;
-      setAuthSetting(data || { type: "noAuth" });
+      })) as AuthType | undefined;
+      setAuthSetting(data || { type: "NoAuth" });
       setIsLoading(false);
     })();
   };
-  const onSave = () => {
+  const onSave = (): void => {
     void (async () => {
       setIsLoading(true);
       await window.api.request({
@@ -128,7 +131,7 @@ const Setting = () => {
           label={"ブラウザから取得"}
         />
         <FormControlLabel
-          value={"noAuth"}
+          value={"NoAuth"}
           control={<Radio />}
           label={"認証なし"}
         />

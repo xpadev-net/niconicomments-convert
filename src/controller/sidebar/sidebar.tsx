@@ -1,7 +1,9 @@
-import { FC, useState } from "react";
+import type { FC } from "react";
+import { useState } from "react";
+
 import Styles from "./sidebar.module.scss";
 
-type props = {
+type Props = {
   pages: {
     id: string;
     icon: FC;
@@ -9,9 +11,9 @@ type props = {
   }[];
 };
 
-const Sidebar = ({ pages }: props) => {
+const Sidebar: FC<Props> = ({ pages }) => {
   const [openingPage, setOpeningPage] = useState<string | undefined>(undefined);
-  const togglePage = (i: string) => {
+  const togglePage = (i: string): void => {
     if (i === openingPage) {
       setOpeningPage(undefined);
     } else {

@@ -1,4 +1,10 @@
-import { browserProfile, Cookies } from "@/@types/cookies";
+import type {
+  BrowserProfile,
+  ChromiumProfile,
+  Cookies,
+  FirefoxProfile,
+} from "@/@types/cookies";
+
 import {
   getAvailableChromiumProfiles,
   getChromiumCookies,
@@ -8,7 +14,9 @@ import {
   getFirefoxCookies,
 } from "./cookies/firefox";
 
-const getAvailableProfiles = async () => {
+const getAvailableProfiles = async (): Promise<
+  (FirefoxProfile | ChromiumProfile)[]
+> => {
   return [
     ...(await getAvailableFirefoxProfiles()),
     ...(await getAvailableChromiumProfiles("brave")),
@@ -20,14 +28,14 @@ const getAvailableProfiles = async () => {
   ];
 };
 
-const getCookies = (profile: browserProfile) => {
+const getCookies = (profile: BrowserProfile): Promise<Cookies> => {
   if (profile.type === "chromiumProfile") {
     return getChromiumCookies(profile);
   }
   return getFirefoxCookies(profile);
 };
 
-const convertToEncodedCookie = (cookie: Cookies) => {
+const convertToEncodedCookie = (cookie: Cookies): string => {
   let cookieString = "";
   for (const key in cookie) {
     const value = cookie[key];
@@ -37,4 +45,4 @@ const convertToEncodedCookie = (cookie: Cookies) => {
   return cookieString;
 };
 
-export { getAvailableProfiles, getCookies, convertToEncodedCookie };
+export { convertToEncodedCookie, getAvailableProfiles, getCookies };

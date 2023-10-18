@@ -1,14 +1,18 @@
-import {
-  createSessionRequest,
-  UserData,
-  watchV3Metadata,
-} from "@/@types/niconico";
-import { CommentQueue, NicovideoFormat } from "@/@types/queue";
-import { authType } from "@/@types/setting";
-import { v1Raw } from "@/@types/types";
-import NiconiComments, { FormattedComment } from "@xpadev-net/niconicomments";
+import type { FormattedComment } from "@xpadev-net/niconicomments";
+import NiconiComments from "@xpadev-net/niconicomments";
 import * as fs from "fs";
 import { JSDOM } from "jsdom";
+
+import type {
+  CreateSessionRequest,
+  TWatchV3Metadata,
+  UserData,
+} from "@/@types/niconico";
+import type { CommentQueue, NicovideoMovieFormat } from "@/@types/queue";
+import type { AuthType } from "@/@types/setting";
+import type { SpawnResult } from "@/@types/spawn";
+import type { V1Raw } from "@/@types/types";
+
 import { sendMessageToController } from "../controllerWindow";
 import { ffmpegPath } from "../ffmpeg";
 import { store } from "../store";
@@ -39,8 +43,10 @@ const getUserInfo = async (cookies: string): Promise<UserData | false> => {
   return res;
 };
 
-const getMetadata = async (nicoId: string) => {
-  const authSetting = store.get("auth") as authType | undefined;
+const getMetadata = async (
+  nicoId: string,
+): Promise<TWatchV3Metadata | undefined> => {
+  const authSetting = store.get("auth") as AuthType | undefined;
   if (authSetting?.type === "browser" && authSetting.profile) {
     const cookies = convertToEncodedCookie(
       await getCookies(authSetting.profile),
@@ -54,22 +60,24 @@ const getMetadata = async (nicoId: string) => {
       },
     );
     const metadata = (await req.json()) as unknown;
-    if (!typeGuard.niconico.watchV3Metadata(metadata)) {
+    if (!typeGuard.niconico.TWatchV3Metadata(metadata)) {
       return getV3GuestMetadata(nicoId);
     }
     return metadata;
   }
-  if (!authSetting || authSetting.type === "noAuth") {
+  if (!authSetting || authSetting.type === "NoAuth") {
     return getV3GuestMetadata(nicoId);
   }
 };
 
-const getV3GuestMetadata = async (nicoId: string): Promise<watchV3Metadata> => {
+const getV3GuestMetadata = async (
+  nicoId: string,
+): Promise<TWatchV3Metadata> => {
   const req = await fetch(
     `https://www.nicovideo.jp/api/watch/v3_guest/${nicoId}?_frontendId=6&_frontendVersion=0&actionTrackId=0_0`,
   );
   const metadata = (await req.json()) as unknown;
-  if (!typeGuard.niconico.watchV3Metadata(metadata)) {
+  if (!typeGuard.niconico.TWatchV3Metadata(metadata)) {
     throw new Error(`failed to get metadata\n${encodeJson(metadata)}`);
   }
   return metadata;
@@ -77,10 +85,10 @@ const getV3GuestMetadata = async (nicoId: string): Promise<watchV3Metadata> => {
 
 const download = async (
   nicoId: string,
-  format: NicovideoFormat,
+  format: NicovideoMovieFormat,
   path: string,
   progress: (total: number, downloaded: number) => void,
-) => {
+): Promise<SpawnResult | undefined> => {
   const metadata = await getMetadata(nicoId);
   if (!metadata) {
     sendMessageToController({
@@ -128,7 +136,7 @@ const download = async (
     body: JSON.stringify(requestBody),
   });
   const res = (await req.json()) as unknown;
-  if (!typeGuard.niconico.createSessionResponse(res)) {
+  if (!typeGuard.niconico.CreateSessionResponse(res)) {
     sendMessageToController({
       title: "セッションの作成に失敗しました",
       message:
@@ -153,7 +161,7 @@ const download = async (
         },
       );
       const res = (await req.json()) as unknown;
-      if (!typeGuard.niconico.createSessionResponse(res)) {
+      if (!typeGuard.niconico.CreateSessionResponse(res)) {
         sendMessageToController({
           title: "セッションの更新に失敗しました",
           message:
@@ -168,7 +176,7 @@ const download = async (
 
   let total = 0,
     downloaded = 0;
-  const onData = (data: string) => {
+  const onData = (data: string): void => {
     let match;
     if ((match = data.match(/Duration: ([0-9:.]+),/))) {
       total = time2num(match[1]);
@@ -201,7 +209,7 @@ const download = async (
   return result;
 };
 
-const time2num = (time: string) => {
+const time2num = (time: string): number => {
   let second = 0;
   let offset = 0;
   while (time) {
@@ -213,10 +221,10 @@ const time2num = (time: string) => {
 };
 
 const createSessionCreateRequestBody = (
-  metadata: watchV3Metadata,
-  format: NicovideoFormat,
-): createSessionRequest => {
-  const sessionBody: createSessionRequest = {
+  metadata: TWatchV3Metadata,
+  format: NicovideoMovieFormat,
+): CreateSessionRequest => {
+  const sessionBody: CreateSessionRequest = {
     session: {
       client_info: {
         player_id: metadata.data.media.delivery.movie.session.playerId,
@@ -291,20 +299,14 @@ const createSessionCreateRequestBody = (
 
 const downloadComment = async (
   queue: CommentQueue,
-  updateProgress: (total, progress) => void,
-) => {
-  const formattedComments = await (async () => {
-    if (queue.api === "v3+legacy") {
-      return await downloadV3LegacyComment(queue, updateProgress);
-    } else if (queue.api === "v3+v1") {
-      return await downloadV3V1Comment(queue, updateProgress);
-    }
-  })();
+  updateProgress: (total: number, progress: number) => void,
+): Promise<void> => {
+  const formattedComments = await downloadV3V1Comment(queue, updateProgress);
   const xml = convertToXml(formattedComments);
   fs.writeFileSync(queue.path, xml, "utf-8");
 };
 
-const convertToXml = (comments: FormattedComment[]) => {
+const convertToXml = (comments: FormattedComment[]): string => {
   const jsdom = new JSDOM();
   const parser = new jsdom.window.DOMParser();
   const document = parser.parseFromString(
@@ -327,98 +329,10 @@ const convertToXml = (comments: FormattedComment[]) => {
   return document.documentElement.outerHTML;
 };
 
-const downloadV3LegacyComment = async (
-  queue: CommentQueue,
-  updateProgress: (total, progress) => void,
-) => {
-  const userList = [];
-  const comments: FormattedComment[] = [];
-  const start = Math.floor(new Date(queue.option.start).getTime() / 1000);
-  const threadTotal = queue.option.threads.filter(
-    (thread) => thread.enable,
-  ).length;
-  const total =
-    queue.option.end.type === "date"
-      ? start - Math.floor(new Date(queue.option.end.date).getTime() / 1000)
-      : queue.option.end.count;
-  let threadId = 0;
-  for (const thread of queue.option.threads) {
-    if (!thread.enable) continue;
-    const threadComments: FormattedComment[] = [];
-    let when = Math.floor(new Date(queue.option.start).getTime() / 1000);
-    while (
-      (queue.option.end.type === "date" &&
-        when > Math.floor(new Date(queue.option.end.date).getTime() / 1000)) ||
-      (queue.option.end.type === "count" &&
-        threadComments.length < queue.option.end.count)
-    ) {
-      await sleep(1000);
-      const req = await fetch(
-        `${queue.metadata.threads[0].server}/api.json/thread?version=20090904&scores=1&nicoru=3&fork=${thread.fork}&language=0&thread=${thread.threadId}&res_from=-1000&when=${when}`,
-      );
-      const res = (await req.json()) as unknown;
-      if (!NiconiComments.typeGuard.legacy.rawApiResponses(res))
-        throw new Error("failed to get comments");
-      for (const itemWrapper of res) {
-        for (const key of Object.keys(itemWrapper)) {
-          const value = itemWrapper[key];
-          if (!value) continue;
-          if (!NiconiComments.typeGuard.legacy.apiChat(value)) continue;
-          if (value.deleted !== 1) {
-            const tmpParam: FormattedComment = {
-              id: value.no,
-              vpos: value.vpos,
-              content: value.content || "",
-              date: value.date,
-              date_usec: value.date_usec || 0,
-              owner: !value.user_id,
-              premium: value.premium === 1,
-              mail: [],
-              user_id: -1,
-              layer: -1,
-              is_my_post: false,
-            };
-            if (value.mail) {
-              tmpParam.mail = value.mail.split(/\s+/g);
-            }
-            if (value.content.startsWith("/") && !value.user_id) {
-              tmpParam.mail.push("invisible");
-            }
-            const isUserExist = userList.indexOf(value.user_id);
-            if (isUserExist === -1) {
-              tmpParam.user_id = userList.length;
-              userList.push(value.user_id);
-            } else {
-              tmpParam.user_id = isUserExist;
-            }
-            threadComments.push(tmpParam);
-            if (when > value.date) {
-              when = value.date;
-            }
-          }
-        }
-      }
-      if (queue.option.end.type === "date") {
-        updateProgress(total * threadTotal, total * threadId + start - when);
-      } else {
-        updateProgress(
-          queue.option.end.count * threadTotal,
-          queue.option.end.count * threadId + threadComments.length,
-        );
-      }
-      if (res.length < 100 || threadComments[threadComments.length - 1]?.id < 5)
-        break;
-    }
-    comments.push(...threadComments);
-    threadId++;
-  }
-  return comments;
-};
-
 const downloadV3V1Comment = async (
   queue: CommentQueue,
-  updateProgress: (total, progress) => void,
-) => {
+  updateProgress: (total: number, progress: number) => void,
+): Promise<FormattedComment[]> => {
   const userList = [];
   const comments: FormattedComment[] = [];
   const start = Math.floor(new Date(queue.option.start).getTime() / 1000);
@@ -470,7 +384,7 @@ const downloadV3V1Comment = async (
         }),
       });
       const res = (await req.json()) as unknown;
-      const threads = (res as v1Raw)?.data?.threads;
+      const threads = (res as V1Raw)?.data?.threads;
       if (!NiconiComments.typeGuard.v1.threads(threads))
         throw new Error("failed to get comments");
       for (const thread of threads) {
@@ -530,4 +444,4 @@ const downloadV3V1Comment = async (
 const date2time = (date: string): number =>
   Math.floor(new Date(date).getTime() / 1000);
 
-export { getMetadata, download, getUserInfo, downloadComment };
+export { download, downloadComment, getMetadata, getUserInfo };

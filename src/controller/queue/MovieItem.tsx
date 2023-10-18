@@ -1,13 +1,16 @@
-import type { MovieQueue } from "@/@types/queue";
-import { LinearProgress } from "@mui/material";
+import type { FC } from "react";
 import { useMemo } from "react";
+
+import type { MovieQueue } from "@/@types/queue";
+import { ProgressDisplay } from "@/controller/queue/ProgressDisplay";
+
 import Styles from "./ConvertItem.module.scss";
 
-type props = {
+type Props = {
   queue: MovieQueue;
   className: string;
 };
-const MovieItem = ({ queue, className }: props) => {
+const MovieItem: FC<Props> = ({ queue, className }) => {
   return useMemo(() => {
     const outputName = queue.path.split(/\/|\\/g).reverse()[0];
     const url = queue.url.split(/\/|\\/g).reverse()[0];
@@ -31,21 +34,7 @@ const MovieItem = ({ queue, className }: props) => {
         <p>path: {outputName}</p>
         <p>status: processing</p>
         <div className={Styles.progressWrapper}>
-          {isNaN(queue.progress) ? (
-            <LinearProgress className={Styles.progress} />
-          ) : (
-            <>
-              <LinearProgress
-                variant="determinate"
-                value={queue.progress * 100}
-                valueBuffer={queue.progress * 100}
-                className={Styles.progress}
-              />
-              <span className={Styles.text}>
-                {Math.floor(queue.progress * 100)}%
-              </span>
-            </>
-          )}
+          <ProgressDisplay progress={queue.progress} />
         </div>
       </div>
     );

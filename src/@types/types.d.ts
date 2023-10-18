@@ -1,44 +1,46 @@
+import type { V1Thread } from "@xpadev-net/niconicomments";
+
 import type {
-  apiRequestsFromController,
-  apiRequestFromController,
+  ApiRequestFromRenderer,
+  ApiRequestsFromRenderer,
+} from "@/@types/request.renderer";
+import type {
+  ApiResponsesToBinaryDownloader,
+  ApiResponseToBinaryDownloader,
+} from "@/@types/response.binaryDownloader";
+import type {
+  ApiResponsesToRenderer,
+  ApiResponseToRenderer,
+} from "@/@types/response.renderer";
+
+import type {
+  ApiRequestFromController,
+  ApiRequestsFromController,
 } from "./request.controller";
 import type {
-  apiRequestsFromRenderer,
-  apiRequestFromRenderer,
-} from "./request.renderer";
-import type {
-  apiResponsesToController,
-  apiResponseToController,
+  ApiResponsesToController,
+  ApiResponseToController,
 } from "./response.controller";
-import type {
-  apiResponsesToRenderer,
-  apiResponseToRenderer,
-} from "./response.renderer";
-import type {
-  apiResponsesToBinaryDownloader,
-  apiResponseToBinaryDownloader,
-} from "./response.binaryDownloader";
-import type { V1Thread } from "@xpadev-net/niconicomments";
 
 declare global {
   interface Window {
     api: {
-      request: (data: apiRequestType) => Promise<unknown>;
+      request: (data: ApiRequestType) => Promise<unknown>;
       onResponse: (
-        callback: (_: unknown, data: apiResponseType) => void,
+        callback: (_: unknown, data: ApiResponseType) => void,
       ) => void;
-      remove: (callback: (_: unknown, data: apiResponseType) => void) => void;
+      remove: (callback: (_: unknown, data: ApiResponseType) => void) => void;
     };
   }
 }
 
-type apiRequestType =
-  | (apiRequestsFromController & apiRequestFromController)
-  | (apiRequestsFromRenderer & apiRequestFromRenderer);
-type apiResponseType =
-  | (apiResponsesToController & apiResponseToController)
-  | (apiResponsesToRenderer & apiResponseToRenderer)
-  | (apiResponsesToBinaryDownloader & apiResponseToBinaryDownloader);
+type ApiRequestType =
+  | (ApiRequestsFromController & ApiRequestFromController)
+  | (ApiRequestsFromRenderer & ApiRequestFromRenderer);
+type ApiResponseType =
+  | (ApiResponsesToController & ApiResponseToController)
+  | (ApiResponsesToRenderer & ApiResponseToRenderer)
+  | (ApiResponsesToBinaryDownloader & ApiResponseToBinaryDownloader);
 
 type Movie = {
   path: Electron.OpenDialogReturnValue;
@@ -58,7 +60,7 @@ type Message = {
   content: string;
 };
 
-export type v1Raw = {
+export type V1Raw = {
   meta: {
     status: 200;
   };

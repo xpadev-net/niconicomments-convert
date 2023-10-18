@@ -1,1 +1,1 @@
-export type spawnResult = { stdout: string; stderr: string; code: number };
+export type SpawnResult = { stdout: string; stderr: string; code: number };

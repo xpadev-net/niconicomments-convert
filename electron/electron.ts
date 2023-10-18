@@ -1,4 +1,5 @@
 import { app, BrowserWindow, globalShortcut } from "electron";
+
 import { createControllerWindow } from "./controllerWindow";
 import { onStartUp } from "./ffmpeg";
 import { registerListener } from "./ipcManager";

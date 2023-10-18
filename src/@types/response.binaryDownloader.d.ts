@@ -1,12 +1,12 @@
-export type apiResponseToBinaryDownloader = {
+export type ApiResponseToBinaryDownloader = {
   target: "downloader";
 };
-export type apiResponseDownloadProgress = {
+export type ApiResponseDownloadProgress = {
   type: "downloadProgress";
   name: string;
   progress: number;
 };
 
-export type apiResponsesToBinaryDownloader = apiResponseDownloadProgress;
+export type ApiResponsesToBinaryDownloader = ApiResponseDownloadProgress;
 
 export {};

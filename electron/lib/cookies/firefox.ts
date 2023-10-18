@@ -1,11 +1,13 @@
+import * as fs from "fs";
+import * as path from "path";
+
 import type {
   Cookies,
-  firefoxProfile,
+  FirefoxProfile,
   l10nID,
   moz_cookies,
 } from "@/@types/cookies";
-import * as fs from "fs";
-import * as path from "path";
+
 import { typeGuard } from "../../typeGuard";
 import { convertToEncodedCookie } from "../cookie";
 import { fetchAll, openClonedDB } from "../db";
@@ -17,7 +19,7 @@ reference source:
   Released under The Unlicense
  */
 
-const getFirefoxRootDir = () => {
+const getFirefoxRootDir = (): string => {
   if (process.platform === "win32") {
     if (!process.env.APPDATA) throw new Error("fail to resolve appdata");
     return path.join(process.env.APPDATA, "Mozilla/Firefox/Profiles");
@@ -36,15 +38,18 @@ const containerNames: { [key in l10nID]: string } = {
   "userContextShopping.label": "ショッピング",
 };
 
-const getAvailableFirefoxProfiles = async () => {
+const getAvailableFirefoxProfiles = async (): Promise<FirefoxProfile[]> => {
   const rootDir = getFirefoxRootDir();
   if (!fs.existsSync(rootDir)) {
     return [];
   }
   const files = fs.readdirSync(rootDir);
-  const profiles: firefoxProfile[] = [];
-  const addProfile = async (profile: firefoxProfile) =>
-    (await isLoggedIn(profile)) && profiles.push(profile);
+  const profiles: FirefoxProfile[] = [];
+  const addProfile = async (profile: FirefoxProfile): Promise<void> => {
+    if (await isLoggedIn(profile)) {
+      profiles.push(profile);
+    }
+  };
   for (const item of files) {
     const directoryName = path.join(rootDir, item);
     const dbPath = path.join(directoryName, "cookies.sqlite");
@@ -99,7 +104,7 @@ const getAvailableFirefoxProfiles = async () => {
   return profiles;
 };
 
-const isLoggedIn = async (profile: firefoxProfile) => {
+const isLoggedIn = async (profile: FirefoxProfile): Promise<boolean> => {
   const cookies = await getFirefoxCookies(profile);
   if (!(cookies["user_session"] && cookies["user_session_secure"]))
     return false;
@@ -107,7 +112,7 @@ const isLoggedIn = async (profile: firefoxProfile) => {
   return !!user;
 };
 
-const getFirefoxCookies = async (profile: firefoxProfile) => {
+const getFirefoxCookies = async (profile: FirefoxProfile): Promise<Cookies> => {
   const db = openClonedDB(path.join(profile.path, "cookies.sqlite"));
   const cookies: Cookies = {};
   const rows = (await (async () => {

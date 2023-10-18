@@ -1,15 +1,15 @@
-import { browserProfile } from "@/@types/cookies";
+import type { BrowserProfile } from "@/@types/cookies";
 
-export type authType = authByBrowserCookie | authByCookieFile | noAuth;
+export type AuthType = AuthByBrowserCookie | AuthByCookieFile | NoAuth;
 
-export type authByCookieFile = {
+export type AuthByCookieFile = {
   type: "cookie";
   path: string;
 };
-export type authByBrowserCookie = {
+export type AuthByBrowserCookie = {
   type: "browser";
-  profile?: browserProfile;
+  profile?: BrowserProfile;
 };
-export type noAuth = {
-  type: "noAuth";
+export type NoAuth = {
+  type: "NoAuth";
 };

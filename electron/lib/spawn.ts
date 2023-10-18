@@ -1,5 +1,6 @@
-import { spawnResult } from "@/@types/spawn";
 import * as child_process from "child_process";
+
+import type { SpawnResult } from "@/@types/spawn";
 
 function spawn(
   cmd: string,
@@ -7,8 +8,8 @@ function spawn(
   options?: child_process.SpawnOptionsWithoutStdio,
   onData?: (data: string) => unknown,
   onError?: (data: string) => unknown,
-): Promise<spawnResult> {
-  return new Promise<spawnResult>((resolve, reject) => {
+): Promise<SpawnResult> {
+  return new Promise<SpawnResult>((resolve, reject) => {
     let stdout = "",
       stderr = "";
     const p = child_process.spawn(cmd, args, options);

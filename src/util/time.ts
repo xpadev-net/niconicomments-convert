@@ -34,7 +34,7 @@ const time2str = (time: number | undefined): string => {
   )}`;
 };
 
-const formatDate = (_date: Date) => {
+const formatDate = (_date: Date): string => {
   return `${_date.getFullYear()}-${fill(_date.getMonth() + 1, 2)}-${fill(
     _date.getDate(),
     2,
@@ -43,4 +43,4 @@ const formatDate = (_date: Date) => {
     2,
   )}`;
 };
-export { str2time, time2str, formatDate };
+export { formatDate, str2time, time2str };

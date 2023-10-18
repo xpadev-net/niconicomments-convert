@@ -1,15 +1,17 @@
-import {
-  chromiumBrowser,
-  chromiumCookies,
-  chromiumLocalState,
-  chromiumProfile,
-  columnInfo,
-  Cookies,
-} from "@/@types/cookies";
-import { winProtect } from "@/@types/win-protect";
 import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
+
+import type {
+  ChromiumBrowser,
+  chromiumCookies,
+  chromiumLocalState,
+  ChromiumProfile,
+  columnInfo,
+  Cookies,
+} from "@/@types/cookies";
+import type { winProtect } from "@/@types/win-protect";
+
 import { typeGuard } from "../../typeGuard";
 import { convertToEncodedCookie } from "../cookie";
 import { fetchAll, openClonedDB } from "../db";
@@ -29,7 +31,7 @@ const salt = "saltysalt",
   integrations = 1003,
   keyLength = 16;
 
-const getChromiumRootDir = (browser: chromiumBrowser) => {
+const getChromiumRootDir = (browser: ChromiumBrowser): string => {
   if (process.platform === "win32") {
     if (!process.env.APPDATA) throw new Error("fail to resolve appdata");
     if (!process.env.LOCALAPPDATA)
@@ -91,7 +93,7 @@ const getChromiumRootDir = (browser: chromiumBrowser) => {
   throw new Error("unknown browser");
 };
 
-const getChromiumKeyName = (browser: chromiumBrowser) => {
+const getChromiumKeyName = (browser: ChromiumBrowser): string => {
   if (browser === "brave") {
     return "Brave";
   }
@@ -119,8 +121,8 @@ const getChromiumKeyName = (browser: chromiumBrowser) => {
 };
 
 const getAvailableChromiumProfiles = async (
-  browser: chromiumBrowser,
-): Promise<chromiumProfile[]> => {
+  browser: ChromiumBrowser,
+): Promise<ChromiumProfile[]> => {
   try {
     const root = getChromiumRootDir(browser);
     const localStatePath = path.join(root, "Local State");
@@ -129,9 +131,12 @@ const getAvailableChromiumProfiles = async (
       fs.readFileSync(localStatePath, "utf-8"),
     ) as unknown;
     if (!typeGuard.chromium.profiles(metadata)) return [];
-    const profiles: chromiumProfile[] = [];
-    const addProfile = async (profile: chromiumProfile) =>
-      (await isLoggedIn(profile)) && profiles.push(profile);
+    const profiles: ChromiumProfile[] = [];
+    const addProfile = async (profile: ChromiumProfile): Promise<void> => {
+      if (await isLoggedIn(profile)) {
+        profiles.push(profile);
+      }
+    };
     for (const key of Object.keys(metadata.profile.info_cache)) {
       try {
         const value = metadata.profile.info_cache[key];
@@ -159,7 +164,7 @@ const getAvailableChromiumProfiles = async (
   }
 };
 
-const isLoggedIn = async (profile: chromiumProfile): Promise<boolean> => {
+const isLoggedIn = async (profile: ChromiumProfile): Promise<boolean> => {
   try {
     if (process.platform === "darwin") return true;
     const cookies = await getChromiumCookies(profile);
@@ -172,7 +177,9 @@ const isLoggedIn = async (profile: chromiumProfile): Promise<boolean> => {
   }
 };
 
-const getChromiumCookies = async (profile: chromiumProfile) => {
+const getChromiumCookies = async (
+  profile: ChromiumProfile,
+): Promise<Cookies> => {
   const cookiesPath = (() => {
     const basePath = path.join(profile.path, "Cookies");
     if (fs.existsSync(basePath)) {
@@ -231,7 +238,7 @@ const decryptAES256GCM = (
   enc: Buffer,
   nonce: Buffer,
   tag: Buffer,
-) => {
+): string => {
   const algorithm = "aes-256-gcm";
   const decipher = crypto.createDecipheriv(algorithm, key, nonce);
   decipher.setAuthTag(tag);
@@ -240,15 +247,17 @@ const decryptAES256GCM = (
   return str;
 };
 
-const getWindowsDecryptor = (
-  profile: chromiumProfile,
-): ((value: Buffer) => string) => {
+const getWindowsDecryptor = async (
+  profile: ChromiumProfile,
+): Promise<(value: Buffer) => string> => {
   const localState = JSON.parse(
     fs.readFileSync(path.join(profile.path, "../", "Local State"), "utf-8"),
   ) as chromiumLocalState;
   const base64_key = localState.os_crypt.encrypted_key;
   const encryptedKey = Buffer.from(base64_key, "base64");
-  const wp = require("win-protect") as winProtect;
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //@ts-ignore
+  const wp = (await import("win-protect")) as winProtect;
   return (value: Buffer) => {
     if (value[0] == 0x76 && value[1] == 0x31 && value[2] == 0x30) {
       const key: Buffer = wp.decrypt(
@@ -272,7 +281,7 @@ const getWindowsDecryptor = (
 };
 
 const getMacDecryptor = async (
-  profile: chromiumProfile,
+  profile: ChromiumProfile,
 ): Promise<(value: Buffer) => string> => {
   const keyName = getChromiumKeyName(profile.browser);
   const keyResult = await spawn("security", [

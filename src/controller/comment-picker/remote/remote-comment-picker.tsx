@@ -1,36 +1,36 @@
-import type {
-  availableNicovideoApi,
-  commentOption,
-  watchV3Metadata,
-} from "@/@types/niconico";
+import { TextField } from "@mui/material";
+import Button from "@mui/material/Button";
+import { useSetAtom } from "jotai";
+import type { ChangeEvent, FC } from "react";
+import { useState } from "react";
+
+import type { TCommentOption, TWatchV3Metadata } from "@/@types/niconico";
+import type { TCommentItemRemote } from "@/@types/queue";
 import { CommentOption } from "@/components/CommentOption";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import { getNicoId, isNicovideoUrl } from "@/util/niconico";
 import { formatDate } from "@/util/time";
-import { generateUuid } from "@/util/uuid";
-import { TextField } from "@mui/material";
-import Button from "@mui/material/Button";
-import { useSetAtom } from "jotai";
-import { ChangeEvent, useState } from "react";
-import Styles from "./comment.module.scss";
+import { uuid } from "@/util/uuid";
 
-type props = {
-  api: availableNicovideoApi;
+import Styles from "./remote-comment-picker.module.scss";
+
+type Props = {
+  onChange: (val: TCommentItemRemote | undefined) => void;
 };
 
-const MetaV3 = ({ api }: props) => {
+const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
   const [url, setUrl] = useState("");
-  const [metadata, setMetadata] = useState<watchV3Metadata | undefined>();
-  const [commentOption, setCommentOption] = useState<commentOption | undefined>(
-    undefined,
-  );
+  const [metadata, setMetadata] = useState<TWatchV3Metadata | undefined>();
+  const [commentOption, setCommentOption] = useState<
+    TCommentOption | undefined
+  >(undefined);
   const setMessage = useSetAtom(messageAtom);
   const setIsLoading = useSetAtom(isLoadingAtom);
-  const onUrlChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const onUrlChange = (e: ChangeEvent<HTMLInputElement>): void => {
     setMetadata(undefined);
     setUrl(e.target.value);
   };
-  const updateMetadata = () => {
+  const updateMetadata = (): void => {
     void (async () => {
       const nicoId = getNicoId(url);
       if (!isNicovideoUrl(url) || metadata || !nicoId) return;
@@ -39,7 +39,7 @@ const MetaV3 = ({ api }: props) => {
         type: "getNiconicoMovieMetadata",
         nicoId: nicoId,
         host: "controller",
-      })) as watchV3Metadata;
+      })) as TWatchV3Metadata;
       setIsLoading(false);
       if (!targetMetadata) {
         setMessage({
@@ -58,44 +58,36 @@ const MetaV3 = ({ api }: props) => {
       setMetadata(targetMetadata);
     })();
   };
-
-  const download = () => {
-    const nicoId = getNicoId(url);
-    if (!nicoId || !metadata || !commentOption) return;
+  const onClick = (): void => {
     void (async () => {
+      const nicoId = getNicoId(url);
+      if (!nicoId || !commentOption || !metadata) return;
       setIsLoading(true);
-      const ext = "xml";
       const output = await window.api.request({
         type: "selectOutput",
         host: "controller",
         options: {
-          filters: [{ name: ext, extensions: [ext] }],
+          filters: [{ name: "xml", extensions: ["xml"] }],
           properties: ["createDirectory"],
         },
       });
-      if (typeof output !== "string") {
-        setIsLoading(false);
-        return;
-      }
-      await window.api.request({
-        type: "appendQueue",
-        data: {
-          id: generateUuid(),
+      setIsLoading(false);
+      if (typeof output !== "string") return;
+      onChange({
+        type: "remote",
+        path: output,
+        format: "XMLDocument",
+        ref: {
+          id: uuid(),
           type: "comment",
-          target: nicoId,
-          api: api,
-          metadata: metadata.data.comment,
+          url: nicoId,
           option: commentOption,
-          progress: 0,
+          metadata: metadata.data.comment,
           path: output,
           status: "queued",
+          progress: 0,
         },
-        host: "controller",
       });
-      setUrl("");
-      setMetadata(undefined);
-      setCommentOption(undefined);
-      setIsLoading(false);
     })();
   };
 
@@ -118,15 +110,16 @@ const MetaV3 = ({ api }: props) => {
           postedDate={formatDate(new Date(metadata.data.video.registeredAt))}
         />
       )}
-      <Button
-        variant={"outlined"}
-        onClick={download}
-        disabled={!commentOption || !metadata}
-        className={Styles.input}
-      >
-        ダウンロード
-      </Button>
+      <div>
+        <Button
+          variant={"outlined"}
+          onClick={onClick}
+          disabled={!CommentOption || !metadata}
+        >
+          確定
+        </Button>
+      </div>
     </div>
   );
 };
-export { MetaV3 };
+export { RemoteCommentPicker };

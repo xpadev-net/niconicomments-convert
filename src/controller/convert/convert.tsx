@@ -1,10 +1,6 @@
-import type { niconicommentsOptions, Options } from "@/@types/options";
-import type { apiResponseType, Movie } from "@/@types/types";
-import { isLoadingAtom, messageAtom } from "@/controller/atoms";
-import { typeGuard } from "@/typeGuard";
-import { str2time, time2str } from "@/util/time";
-import { generateUuid } from "@/util/uuid";
 import {
+  Dialog,
+  DialogContent,
   FormControl,
   FormControlLabel,
   FormGroup,
@@ -15,9 +11,21 @@ import {
 } from "@mui/material";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import { InputFormat, InputFormatType } from "@xpadev-net/niconicomments";
 import { useSetAtom } from "jotai";
-import { useCallback, useEffect, useState } from "react";
+import type { FC } from "react";
+import { useEffect, useState } from "react";
+
+import type { UUID } from "@/@types/brand";
+import type { NiconicommentsOptions, Options } from "@/@types/options";
+import type { TCommentItem, TMovieItem } from "@/@types/queue";
+import type { ApiResponseType } from "@/@types/types";
+import { isLoadingAtom, messageAtom } from "@/controller/atoms";
+import { CommentPicker } from "@/controller/comment-picker";
+import { MoviePicker } from "@/controller/movie-picker";
+import { typeGuard } from "@/typeGuard";
+import { str2time, time2str } from "@/util/time";
+import { uuid } from "@/util/uuid";
+
 import Styles from "./convert.module.scss";
 
 const initialConfig: Options = {
@@ -53,67 +61,33 @@ const initialConfig: Options = {
   },
 };
 
-const Convert = () => {
-  const [movie, setMovie] = useState<Movie | undefined>();
-  const [comment, setComment] = useState<
-    { format: InputFormatType; data: InputFormat } | undefined
-  >();
+const Convert: FC = () => {
+  const [movie, setMovie] = useState<TMovieItem | undefined>();
+  const [comment, setComment] = useState<TCommentItem | undefined>();
   const [rawClip, setRawClip] = useState<{ start: string; end: string }>({
     start: "",
     end: "",
   });
   const [options, setOptions] = useState<Options>(initialConfig);
+  const [modal, setModal] = useState<"movie" | "comment" | undefined>();
   const setIsLoading = useSetAtom(isLoadingAtom);
   const setMessage = useSetAtom(messageAtom);
-  const onMovieClick = useCallback(() => {
-    void (async () => {
-      setIsLoading(true);
-      const data = await window.api.request({
-        type: "selectMovie",
-        host: "controller",
-      });
-      if (!typeGuard.controller.selectMovie(data)) {
-        setIsLoading(false);
-        if (typeGuard.controller.message(data)) {
-          setMessage({
-            title: data.title || "未知のエラーが発生しました",
-            content: data.message,
-          });
-          return;
-        }
-        if (!data) return;
-        throw new Error();
-      }
-      setMovie(data.data);
-      setIsLoading(false);
-    })();
-  }, []);
-  const onCommentClick = useCallback(() => {
-    void (async () => {
-      setIsLoading(true);
-      const data = await window.api.request({
-        type: "selectComment",
-        host: "controller",
-      });
+  const onMovieClick = (): void => setModal("movie");
+  const onCommentClick = (): void => setModal("comment");
 
-      if (!typeGuard.controller.selectComment(data)) {
-        setIsLoading(false);
-        if (typeGuard.controller.message(data)) {
-          setMessage({
-            title: data.title || "未知のエラーが発生しました",
-            content: data.message,
-          });
-          return;
-        }
-        if (!data) return;
-        throw new Error();
-      }
-      setComment(data);
-      setIsLoading(false);
-    })();
-  }, []);
+  const onMovieChange = (val?: TMovieItem): void => {
+    console.log(val);
+    setMovie(val);
+    setModal(undefined);
+  };
+  const onCommentChange = (val?: TCommentItem): void => {
+    console.log(val);
+    setComment(val);
+    setModal(undefined);
+  };
+  console.log(comment, movie);
 
-  const convert = () => {
+  const convert = (): void => {
     if (!comment || !movie) return;
     void (async () => {
       setIsLoading(true);
@@ -131,48 +105,39 @@ const Convert = () => {
       }
       const nicoOption: { [key: string]: unknown } = {};
       for (const key in options.nico) {
-        const item = options.nico[key as keyof niconicommentsOptions];
+        const item = options.nico[key as keyof NiconicommentsOptions];
         if (item.type === "number") {
           nicoOption[key] = Number(item.value);
         } else {
           nicoOption[key] = item.value;
         }
       }
+      const wait: UUID[] = [];
+      if (comment.type === "remote") wait.push(comment.ref.id);
+      if (movie.type === "remote") wait.push(movie.ref.id);
       await window.api.request({
         type: "appendQueue",
         host: "controller",
         data: {
           type: "convert",
-          id: generateUuid(),
+          id: uuid(),
           status: "queued",
-          comment: {
-            data: comment.data,
+          comment: comment,
+          movie: movie,
+          output: {
+            path: output,
+          },
+          option: {
+            ss: options.video.start,
+            to: options.video.end,
+            fps: options.video.fps,
+            format: comment.format,
             options: {
-              format: comment.format,
               ...nicoOption,
             },
           },
-          movie: {
-            path: movie.path.filePaths[0],
-            duration: movie.duration,
-            option: {
-              ss: options.video.start,
-              to: options.video.end,
-            },
-          },
-          output: {
-            path: output,
-            fps: options.video.fps,
-          },
-          progress: {
-            generated: 0,
-            converted: 0,
-            total:
-              Math.ceil(
-                (options.video.end || movie.duration) -
-                  (options.video.start || 0),
-              ) * options.video.fps,
-          },
+          wait,
+          progress: 0,
         },
       });
       setComment(undefined);
@@ -182,7 +147,7 @@ const Convert = () => {
   };
 
   useEffect(() => {
-    const eventHandler = (_: unknown, data: apiResponseType) => {
+    const eventHandler = (_: unknown, data: ApiResponseType): void => {
       if (data.target !== "controller") return;
       if (typeGuard.controller.message(data)) {
         setMessage({
@@ -198,23 +163,13 @@ const Convert = () => {
   }, []);
   return (
     <div className={Styles.wrapper}>
-      <div>
-        <Button variant={"outlined"} onClick={onMovieClick}>
-          動画を選択
-        </Button>
-        {typeof movie === "object" && (
-          <p>
-            path:{movie.path.filePaths}, width:{movie.width}, height:
-            {movie.height}, duration:{movie.duration}
-          </p>
-        )}
-      </div>
-      <div>
-        <Button variant={"outlined"} onClick={onCommentClick}>
-          コメントデータを選択
-        </Button>
-        {comment && <p>フォーマット：{comment.format}</p>}
-      </div>
+      <Button variant={"outlined"} onClick={onMovieClick}>
+        動画を選択
+      </Button>
+      <Button variant={"outlined"} onClick={onCommentClick}>
+        コメントを選択
+      </Button>
+
       {movie && comment && (
         <section>
           <div>
@@ -267,7 +222,7 @@ const Convert = () => {
           <FormGroup>
             <h3>設定</h3>
             {Object.keys(options.nico).map((key) => {
-              const item = options.nico[key as keyof niconicommentsOptions];
+              const item = options.nico[key as keyof NiconicommentsOptions];
               if (item.type === "boolean") {
                 return (
                   <FormControlLabel
@@ -340,6 +295,24 @@ const Convert = () => {
           </div>
         </section>
       )}
+      <Dialog
+        open={modal === "movie"}
+        onClose={() => setModal(undefined)}
+        fullWidth={true}
+      >
+        <DialogContent style={{ minHeight: "200px" }}>
+          <MoviePicker onChange={onMovieChange} />
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={modal === "comment"}
+        onClose={() => setModal(undefined)}
+        fullWidth={true}
+      >
+        <DialogContent style={{ minHeight: "200px" }}>
+          <CommentPicker onChange={onCommentChange} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

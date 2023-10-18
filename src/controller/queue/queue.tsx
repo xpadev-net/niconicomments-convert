@@ -1,15 +1,18 @@
+import type { FC } from "react";
+import { useEffect, useState } from "react";
+
 import type { Queue } from "@/@types/queue";
 import { CommentItem } from "@/controller/queue/CommentItem";
 import { ConvertItem } from "@/controller/queue/ConvertItem";
 import { MovieItem } from "@/controller/queue/MovieItem";
 import { typeGuard } from "@/typeGuard";
-import { useEffect, useState } from "react";
+
 import Styles from "./queue.module.scss";
 
-const QueueDisplay = () => {
+const QueueDisplay: FC = () => {
   const [queue, setQueue] = useState<Queue[]>([]);
   useEffect(() => {
-    const callback = (_: unknown, e: unknown) => {
+    const callback = (_: unknown, e: unknown): void => {
       if (typeGuard.controller.progress(e)) {
         setQueue(e.data);
       }

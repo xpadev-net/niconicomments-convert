@@ -1,4 +1,5 @@
 import { ipcMain } from "electron";
+
 import { sendMessageToController } from "./controllerWindow";
 import { selectComment, selectFile, selectMovie, selectOutput } from "./dialog";
 import { getAvailableProfiles } from "./lib/cookie";
@@ -8,14 +9,12 @@ import {
   appendBuffers,
   appendQueue,
   markAsCompleted,
-  processingQueue,
-  sendProgress,
-  updateProgress,
+  processOnLoad,
 } from "./queue";
 import { store } from "./store";
 import { typeGuard } from "./typeGuard";
 
-const registerListener = () => {
+const registerListener = (): void => {
   ipcMain.handle("request", async (IpcMainEvent, args) => {
     try {
       const value = (args as { data: unknown[] }).data[0];
@@ -33,7 +32,6 @@ const registerListener = () => {
         return await selectFile(value.pattern);
       } else if (typeGuard.controller.appendQueue(value)) {
         appendQueue(value.data);
-        sendProgress();
         return;
       } else if (typeGuard.controller.getSetting(value)) {
         return store.get(value.key);
@@ -43,10 +41,8 @@ const registerListener = () => {
         return await getAvailableProfiles();
       } else if (typeGuard.controller.getNiconicoMovieMetadata(value)) {
         return await getMetadata(value.nicoId);
-      } else if (typeGuard.renderer.progress(value)) {
-        updateProgress(value.data.generated);
       } else if (typeGuard.renderer.load(value)) {
-        return processingQueue;
+        return processOnLoad();
       } else if (typeGuard.renderer.message(value)) {
         sendMessageToController(value);
       } else {

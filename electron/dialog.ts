@@ -1,24 +1,33 @@
-import type { ffmpegOutput } from "@/@types/ffmpeg";
-import type { spawnResult } from "@/@types/spawn";
-import type { v1Raw } from "@/@types/types";
-import NiconiComments from "@xpadev-net/niconicomments";
+import type { SaveDialogOptions } from "electron";
+import type { OpenDialogReturnValue } from "electron";
 import { dialog } from "electron";
-import * as fs from "fs";
-import { JSDOM } from "jsdom";
+
+import type { FfprobeOutput } from "@/@types/ffmpeg";
+import type {
+  ApiResponseSelectComment,
+  ApiResponseSelectMovie,
+} from "@/@types/response.controller";
+import type { ApiResponseMessage } from "@/@types/response.controller";
+import type { SpawnResult } from "@/@types/spawn";
+
 import { sendMessageToController } from "./controllerWindow";
 import { ffprobePath } from "./ffmpeg";
 import { encodeJson } from "./lib/json";
 import { spawn } from "./lib/spawn";
-import SaveDialogOptions = Electron.SaveDialogOptions;
+import { identifyCommentFormat } from "./utils/niconicomments";
 
-const selectFile = async (pattern: Electron.FileFilter[]) => {
+const selectFile = async (
+  pattern: Electron.FileFilter[],
+): Promise<OpenDialogReturnValue> => {
   return await dialog.showOpenDialog({
     properties: ["openFile"],
     filters: pattern,
   });
 };
 
-const selectMovie = async () => {
+const selectMovie = async (): Promise<
+  ApiResponseMessage | ApiResponseSelectMovie | void
+> => {
   const path = await dialog.showOpenDialog({
     properties: ["openFile"],
     filters: [
@@ -35,8 +44,8 @@ const selectMovie = async () => {
   if (path.canceled) {
     return;
   }
-  let ffprobe: spawnResult;
-  let metadata;
+  let ffprobe: SpawnResult;
+  let metadata: FfprobeOutput;
   try {
     ffprobe = await spawn(ffprobePath, [
       path.filePaths[0],
@@ -48,7 +57,7 @@ const selectMovie = async () => {
       "-show_streams",
     ]);
   } catch (e: unknown) {
-    const error = e as spawnResult;
+    const error = e as SpawnResult;
     return {
       type: "message",
       title: "動画ファイルの解析に失敗しました",
@@ -56,7 +65,7 @@ const selectMovie = async () => {
     };
   }
   try {
-    metadata = JSON.parse(ffprobe.stdout) as ffmpegOutput;
+    metadata = JSON.parse(ffprobe.stdout) as FfprobeOutput;
   } catch (e) {
     return {
       type: "message",
@@ -101,9 +110,9 @@ const selectMovie = async () => {
     data: { path, width, height, duration },
   };
 };
-const selectComment = async () => {
-  const documentLink =
-    "対応しているフォーマットについては以下のリンクを御覧ください\nhttps://xpadev-net.github.io/niconicomments/#p_format\n※フォーマットの識別は拡張子をもとに行っています";
+const selectComment = async (): Promise<
+  ApiResponseSelectComment | undefined
+> => {
   const path = await dialog.showOpenDialog({
     properties: ["openFile"],
     filters: [
@@ -117,75 +126,28 @@ const selectComment = async () => {
     ],
   });
   if (path.canceled) return;
-  const file = path.filePaths[0];
-  const fileData = fs.readFileSync(file, "utf8");
-  let data, type;
-  if (file.match(/\.xml$/)) {
-    const jsdom = new JSDOM();
-    const parser = new jsdom.window.DOMParser();
-    const dom = parser.parseFromString(fileData, "application/xhtml+xml");
-    if (NiconiComments.typeGuard.xmlDocument(dom)) {
-      data = fileData;
-      type = "XMLDocument";
-    } else {
-      sendMessageToController({
-        type: "message",
-        title: "非対応のフォーマットです",
-        message: `入力されたデータの識別に失敗しました\nXMLはniconicomeの形式に準拠しています\nそれ以外のツールを使用したい場合は開発者までお問い合わせください\n推奨形式はv1形式のjsonファイルです\n${documentLink}\ndialog / selectComment / xml`,
-      });
-      return;
-    }
-  } else if (file.match(/\.json$/) || file.match(/_commentJSON\.txt$/)) {
-    const json = JSON.parse(fileData) as unknown;
-    if (
-      (json as v1Raw)?.meta?.status === 200 &&
-      NiconiComments.typeGuard.v1.threads((json as v1Raw)?.data?.threads)
-    ) {
-      data = (json as v1Raw).data.threads;
-      type = "v1";
-    } else {
-      if (NiconiComments.typeGuard.v1.threads(json)) {
-        type = "v1";
-      } else if (NiconiComments.typeGuard.legacy.rawApiResponses(json)) {
-        type = "legacy";
-      } else if (NiconiComments.typeGuard.owner.comments(json)) {
-        type = "owner";
-      } else if (
-        NiconiComments.typeGuard.formatted.comments(json) ||
-        NiconiComments.typeGuard.formatted.legacyComments(json)
-      ) {
-        type = "formatted";
-      } else {
-        sendMessageToController({
-          type: "message",
-          title: "非対応のフォーマットです",
-          message: `入力されたデータの識別に失敗しました\n対応していないフォーマットの可能性があります\n${documentLink}\ndialog / selectComment / json`,
-        });
-        return;
-      }
-      data = json;
-    }
-  } else if (file.match(/\.txt$/)) {
-    data = fileData;
-    type = "legacyOwner";
-  } else {
+  const filePath = path.filePaths[0];
+  const format = identifyCommentFormat(filePath);
+  if (!format) {
     sendMessageToController({
       type: "message",
       title: "非対応のフォーマットです",
-      message: `入力されたデータの識別に失敗しました\n対応していないフォーマットの可能性があります\n${documentLink}\ndialog / selectComment / txt`,
+      message: `入力されたデータの識別に失敗しました\n対応していないフォーマットの可能性があります\n対応しているフォーマットについては以下のリンクを御覧ください\nhttps://xpadev-net.github.io/niconicomments/#p_format\n※フォーマットの識別は拡張子をもとに行っています\ndialog / selectComment`,
     });
     return;
   }
   return {
     type: "selectComment",
-    data: data,
-    format: type,
+    path: path.filePaths[0],
+    format: format,
   };
 };
 
-const selectOutput = async (options: SaveDialogOptions) => {
+const selectOutput = async (
+  options: SaveDialogOptions,
+): Promise<string | undefined> => {
   const outputPath = await dialog.showSaveDialog(options);
   return outputPath.canceled ? undefined : outputPath.filePath;
 };
 
-export { selectComment, selectMovie, selectOutput, selectFile };
+export { selectComment, selectFile, selectMovie, selectOutput };

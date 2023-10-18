@@ -1,23 +1,23 @@
-export type chromiumBrowser =
+export type ChromiumBrowser =
   | "brave"
   | "chrome"
   | "chromium"
   | "edge"
   | "opera"
   | "vivaldi";
-export type browser = chromiumBrowser | "firefox" | "safari";
-export type platform = "win32" | "darwin";
+export type Browser = ChromiumBrowser | "firefox" | "safari";
+export type Platform = "win32" | "darwin";
 
-export type firefoxProfile = firefoxBasicProfile | firefoxContainer;
+export type FirefoxProfile = FirefoxBasicProfile | FirefoxContainer;
 
-export type firefoxBasicProfile = {
+export type FirefoxBasicProfile = {
   type: "firefoxBasicProfile";
   browser: "firefox";
   name: string;
   path: string;
 };
 
-export type firefoxContainer = {
+export type FirefoxContainer = {
   type: "firefoxContainer";
   browser: "firefox";
   name: string;
@@ -72,7 +72,7 @@ export type Cookies = {
   [key: string]: string;
 };
 
-export type chromiumProfilesJson = {
+export type ChromiumProfilesJson = {
   profile: {
     info_cache: {
       [profile_name: string]: {
@@ -95,9 +95,9 @@ export type chromiumProfilesJson = {
   };
 };
 
-export type chromiumProfile = {
+export type ChromiumProfile = {
   type: "chromiumProfile";
-  browser: chromiumBrowser;
+  browser: ChromiumBrowser;
   profileName: string;
   name: string;
   path: string;
@@ -128,4 +128,4 @@ export type chromiumLocalState = {
   };
 };
 
-export type browserProfile = firefoxProfile | chromiumProfile;
+export type BrowserProfile = FirefoxProfile | ChromiumProfile;

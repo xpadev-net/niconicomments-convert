@@ -1,29 +1,27 @@
-import type { InputFormat, InputFormatType } from "@xpadev-net/niconicomments";
+import type { ConvertQueue, Queue } from "@/@types/queue";
+import type { ApiResponseEnd } from "@/@types/response.controller";
 
-import type { Options } from "./options";
-import { apiResponseEnd } from "@/@types/response.controller";
-import { Queue } from "@/@types/queue";
-
-export type apiResponseToRenderer = {
+export type ApiResponseToRenderer = {
   target: "renderer";
 };
-export type apiResponseStartRender = {
-  type: "start";
-  data: InputFormat;
-  format: InputFormatType;
-  options?: Options;
-  duration: number;
-  fps: number;
-  offset: number;
-  frames: number;
-};
-export type apiResponseProgressRenderer = {
+export type ApiResponseProgressRenderer = {
   type: "progress";
   data: Queue;
 };
-export type apiResponsesToRenderer =
-  | apiResponseEnd
-  | apiResponseProgressRenderer
-  | apiResponseStartRender;
+export type ApiResponseLoad = {
+  type: "load";
+  queue: ConvertQueue;
+  commentData: string;
+};
+export type ApiResponseReportProgress = {
+  type: "reportProgress";
+  converted: number;
+};
+
+export type ApiResponsesToRenderer =
+  | ApiResponseEnd
+  | ApiResponseLoad
+  | ApiResponseProgressRenderer
+  | ApiResponseReportProgress;
 
 export {};

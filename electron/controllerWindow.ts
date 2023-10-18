@@ -1,10 +1,12 @@
-import { apiResponsesToController } from "@/@types/response.controller";
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
+
+import type { ApiResponsesToController } from "@/@types/response.controller";
+
 import { baseUrl } from "./context";
 
 let controllerWindow: BrowserWindow;
-const createControllerWindow = () => {
+const createControllerWindow = (): void => {
   controllerWindow = new BrowserWindow({
     width: 800,
     height: 600,
@@ -24,7 +26,7 @@ const createControllerWindow = () => {
     controllerWindow.webContents.openDevTools();
   }
 };
-const sendMessageToController = (value: apiResponsesToController) => {
+const sendMessageToController = (value: ApiResponsesToController): void => {
   controllerWindow.webContents.send("response", {
     ...value,
     target: "controller",

@@ -1,107 +1,102 @@
 import type {
-  chromiumProfilesJson,
+  ChromiumProfilesJson,
   firefoxContainerDefault,
   firefoxContainersJson,
   firefoxContainerUser,
 } from "@/@types/cookies";
 import type {
-  createSessionResponse,
+  CreateSessionResponse,
+  TWatchV3Metadata,
   UserData,
-  watchV3Metadata,
 } from "@/@types/niconico";
 import type {
-  apiRequestAppendQueue,
-  apiRequestDownloadMovie,
-  apiRequestFromController,
-  apiRequestGetAvailableProfiles,
-  apiRequestGetNiconicoMovieMetadata,
-  apiRequestGetSetting,
-  apiRequestSelectComment,
-  apiRequestSelectFile,
-  apiRequestSelectMovie,
-  apiRequestSelectOutput,
-  apiRequestSetSetting,
+  ApiRequestAppendQueue,
+  ApiRequestDownloadMovie,
+  ApiRequestFromController,
+  ApiRequestGetAvailableProfiles,
+  ApiRequestGetNiconicoMovieMetadata,
+  ApiRequestGetSetting,
+  ApiRequestSelectComment,
+  ApiRequestSelectFile,
+  ApiRequestSelectMovie,
+  ApiRequestSelectOutput,
+  ApiRequestSetSetting,
 } from "@/@types/request.controller";
 import type {
-  apiRequestBuffer,
-  apiRequestEnd,
-  apiRequestFromRenderer,
-  apiRequestLoad,
-  apiRequestProgress,
+  ApiRequestBuffer,
+  ApiRequestEnd,
+  ApiRequestFromRenderer,
+  ApiRequestLoad,
 } from "@/@types/request.renderer";
-import { apiRequestMessage } from "@/@types/request.renderer";
+import type { ApiRequestMessage } from "@/@types/request.renderer";
 
 const typeGuard = {
   controller: {
-    selectMovie: (i: unknown): i is apiRequestSelectMovie =>
+    selectMovie: (i: unknown): i is ApiRequestSelectMovie =>
       typeof i === "object" &&
-      (i as apiRequestFromController).host === "controller" &&
-      (i as apiRequestSelectMovie).type === "selectMovie",
-    selectComment: (i: unknown): i is apiRequestSelectComment =>
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestSelectMovie).type === "selectMovie",
+    selectComment: (i: unknown): i is ApiRequestSelectComment =>
       typeof i === "object" &&
-      (i as apiRequestFromController).host === "controller" &&
-      (i as apiRequestSelectComment).type === "selectComment",
-    selectOutput: (i: unknown): i is apiRequestSelectOutput =>
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestSelectComment).type === "selectComment",
+    selectOutput: (i: unknown): i is ApiRequestSelectOutput =>
       typeof i === "object" &&
-      (i as apiRequestFromController).host === "controller" &&
-      (i as apiRequestSelectOutput).type === "selectOutput",
-    selectFile: (i: unknown): i is apiRequestSelectFile =>
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestSelectOutput).type === "selectOutput",
+    selectFile: (i: unknown): i is ApiRequestSelectFile =>
       typeof i === "object" &&
-      (i as apiRequestFromController).host === "controller" &&
-      (i as apiRequestSelectFile).type === "selectFile",
-    appendQueue: (i: unknown): i is apiRequestAppendQueue =>
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestSelectFile).type === "selectFile",
+    appendQueue: (i: unknown): i is ApiRequestAppendQueue =>
       typeof i === "object" &&
-      (i as apiRequestFromController).host === "controller" &&
-      (i as apiRequestAppendQueue).type === "appendQueue",
-    load: (i: unknown): i is apiRequestLoad =>
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestAppendQueue).type === "appendQueue",
+    load: (i: unknown): i is ApiRequestLoad =>
       typeof i === "object" &&
-      (i as apiRequestFromController).host === "controller" &&
-      (i as apiRequestLoad).type === "load",
-    getSetting: (i: unknown): i is apiRequestGetSetting =>
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestLoad).type === "load",
+    getSetting: (i: unknown): i is ApiRequestGetSetting =>
       typeof i === "object" &&
-      (i as apiRequestFromController).host === "controller" &&
-      (i as apiRequestGetSetting).type === "getSetting",
-    setSetting: (i: unknown): i is apiRequestSetSetting =>
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestGetSetting).type === "getSetting",
+    setSetting: (i: unknown): i is ApiRequestSetSetting =>
       typeof i === "object" &&
-      (i as apiRequestFromController).host === "controller" &&
-      (i as apiRequestSetSetting).type === "setSetting",
-    downloadMovie: (i: unknown): i is apiRequestDownloadMovie =>
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestSetSetting).type === "setSetting",
+    downloadMovie: (i: unknown): i is ApiRequestDownloadMovie =>
       typeof i === "object" &&
-      (i as apiRequestFromController).host === "controller" &&
-      (i as apiRequestDownloadMovie).type === "downloadMovie",
-    getAvailableProfiles: (i: unknown): i is apiRequestGetAvailableProfiles =>
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestDownloadMovie).type === "downloadMovie",
+    getAvailableProfiles: (i: unknown): i is ApiRequestGetAvailableProfiles =>
       typeof i === "object" &&
-      (i as apiRequestFromController).host === "controller" &&
-      (i as apiRequestGetAvailableProfiles).type === "getAvailableProfiles",
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestGetAvailableProfiles).type === "getAvailableProfiles",
     getNiconicoMovieMetadata: (
       i: unknown,
-    ): i is apiRequestGetNiconicoMovieMetadata =>
+    ): i is ApiRequestGetNiconicoMovieMetadata =>
       typeof i === "object" &&
-      (i as apiRequestFromController).host === "controller" &&
-      (i as apiRequestGetNiconicoMovieMetadata).type ===
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestGetNiconicoMovieMetadata).type ===
         "getNiconicoMovieMetadata",
   },
   renderer: {
-    progress: (i: unknown): i is apiRequestProgress =>
+    buffer: (i: unknown): i is ApiRequestBuffer =>
       typeof i === "object" &&
-      (i as apiRequestFromRenderer).host === "renderer" &&
-      (i as apiRequestProgress).type === "progress",
-    buffer: (i: unknown): i is apiRequestBuffer =>
+      (i as ApiRequestFromRenderer).host === "renderer" &&
+      (i as ApiRequestBuffer).type === "buffer",
+    end: (i: unknown): i is ApiRequestEnd =>
       typeof i === "object" &&
-      (i as apiRequestFromRenderer).host === "renderer" &&
-      (i as apiRequestBuffer).type === "buffer",
-    end: (i: unknown): i is apiRequestEnd =>
+      (i as ApiRequestFromRenderer).host === "renderer" &&
+      (i as ApiRequestEnd).type === "end",
+    load: (i: unknown): i is ApiRequestLoad =>
       typeof i === "object" &&
-      (i as apiRequestFromRenderer).host === "renderer" &&
-      (i as apiRequestEnd).type === "end",
-    load: (i: unknown): i is apiRequestLoad =>
+      (i as ApiRequestFromRenderer).host === "renderer" &&
+      (i as ApiRequestLoad).type === "load",
+    message: (i: unknown): i is ApiRequestMessage =>
       typeof i === "object" &&
-      (i as apiRequestFromRenderer).host === "renderer" &&
-      (i as apiRequestLoad).type === "load",
-    message: (i: unknown): i is apiRequestMessage =>
-      typeof i === "object" &&
-      (i as apiRequestFromRenderer).host === "renderer" &&
-      (i as apiRequestMessage).type === "message",
+      (i as ApiRequestFromRenderer).host === "renderer" &&
+      (i as ApiRequestMessage).type === "message",
   },
   firefox: {
     containers: (i: unknown): i is firefoxContainersJson =>
@@ -116,27 +111,27 @@ const typeGuard = {
       typeof (i as firefoxContainerUser).name === "string",
   },
   chromium: {
-    profiles: (i: unknown): i is chromiumProfilesJson =>
+    profiles: (i: unknown): i is ChromiumProfilesJson =>
       typeof i === "object" &&
-      typeof (i as chromiumProfilesJson).profile === "object" &&
-      typeof (i as chromiumProfilesJson).profile.info_cache === "object",
+      typeof (i as ChromiumProfilesJson).profile === "object" &&
+      typeof (i as ChromiumProfilesJson).profile.info_cache === "object",
   },
   niconico: {
     userData: (i: unknown): i is UserData =>
       typeof i === "object" &&
       (i as UserData).meta.status === 200 &&
       typeof (i as UserData).data.userId === "string",
-    watchV3Metadata: (i: unknown): i is watchV3Metadata =>
+    TWatchV3Metadata: (i: unknown): i is TWatchV3Metadata =>
       typeof i === "object" &&
-      (i as watchV3Metadata).meta.status === 200 &&
-      typeof (i as watchV3Metadata).data === "object",
-    createSessionResponse: (i: unknown): i is createSessionResponse =>
+      (i as TWatchV3Metadata).meta.status === 200 &&
+      typeof (i as TWatchV3Metadata).data === "object",
+    CreateSessionResponse: (i: unknown): i is CreateSessionResponse =>
       typeof i === "object" &&
-      ((i as createSessionResponse).meta.status === 201 ||
-        (i as createSessionResponse).meta.status === 200) &&
-      ((i as createSessionResponse).meta.message === "created" ||
-        (i as createSessionResponse).meta.message === "ok") &&
-      typeof (i as createSessionResponse).data === "object",
+      ((i as CreateSessionResponse).meta.status === 201 ||
+        (i as CreateSessionResponse).meta.status === 200) &&
+      ((i as CreateSessionResponse).meta.message === "created" ||
+        (i as CreateSessionResponse).meta.message === "ok") &&
+      typeof (i as CreateSessionResponse).data === "object",
   },
 };
 export { typeGuard };

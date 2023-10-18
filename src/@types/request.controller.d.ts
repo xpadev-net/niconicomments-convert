@@ -1,65 +1,66 @@
-import { apiRequestLoad } from "@/@types/request.renderer";
-import { Queue } from "@/@types/queue";
-import SaveDialogOptions = Electron.SaveDialogOptions;
+import type { SaveDialogOptions } from "electron";
 
-export type apiRequestFromController = {
+import type { Queue } from "@/@types/queue";
+import type { ApiRequestLoad } from "@/@types/request.renderer";
+
+export type ApiRequestFromController = {
   host: "controller";
 };
-export type apiRequestSelectMovie = {
+export type ApiRequestSelectMovie = {
   type: "selectMovie";
 };
-export type apiRequestSelectComment = {
+export type ApiRequestSelectComment = {
   type: "selectComment";
 };
-export type apiRequestSelectOutput = {
+export type ApiRequestSelectOutput = {
   type: "selectOutput";
   options: SaveDialogOptions;
 };
-export type apiRequestSelectFile = {
+export type ApiRequestSelectFile = {
   type: "selectFile";
   pattern: Electron.FileFilter[];
 };
-export type apiRequestAppendQueue = {
+export type ApiRequestAppendQueue = {
   type: "appendQueue";
   data: Queue;
 };
-export type apiRequestGetSetting = {
+export type ApiRequestGetSetting = {
   type: "getSetting";
   key: string;
 };
-export type apiRequestSetSetting = {
+export type ApiRequestSetSetting = {
   type: "setSetting";
   key: string;
   data: unknown;
 };
 
-export type apiRequestDownloadMovie = {
+export type ApiRequestDownloadMovie = {
   type: "downloadMovie";
   url: string;
   format: string;
   path: string;
 };
 
-export type apiRequestGetAvailableProfiles = {
+export type ApiRequestGetAvailableProfiles = {
   type: "getAvailableProfiles";
 };
 
-export type apiRequestGetNiconicoMovieMetadata = {
+export type ApiRequestGetNiconicoMovieMetadata = {
   type: "getNiconicoMovieMetadata";
   nicoId: string;
 };
 
-export type apiRequestsFromController =
-  | apiRequestAppendQueue
-  | apiRequestSelectComment
-  | apiRequestSelectMovie
-  | apiRequestSelectOutput
-  | apiRequestLoad
-  | apiRequestSelectFile
-  | apiRequestGetSetting
-  | apiRequestSetSetting
-  | apiRequestDownloadMovie
-  | apiRequestGetAvailableProfiles
-  | apiRequestGetNiconicoMovieMetadata;
+export type ApiRequestsFromController =
+  | ApiRequestAppendQueue
+  | ApiRequestSelectComment
+  | ApiRequestSelectMovie
+  | ApiRequestSelectOutput
+  | ApiRequestLoad
+  | ApiRequestSelectFile
+  | ApiRequestGetSetting
+  | ApiRequestSetSetting
+  | ApiRequestDownloadMovie
+  | ApiRequestGetAvailableProfiles
+  | ApiRequestGetNiconicoMovieMetadata;
 
 export {};

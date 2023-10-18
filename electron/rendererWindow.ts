@@ -1,11 +1,13 @@
-import { apiResponsesToRenderer } from "@/@types/response.renderer";
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
+
+import type { ApiResponsesToRenderer } from "@/@types/response.renderer";
+
 import { baseUrl } from "./context";
 
 let rendererWindow: BrowserWindow;
 let isOpen = false;
-const createRendererWindow = () => {
+const createRendererWindow = (): void => {
   rendererWindow = new BrowserWindow({
     width: 640,
     height: 360,
@@ -27,7 +29,7 @@ const createRendererWindow = () => {
     rendererWindow.webContents.openDevTools();
   }
 };
-const sendMessageToRenderer = (value: apiResponsesToRenderer) => {
+const sendMessageToRenderer = (value: ApiResponsesToRenderer): void => {
   if (!isOpen) return;
   rendererWindow.webContents.send("response", { ...value, target: "renderer" });
 };

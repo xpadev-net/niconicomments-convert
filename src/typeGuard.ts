@@ -1,44 +1,45 @@
-import type { apiResponseDownloadProgress } from "@/@types/response.binaryDownloader";
+import type { ApiResponseDownloadProgress } from "@/@types/response.binaryDownloader";
 import type {
-  apiResponseEnd,
-  apiResponseMessage,
-  apiResponseProgress,
-  apiResponseSelectComment,
-  apiResponseSelectMovie,
-  apiResponseStartController,
+  ApiResponseEnd,
+  ApiResponseMessage,
+  ApiResponseProgress,
+  ApiResponseSelectComment,
+  ApiResponseSelectMovie,
+  ApiResponseStartController,
 } from "@/@types/response.controller";
-import type { apiResponseStartRender } from "@/@types/response.renderer";
+import type { ApiResponseReportProgress } from "@/@types/response.renderer";
 
 const typeGuard = {
   controller: {
-    selectMovie: (i: unknown): i is apiResponseSelectMovie =>
+    selectMovie: (i: unknown): i is ApiResponseSelectMovie =>
       typeof i === "object" &&
-      (i as apiResponseSelectMovie).type === "selectMovie",
-    selectComment: (i: unknown): i is apiResponseSelectComment =>
+      (i as ApiResponseSelectMovie).type === "selectMovie",
+    selectComment: (i: unknown): i is ApiResponseSelectComment =>
       typeof i === "object" &&
-      (i as apiResponseSelectComment).type === "selectComment",
-    progress: (i: unknown): i is apiResponseProgress =>
-      typeof i === "object" && (i as apiResponseProgress).type === "progress",
-    start: (i: unknown): i is apiResponseStartController =>
+      (i as ApiResponseSelectComment).type === "selectComment",
+    progress: (i: unknown): i is ApiResponseProgress =>
+      typeof i === "object" && (i as ApiResponseProgress).type === "progress",
+    start: (i: unknown): i is ApiResponseStartController =>
       typeof i === "object" &&
-      (i as apiResponseStartController).type === "start",
-    end: (i: unknown): i is apiResponseEnd =>
-      typeof i === "object" && (i as apiResponseEnd).type === "end",
-    message: (i: unknown): i is apiResponseMessage =>
-      typeof i === "object" && (i as apiResponseMessage).type === "message",
+      (i as ApiResponseStartController).type === "start",
+    end: (i: unknown): i is ApiResponseEnd =>
+      typeof i === "object" && (i as ApiResponseEnd).type === "end",
+    message: (i: unknown): i is ApiResponseMessage =>
+      typeof i === "object" && (i as ApiResponseMessage).type === "message",
   },
   renderer: {
-    start: (i: unknown): i is apiResponseStartRender =>
-      typeof i === "object" && (i as apiResponseStartRender).type === "start",
-    progress: (i: unknown): i is apiResponseProgress =>
-      typeof i === "object" && (i as apiResponseProgress).type === "progress",
-    end: (i: unknown): i is apiResponseEnd =>
-      typeof i === "object" && (i as apiResponseEnd).type === "end",
+    progress: (i: unknown): i is ApiResponseProgress =>
+      typeof i === "object" && (i as ApiResponseProgress).type === "progress",
+    end: (i: unknown): i is ApiResponseEnd =>
+      typeof i === "object" && (i as ApiResponseEnd).type === "end",
+    reportProgress: (i: unknown): i is ApiResponseReportProgress =>
+      typeof i === "object" &&
+      (i as ApiResponseReportProgress).type === "reportProgress",
   },
   binaryDownloader: {
-    progress: (i: unknown): i is apiResponseDownloadProgress =>
+    progress: (i: unknown): i is ApiResponseDownloadProgress =>
       typeof i === "object" &&
-      (i as apiResponseDownloadProgress).type === "downloadProgress",
+      (i as ApiResponseDownloadProgress).type === "downloadProgress",
   },
 };
 
