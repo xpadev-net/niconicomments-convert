@@ -45,6 +45,22 @@ export type TMovieItemRemote = {
   ref: MovieQueue;
 };
 
+export type TRemoteServerType = "delivery" | "domand";
+export type TRemoteMovieItemFormat = TDomandFormat | TDeliveryFormat;
+
+export type TDeliveryFormat = {
+  type: "delivery";
+  format: {
+    audio: string;
+    video: string;
+  };
+};
+
+export type TDomandFormat = {
+  type: "domand";
+  format: [string, string];
+};
+
 export type ConvertQueue = BaseQueue & {
   type: "convert";
   comment: TCommentItem;
@@ -65,7 +81,7 @@ export type ConvertQueue = BaseQueue & {
 export type MovieQueue = BaseQueue & {
   type: "movie";
   url: NicoId;
-  format: NicovideoMovieFormat;
+  format: TRemoteMovieItemFormat;
   path: string;
 };
 

@@ -61,6 +61,7 @@ const startMovieDownload = async (): Promise<void> => {
   try {
     await download(
       targetQueue.url,
+      //@ts-ignore
       targetQueue.format,
       targetQueue.path,
       (total, downloaded) => {

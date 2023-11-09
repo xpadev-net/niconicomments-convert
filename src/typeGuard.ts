@@ -1,3 +1,4 @@
+import type { TWatchV3Metadata } from "@/@types/niconico";
 import type { ApiResponseDownloadProgress } from "@/@types/response.binaryDownloader";
 import type {
   ApiResponseEnd,
@@ -26,6 +27,10 @@ const typeGuard = {
       typeof i === "object" && (i as ApiResponseEnd).type === "end",
     message: (i: unknown): i is ApiResponseMessage =>
       typeof i === "object" && (i as ApiResponseMessage).type === "message",
+    v3Delivery: (i: unknown): i is TWatchV3Metadata<"delivery"> =>
+      typeof i === "object" && !!(i as TWatchV3Metadata).data.media.delivery,
+    v3Domand: (i: unknown): i is TWatchV3Metadata<"domand"> =>
+      typeof i === "object" && !!(i as TWatchV3Metadata).data.media.domand,
   },
   renderer: {
     progress: (i: unknown): i is ApiResponseProgress =>

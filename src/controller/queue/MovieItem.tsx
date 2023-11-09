@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useMemo } from "react";
 
-import type { MovieQueue } from "@/@types/queue";
+import type { MovieQueue, TRemoteMovieItemFormat } from "@/@types/queue";
 import { ProgressDisplay } from "@/controller/queue/ProgressDisplay";
 
 import Styles from "./ConvertItem.module.scss";
@@ -18,8 +18,7 @@ const MovieItem: FC<Props> = ({ queue, className }) => {
       return (
         <div className={`${Styles.queue} ${className}`}>
           <p>id: {url}</p>
-          <p>video: {queue.format.video.slice(8)}</p>
-          <p>audio: {queue.format.audio.slice(8)}</p>
+          <FormatDisplay format={queue.format} />
           <p>output: {outputName}</p>
           <p>status: {queue.status}</p>
         </div>
@@ -29,8 +28,7 @@ const MovieItem: FC<Props> = ({ queue, className }) => {
     return (
       <div className={`${Styles.queue} ${className}`}>
         <p>id: {url}</p>
-        <p>video: {queue.format.video.slice(8)}</p>
-        <p>audio: {queue.format.audio.slice(8)}</p>
+        <FormatDisplay format={queue.format} />
         <p>path: {outputName}</p>
         <p>status: processing</p>
         <div className={Styles.progressWrapper}>
@@ -40,4 +38,28 @@ const MovieItem: FC<Props> = ({ queue, className }) => {
     );
   }, [queue]);
 };
+
+type FormatDisplayProps = {
+  format: TRemoteMovieItemFormat;
+};
+
+const FormatDisplay: FC<FormatDisplayProps> = ({ format }) => {
+  return (
+    <>
+      {format.type === "delivery" && (
+        <>
+          <p>video: {format.format.video.slice(8)}</p>
+          <p>audio: {format.format.audio.slice(8)}</p>
+        </>
+      )}
+      {format.type === "domand" && (
+        <>
+          <p>video: {format.format[0]}</p>
+          <p>audio: {format.format[1]}</p>
+        </>
+      )}
+    </>
+  );
+};
+
 export { MovieItem };

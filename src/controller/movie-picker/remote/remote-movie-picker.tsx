@@ -1,18 +1,17 @@
-import { MenuItem, Select, TextField } from "@mui/material";
+import { FormControlLabel, Radio, RadioGroup, TextField } from "@mui/material";
 import Button from "@mui/material/Button";
 import { useSetAtom } from "jotai";
 import type { ChangeEvent, FC } from "react";
 import { useState } from "react";
 
-import type {
-  TWatchV3Metadata,
-  V3MetadataAudioItem,
-  V3MetadataVideoItem,
-} from "@/@types/niconico";
-import type { TMovieItemRemote } from "@/@types/queue";
-import { SelectField } from "@/components/SelectField";
+import type { TWatchV3Metadata } from "@/@types/niconico";
+import type { TMovieItemRemote, TRemoteMovieItemFormat } from "@/@types/queue";
+import type { TRemoteServerType } from "@/@types/queue";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import Styles from "@/controller/movie/movie.module.scss";
+import { DeliveryMoviePicker } from "@/controller/movie-picker/remote/delivery";
+import { DomandMoviePicker } from "@/controller/movie-picker/remote/domand";
+import { typeGuard } from "@/typeGuard";
 import { getNicoId, isNicovideoUrl } from "@/util/niconico";
 import { uuid } from "@/util/uuid";
 
@@ -23,8 +22,8 @@ type Props = {
 const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
   const [url, setUrl] = useState("");
   const [metadata, setMetadata] = useState<TWatchV3Metadata | undefined>();
-  const [selectedVideo, setSelectedVideo] = useState<string>("");
-  const [selectedAudio, setSelectedAudio] = useState<string>("");
+  const [mediaServer, setMediaServer] = useState<TRemoteServerType>("delivery");
+  const [format, setFormat] = useState<TRemoteMovieItemFormat | undefined>();
   const setMessage = useSetAtom(messageAtom);
   const setIsLoading = useSetAtom(isLoadingAtom);
   const onUrlChange = (e: ChangeEvent<HTMLInputElement>): void => {
@@ -64,13 +63,8 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
         });
         return;
       }
+      setMediaServer(targetMetadata.data.media.domand ? "domand" : "delivery");
       setMetadata(targetMetadata);
-      setSelectedAudio(
-        getBestSegment(targetMetadata.data.media.delivery.movie.audios).id,
-      );
-      setSelectedVideo(
-        getBestSegment(targetMetadata.data.media.delivery.movie.videos).id,
-      );
     })();
   };
   const onClick = (): void => {
@@ -84,7 +78,7 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
         });
         return;
       }
-      if (!selectedVideo || !selectedAudio || !metadata) {
+      if (!format || !metadata) {
         return;
       }
       setIsLoading(true);
@@ -111,7 +105,7 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
           status: "queued",
           type: "movie",
           url: nicoId,
-          format: { audio: selectedAudio, video: selectedVideo },
+          format: format,
           path: output,
           progress: 0,
         },
@@ -132,47 +126,34 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
       />
       {metadata && (
         <>
-          <SelectField label={"動画"} className={Styles.input}>
-            <Select
-              label={"動画"}
-              variant={"standard"}
-              value={selectedVideo}
-              defaultValue={
-                getBestSegment(metadata.data.media.delivery.movie.videos).id
-              }
-              className={Styles.input}
-              onChange={(e) => setSelectedVideo(e.target.value)}
-            >
-              {metadata.data.media.delivery.movie.videos.map((val) => {
-                if (!val.isAvailable) return <></>;
-                return (
-                  <MenuItem key={val.id} value={val.id}>
-                    {val.id}
-                  </MenuItem>
-                );
-              })}
-            </Select>
-          </SelectField>
-          <SelectField label={"音声"} className={Styles.input}>
-            <Select
-              label={"音声"}
-              variant={"standard"}
-              className={Styles.input}
-              defaultValue={
-                getBestSegment(metadata.data.media.delivery.movie.audios).id
-              }
-              value={selectedAudio}
-              onChange={(e) => setSelectedAudio(e.target.value)}
-            >
-              {metadata.data.media.delivery.movie.audios.map((val) => {
-                return (
-                  <MenuItem key={val.id} value={val.id}>
-                    {val.id}
-                  </MenuItem>
-                );
-              })}
-            </Select>
-          </SelectField>
+          <RadioGroup
+            value={mediaServer}
+            onChange={(e) =>
+              setMediaServer(e.target.value as TRemoteServerType)
+            }
+            row
+          >
+            <FormControlLabel
+              value={"delivery"}
+              control={<Radio />}
+              label={"delivery"}
+              disabled={!metadata.data.media.delivery}
+            />
+            <FormControlLabel
+              value={"domand"}
+              control={<Radio />}
+              disabled={!metadata.data.media.domand}
+              label={"domand"}
+            />
+          </RadioGroup>
+          {mediaServer === "delivery" &&
+            typeGuard.controller.v3Delivery(metadata) && (
+              <DeliveryMoviePicker metadata={metadata} onChange={setFormat} />
+            )}
+          {mediaServer === "domand" &&
+            typeGuard.controller.v3Domand(metadata) && (
+              <DomandMoviePicker metadata={metadata} onChange={setFormat} />
+            )}
           <Button variant={"outlined"} onClick={onClick}>
             確定
           </Button>
@@ -181,18 +162,5 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
     </div>
   );
 };
-
-function getBestSegment<T extends V3MetadataAudioItem | V3MetadataVideoItem>(
-  input: T[],
-): T {
-  let bestItem = input[0];
-  for (const item of input) {
-    if (!item.isAvailable) continue;
-    if (bestItem.metadata.bitrate < item.metadata.bitrate) {
-      bestItem = item;
-    }
-  }
-  return bestItem;
-}
 
 export { RemoteMoviePicker };

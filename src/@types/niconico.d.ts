@@ -1,45 +1,16 @@
-export type TWatchV3Metadata = {
+export type TWatchV3Metadata<T extends "delivery" | "domand" | "" = ""> = {
   meta: {
     status: 200;
   };
   data: {
     comment: V3MetadataComment;
     media: {
-      delivery: {
-        recipeId: string;
-        encryption: null | {
-          encryptedKey: string;
-          keyUri: string;
-        };
-        movie: {
-          contentId: string;
-          audios: V3MetadataAudioItem[];
-          videos: V3MetadataVideoItem[];
-          session: {
-            recipeId: string;
-            playerId: string;
-            videos: string[];
-            audios: string[];
-            movies: [];
-            protocols: ["http", "hls"] | ["hls"];
-            AuthTypes: { [key in "http" | "hls"]: "ht2" };
-            serviceUserId: string;
-            token: string;
-            signature: string;
-            contentId: string;
-            heartbeatLifetime: number;
-            contentKeyTimeout: number;
-            priority: number;
-            transferPresets: [] | ["standard2"];
-            urls: {
-              url: string;
-              isWellKnownPort: boolean;
-              isSsl: boolean;
-            }[];
-          };
-        };
-        trackingId: string;
-      };
+      delivery: T extends "delivery"
+        ? V3MetadataDeliveryMedia
+        : V3MetadataDeliveryMedia | null;
+      domand: T extends "domand"
+        ? V3MetadataDomandMedia
+        : V3MetadataDomandMedia | null;
     };
     video: {
       id: string;
@@ -97,6 +68,68 @@ export type V3MetadataVideoItem = {
     };
     levelIndex: number;
   };
+};
+
+export type V3MetadataDeliveryMedia = {
+  recipeId: string;
+  encryption: null | {
+    encryptedKey: string;
+    keyUri: string;
+  };
+  movie: {
+    contentId: string;
+    audios: V3MetadataAudioItem[];
+    videos: V3MetadataVideoItem[];
+    session: {
+      recipeId: string;
+      playerId: string;
+      videos: string[];
+      audios: string[];
+      movies: [];
+      protocols: ["http", "hls"] | ["hls"];
+      AuthTypes: { [key in "http" | "hls"]: "ht2" };
+      serviceUserId: string;
+      token: string;
+      signature: string;
+      contentId: string;
+      heartbeatLifetime: number;
+      contentKeyTimeout: number;
+      priority: number;
+      transferPresets: [] | ["standard2"];
+      urls: {
+        url: string;
+        isWellKnownPort: boolean;
+        isSsl: boolean;
+      }[];
+    };
+  };
+  trackingId: string;
+};
+
+export type V3MetadataDomandMedia = {
+  videos: V3MetadataDomandVideoItem[];
+  audios: V3MetadataDomandAudioItem[];
+};
+
+export type V3MetadataDomandVideoItem = {
+  id: string;
+  isAvailable: boolean;
+  label: string;
+  bitRate: number;
+  width: number;
+  height: number;
+  qualityLevel: number;
+  recommendedHighestAudioQualityLevel: number;
+};
+
+export type V3MetadataDomandAudioItem = {
+  id: string;
+  isAvailable: boolean;
+  bitRate: number;
+  samplingRate: number;
+  integratedLoudness: number;
+  truePeak: number;
+  qualityLevel: number;
 };
 
 export type V3MetadataComment = {
