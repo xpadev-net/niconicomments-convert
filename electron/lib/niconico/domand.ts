@@ -131,7 +131,11 @@ niconico / download / invalid metadata`,
   ): Promise<string> => {
     const replaceMap = new Map<string, string>();
     for (const segment of segments) {
-      const outputPath = `${dir}/${segment.split("/").pop()}`;
+      const segmentUrl = new URL(segment);
+      const outputPath = path.join(
+        dir,
+        segmentUrl.pathname.split("/").pop() ?? "",
+      );
       await downloadFile(segment, outputPath, {
         Cookie: formatCookies(filterCookies(parsedCookie, segment), false).join(
           ";",
@@ -140,16 +144,18 @@ niconico / download / invalid metadata`,
       progress();
       replaceMap.set(segment, outputPath);
     }
-    const keyPath = `${dir}/${key.split("/").pop()}`;
+    const keyUrl = new URL(key);
+    const keyPath = path.join(dir, keyUrl.pathname.split("/").pop() ?? "");
     await downloadFile(key, keyPath, {
       Cookie: formatCookies(filterCookies(parsedCookie, key), false).join(";"),
     });
     replaceMap.set(key, keyPath);
     replaceMap.forEach((value, key) => {
-      manifest = manifest.replace(key, value);
+      manifest = manifest.replace(key, value.replace(/\\/g, "\\\\"));
     });
-    fs.writeFileSync(`${dir}/${format}.m3u8`, manifest);
-    return `${dir}/${format}.m3u8`;
+    const manifestPath = path.join(dir, format + ".m3u8");
+    fs.writeFileSync(manifestPath, manifest);
+    return manifestPath.replace(/\\/g, "\\\\");
   };
 
   let tmpDir: string = "";
@@ -213,13 +219,15 @@ niconico / download / invalid metadata`,
         "debug",
       ],
       undefined,
+      (data) => console.log(data),
+      (data) => console.log(data),
     );
   } catch {
     // handle error
   } finally {
     try {
       if (tmpDir) {
-        fs.rmSync(tmpDir, { recursive: true });
+        //fs.rmSync(tmpDir, { recursive: true });
       }
     } catch (e) {
       console.error(
@@ -268,7 +276,7 @@ const downloadFile = async (
     headers,
     responseType: "stream",
     onDownloadProgress: (status) =>
-      progress?.(status.loaded / (status.total || 1)),
+      progress?.(status.loaded / (status.total ?? 1)),
   }).then((res: AxiosResponse<Stream>) => {
     return new Promise<void>((resolve, reject) => {
       res.data.pipe(file);
@@ -276,7 +284,7 @@ const downloadFile = async (
       file.on("error", (err) => {
         error = err;
         file.close();
-        reject();
+        reject(err);
       });
       file.on("close", () => {
         if (!error) {
