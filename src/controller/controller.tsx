@@ -13,12 +13,12 @@ import type { FC } from "react";
 import { useState } from "react";
 
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
-import { Comment } from "@/controller/comment/comment";
-import { Convert } from "@/controller/convert/convert";
-import { Movie } from "@/controller/movie/movie";
-import { QueueDisplay } from "@/controller/queue/queue";
-import { Setting } from "@/controller/setting/setting";
-import { Sidebar } from "@/controller/sidebar/sidebar";
+import { Comment } from "@/controller/comment";
+import { Convert } from "@/controller/convert";
+import { Movie } from "@/controller/movie";
+import { QueueDisplay } from "@/controller/queue";
+import { Setting } from "@/controller/setting";
+import { Sidebar } from "@/controller/sidebar";
 
 import Styles from "./controller.module.scss";
 
