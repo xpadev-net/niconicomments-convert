@@ -32,7 +32,6 @@ const downloadDomand = async (
 ): Promise<SpawnResult | undefined> => {
   if (!typeGuard.niconico.v3Domand(metadata)) {
     if (typeGuard.niconico.v3Delivery(metadata)) {
-      console.log(metadata);
       sendMessageToController({
         title: "動画情報の取得に失敗しました",
         message:
@@ -57,9 +56,8 @@ const downloadDomand = async (
     }
     return undefined;
   })();
-
   const accessRightsReq = await fetch(
-    `https://nvapi.nicovideo.jp/v1/watch/${nicoId}/access-rights/hls?actionTrackId=0_0`,
+    `https://nvapi.nicovideo.jp/v1/watch/${metadata.data.video.id}/access-rights/hls?actionTrackId=0_0`,
     {
       headers: {
         Host: "nvapi.nicovideo.jp",
@@ -94,11 +92,14 @@ niconico / download / invalid metadata`,
   );
   const manifestRaw = await manifestReq.text();
   const manifests = Array.from(
-    manifestRaw.match(/https:\/\/.+?\.nicovideo\.jp\/.+?\.m3u8/g) || [],
+    manifestRaw.match(
+      /https:\/\/.+?\.nicovideo\.jp\/.+?\.m3u8(?:\?sh=[a-zA-Z0-9_-]+)?/g,
+    ) || [],
   );
+  console.log("manifests", manifests);
   const getManifestUrl = (format: string): string | undefined => {
     for (const url of manifests) {
-      if (url.endsWith(`/${format}.m3u8`)) {
+      if (url.match(`/${format}.m3u8`)) {
         return url;
       }
     }
@@ -173,6 +174,7 @@ niconico / download / invalid metadata`,
       key: audioKey,
       manifest: audioManifest,
     } = await getManifests(format.format[1]);
+    console.log("segments", videoSegments, audioSegments);
     const totalSegments = videoSegments.length + audioSegments.length;
     let downloadedSegments = 0;
     const onProgress = (): void => {
@@ -252,13 +254,17 @@ const fetchWithCookie = (
 };
 
 const getSegments = (manifest: string): { segments: string[]; key: string } => {
-  const key = manifest.match(/https:\/\/.+?\.nicovideo\.jp\/.+?\.key/g)?.[0];
+  const key = manifest.match(
+    /https:\/\/.+?\.nicovideo\.jp\/.+?\.key(?:\?sh=[a-zA-Z0-9_-]+)?/g,
+  )?.[0];
   if (!key) {
     throw new Error("failed to get key");
   }
   return {
     segments: Array.from(
-      manifest.match(/https:\/\/.+?\.nicovideo\.jp\/.+?\.cmf[av]/g) || [],
+      manifest.match(
+        /https:\/\/.+?\.nicovideo\.jp\/.+?\.cmf[av](?:\?sh=[a-zA-Z0-9_-]+)?/g,
+      ) || [],
     ),
     key,
   };
