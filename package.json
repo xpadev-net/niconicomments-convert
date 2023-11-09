@@ -1,7 +1,7 @@
 {
   "name": "niconicomments-convert",
   "private": false,
-  "version": "0.0.14",
+  "version": "0.0.15",
   "type": "commonjs",
   "license": "MIT",
   "main": "build/electron/electron.js",
