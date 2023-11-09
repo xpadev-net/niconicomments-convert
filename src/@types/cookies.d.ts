@@ -72,6 +72,15 @@ export type Cookies = {
   [key: string]: string;
 };
 
+export type ParsedCookie = {
+  key: string;
+  value: string;
+  expires?: string;
+  "Max-Age"?: string;
+  path?: string;
+  domain?: string;
+};
+
 export type ChromiumProfilesJson = {
   profile: {
     info_cache: {

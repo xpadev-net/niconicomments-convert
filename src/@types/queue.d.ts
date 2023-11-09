@@ -85,11 +85,6 @@ export type MovieQueue = BaseQueue & {
   path: string;
 };
 
-export type NicovideoMovieFormat = {
-  video: string;
-  audio: string;
-};
-
 export type CommentQueue = BaseQueue & {
   type: "comment";
   url: NicoId;

@@ -109,6 +109,7 @@ export type V3MetadataDeliveryMedia = {
 export type V3MetadataDomandMedia = {
   videos: V3MetadataDomandVideoItem[];
   audios: V3MetadataDomandAudioItem[];
+  accessRightKey: string;
 };
 
 export type V3MetadataDomandVideoItem = {
@@ -347,6 +348,17 @@ export type DeleteSessionResponse = {
   meta: {
     status: 200;
     message: "ok";
+  };
+};
+
+export type V1AccessRightsHls = {
+  meta: {
+    status: 201;
+  };
+  data: {
+    contentUrl: string;
+    createTime: string;
+    expireTime: string;
   };
 };
 

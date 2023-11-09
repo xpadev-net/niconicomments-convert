@@ -3,11 +3,13 @@ import type {
   firefoxContainerDefault,
   firefoxContainersJson,
   firefoxContainerUser,
+  ParsedCookie,
 } from "@/@types/cookies";
 import type {
   CreateSessionResponse,
   TWatchV3Metadata,
   UserData,
+  V1AccessRightsHls,
 } from "@/@types/niconico";
 import type {
   ApiRequestAppendQueue,
@@ -137,6 +139,18 @@ const typeGuard = {
       ((i as CreateSessionResponse).meta.message === "created" ||
         (i as CreateSessionResponse).meta.message === "ok") &&
       typeof (i as CreateSessionResponse).data === "object",
+    v3Delivery: (i: unknown): i is TWatchV3Metadata<"delivery"> =>
+      typeof i === "object" && !!(i as TWatchV3Metadata).data.media.delivery,
+    v3Domand: (i: unknown): i is TWatchV3Metadata<"domand"> =>
+      typeof i === "object" && !!(i as TWatchV3Metadata).data.media.domand,
+    v1AccessRightsHls: (i: unknown): i is V1AccessRightsHls =>
+      typeof i === "object" &&
+      (i as V1AccessRightsHls).meta.status === 201 &&
+      typeof (i as V1AccessRightsHls).data === "object",
+  },
+  cookie: {
+    parsedCookieKey: (i: unknown): i is keyof ParsedCookie =>
+      typeof i === "string" && !!i.match(/expires|Max-Age|path|domain/),
   },
 };
 export { typeGuard };

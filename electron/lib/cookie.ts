@@ -3,8 +3,10 @@ import type {
   ChromiumProfile,
   Cookies,
   FirefoxProfile,
+  ParsedCookie,
 } from "@/@types/cookies";
 
+import { typeGuard } from "../typeGuard";
 import {
   getAvailableChromiumProfiles,
   getChromiumCookies,
@@ -44,5 +46,74 @@ const convertToEncodedCookie = (cookie: Cookies): string => {
   }
   return cookieString;
 };
+const convertToFfmpegCookie = (cookie: Cookies): string[] => {
+  const cookies = [];
+  for (const key in cookie) {
+    const value = cookie[key];
+    cookies.push(
+      `${encodeURIComponent(key)}=${encodeURIComponent(
+        value,
+      )}; domain=.nicovideo.jp; path=/`,
+    );
+  }
+  return cookies;
+};
 
-export { convertToEncodedCookie, getAvailableProfiles, getCookies };
+const parseCookie = (...cookies: string[]): ParsedCookie[] => {
+  const result: ParsedCookie[] = [];
+  for (const cookie of cookies) {
+    const parts = cookie.split(/;\s*/);
+    const item: Partial<ParsedCookie> = {};
+    parts.forEach((part, index) => {
+      const [key, value] = part.split("=");
+      if (index === 0) {
+        item.key = decodeURIComponent(key);
+        item.value = decodeURIComponent(value);
+        return;
+      }
+      if (typeGuard.cookie.parsedCookieKey(key)) item[key] = value;
+    });
+    result.push(item as ParsedCookie);
+  }
+  return result;
+};
+
+const filterCookies = (
+  cookies: ParsedCookie[],
+  url: string,
+): ParsedCookie[] => {
+  const urlObj = new URL(url);
+  const domain = urlObj.hostname;
+  const path = urlObj.pathname;
+  const result: ParsedCookie[] = [];
+  for (const cookie of cookies) {
+    if (
+      domain.endsWith(cookie.domain ?? "") &&
+      path.startsWith(cookie.path ?? "")
+    ) {
+      result.push(cookie);
+    }
+  }
+  return result;
+};
+
+const formatCookies = (
+  cookies: ParsedCookie[],
+  addSuffix: boolean = false,
+): string[] => {
+  return cookies.map((cookie) => {
+    return `${cookie.key}=${cookie.value}${
+      addSuffix ? `; domain=${cookie.domain}; path=${cookie.path}` : ""
+    }`;
+  });
+};
+
+export {
+  convertToEncodedCookie,
+  convertToFfmpegCookie,
+  filterCookies,
+  formatCookies,
+  getAvailableProfiles,
+  getCookies,
+  parseCookie,
+};
