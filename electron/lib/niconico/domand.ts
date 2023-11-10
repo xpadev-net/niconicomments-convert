@@ -229,7 +229,7 @@ niconico / download / invalid metadata`,
   } finally {
     try {
       if (tmpDir) {
-        //fs.rmSync(tmpDir, { recursive: true });
+        fs.rmSync(tmpDir, { recursive: true });
       }
     } catch (e) {
       console.error(
