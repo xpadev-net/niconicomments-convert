@@ -2,14 +2,23 @@
   display: flex;
   flex-direction: column;
   width: 50px;
+  &.extend {
+    width: 150px;
+  }
+  .item {
+    cursor: pointer;
+    &.active {
+      background: #253b40;
+    }
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
   .icon {
     width: 50px;
     height: 50px;
     display: grid;
     place-items: center;
-    &.active {
-      background: #253b40;
-    }
   }
   .overlay {
     position: fixed;

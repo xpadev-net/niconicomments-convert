@@ -4,6 +4,7 @@
   user-select: none;
   height: 100%;
   .main {
+    border-left: solid 1px white;
     flex: 1;
     overflow-y: scroll;
     overflow-x: hidden;
@@ -17,7 +18,6 @@
     }
   }
   .queue {
-    border-left: solid 1px white;
     width: 50px;
     overflow: hidden;
   }
