@@ -4,7 +4,12 @@ import type { NicoId, UUID } from "@/@types/brand";
 import type { TCommentOption, V3MetadataComment } from "@/@types/niconico";
 import type { CommentFormat } from "@/@types/niconicomments";
 
-type Status = "queued" | "processing" | "completed" | "fail" | "interrupted";
+export type Status =
+  | "queued"
+  | "processing"
+  | "completed"
+  | "fail"
+  | "interrupted";
 
 export type Queue = ConvertQueue | MovieQueue | CommentQueue;
 

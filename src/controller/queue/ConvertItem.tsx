@@ -1,8 +1,15 @@
+import {
+  DescriptionOutlined,
+  MovieFilterOutlined,
+  StopOutlined,
+  VideoFileOutlined,
+} from "@mui/icons-material";
 import type { FC } from "react";
 import { useMemo } from "react";
 
 import type { ConvertQueue } from "@/@types/queue";
-import { ProgressDisplay } from "@/controller/queue/ProgressDisplay";
+import { PathDisplay } from "@/controller/queue/PathDisplay";
+import { StatusDisplay } from "@/controller/queue/StatusDisplay";
 
 import Styles from "./ConvertItem.module.scss";
 
@@ -12,45 +19,25 @@ type Props = {
 };
 const ConvertItem: FC<Props> = ({ queue, className }) => {
   return useMemo(() => {
-    const movieName = queue.movie.path.split(/[/\\]+/g).reverse()[0];
-    const outputName = queue.output.path.split(/[/\\]+/g).reverse()[0];
-    if (queue.status !== "processing") {
-      return (
-        <div className={`${Styles.queue} ${className}`}>
-          <p>input: {movieName}</p>
-          <p>output: {outputName}</p>
-          <p>status: {queue.status}</p>
-        </div>
-      );
-    }
-
-    const targetFrameRate = queue.option.fps || 30;
-    const totalFrames =
-      Math.ceil(
-        (queue.option.to || queue.movie.duration) - (queue.option.ss || 0),
-      ) * targetFrameRate;
-    const progress = queue.progress ? queue.progress / totalFrames : undefined;
-
     return (
       <div className={`${Styles.queue} ${className}`}>
-        <p>input: {movieName}</p>
-        <p>output: {outputName}</p>
-        <p>status: processing</p>
-        <div className={Styles.progressWrapper}>
-          <ProgressDisplay progress={progress} />
-        </div>
-
-        <button
-          onClick={() => {
-            void window.api.request({
-              host: "controller",
-              type: "interruptQueue",
-              queueId: queue.id,
-            });
-          }}
-        >
-          interrupt
-        </button>
+        <PathDisplay label={"動画"} path={queue.movie.path} />
+        <PathDisplay label={"コメント"} path={queue.comment.path} />
+        <PathDisplay label={"出力"} path={queue.output.path} />
+        <StatusDisplay queue={queue} />
+        {queue.status === "processing" && (
+          <button
+            onClick={() => {
+              void window.api.request({
+                host: "controller",
+                type: "interruptQueue",
+                queueId: queue.id,
+              });
+            }}
+          >
+            <StopOutlined />
+          </button>
+        )}
       </div>
     );
   }, [queue]);
