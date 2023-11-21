@@ -1,5 +1,6 @@
 import type { SaveDialogOptions } from "electron";
 
+import type { UUID } from "@/@types/brand";
 import type { Queue } from "@/@types/queue";
 import type { ApiRequestLoad } from "@/@types/request.renderer";
 
@@ -50,6 +51,11 @@ export type ApiRequestGetNiconicoMovieMetadata = {
   nicoId: string;
 };
 
+export type ApiRequestInterruptQueue = {
+  type: "interruptQueue";
+  queueId: UUID;
+};
+
 export type ApiRequestsFromController =
   | ApiRequestAppendQueue
   | ApiRequestSelectComment
@@ -61,6 +67,7 @@ export type ApiRequestsFromController =
   | ApiRequestSetSetting
   | ApiRequestDownloadMovie
   | ApiRequestGetAvailableProfiles
-  | ApiRequestGetNiconicoMovieMetadata;
+  | ApiRequestGetNiconicoMovieMetadata
+  | ApiRequestInterruptQueue;
 
 export {};

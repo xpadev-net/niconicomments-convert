@@ -18,6 +18,7 @@ import type {
   ApiRequestGetAvailableProfiles,
   ApiRequestGetNiconicoMovieMetadata,
   ApiRequestGetSetting,
+  ApiRequestInterruptQueue,
   ApiRequestSelectComment,
   ApiRequestSelectFile,
   ApiRequestSelectMovie,
@@ -82,6 +83,10 @@ const typeGuard = {
       (i as ApiRequestFromController).host === "controller" &&
       (i as ApiRequestGetNiconicoMovieMetadata).type ===
         "getNiconicoMovieMetadata",
+    interruptQueue: (i: unknown): i is ApiRequestInterruptQueue =>
+      typeof i === "object" &&
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestInterruptQueue).type === "interruptQueue",
   },
   renderer: {
     buffer: (i: unknown): i is ApiRequestBuffer =>
