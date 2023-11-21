@@ -12,8 +12,8 @@ type Props = {
 };
 const ConvertItem: FC<Props> = ({ queue, className }) => {
   return useMemo(() => {
-    const movieName = queue.movie.path.split(/\/|\\/g).reverse()[0];
-    const outputName = queue.output.path.split(/\/|\\/g).reverse()[0];
+    const movieName = queue.movie.path.split(/[/\\]+/g).reverse()[0];
+    const outputName = queue.output.path.split(/[/\\]+/g).reverse()[0];
     if (queue.status !== "processing") {
       return (
         <div className={`${Styles.queue} ${className}`}>
@@ -39,6 +39,18 @@ const ConvertItem: FC<Props> = ({ queue, className }) => {
         <div className={Styles.progressWrapper}>
           <ProgressDisplay progress={progress} />
         </div>
+
+        <button
+          onClick={() => {
+            void window.api.request({
+              host: "controller",
+              type: "interruptQueue",
+              queueId: queue.id,
+            });
+          }}
+        >
+          interrupt
+        </button>
       </div>
     );
   }, [queue]);

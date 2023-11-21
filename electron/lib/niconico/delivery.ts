@@ -1,5 +1,5 @@
 import type { CreateSessionRequest, TWatchV3Metadata } from "@/@types/niconico";
-import type { TDeliveryFormat } from "@/@types/queue";
+import type { MovieQueue, TDeliveryFormat } from "@/@types/queue";
 import type { SpawnResult } from "@/@types/spawn";
 
 import { sendMessageToController } from "../../controllerWindow";
@@ -9,7 +9,7 @@ import { time2num } from "../../utils/time";
 import { spawn } from "../spawn";
 
 const downloadDelivery = async (
-  nicoId: string,
+  queue: MovieQueue,
   metadata: TWatchV3Metadata,
   format: TDeliveryFormat,
   path: string,

@@ -1,14 +1,19 @@
 import * as fs from "fs";
 import * as Stream from "stream";
 
+import type { UUID } from "@/@types/brand";
 import type { ConvertQueue, Queue, QueueLists } from "@/@types/queue";
 import type { ApiResponseLoad } from "@/@types/response.renderer";
 
 import { sendMessageToController } from "./controllerWindow";
-import { inputStream, startConverter } from "./converter";
+import { inputStream, interruptConverter, startConverter } from "./converter";
 import { encodeJson } from "./lib/json";
 import { download, downloadComment } from "./lib/niconico";
-import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
+import {
+  closeRendererWindow,
+  createRendererWindow,
+  sendMessageToRenderer,
+} from "./rendererWindow";
 
 const queueList: Queue[] = [];
 const queueLists: QueueLists = {
@@ -60,6 +65,7 @@ const startMovieDownload = async (): Promise<void> => {
   sendProgress();
   try {
     await download(
+      targetQueue,
       targetQueue.url,
       targetQueue.format,
       targetQueue.path,
@@ -143,13 +149,11 @@ const startConvert = async (): Promise<void> => {
 
 const appendFrame = (frameId: number, data: Uint8Array): void => {
   frameQueue[frameId] = data;
-  console.log("receive: ", frameId, lastFrame, endFrame);
   if (frameId !== lastFrame + 1) {
     return;
   }
   while (frameQueue[lastFrame + 1]) {
     lastFrame++;
-    console.log("process: ", frameId, lastFrame, endFrame);
     processFrame(frameQueue[lastFrame]);
     delete frameQueue[lastFrame];
   }
@@ -159,6 +163,7 @@ const appendFrame = (frameId: number, data: Uint8Array): void => {
 };
 
 const processFrame = (data: Uint8Array): void => {
+  if (processingQueue.status !== "processing") return;
   convertQueue = convertQueue.then(() =>
     new Promise<void>((fulfill, reject) => {
       const myStream = new Stream.Readable();
@@ -202,11 +207,23 @@ const processOnLoad = (): ApiResponseLoad => {
   };
 };
 
+const processOnInterrupt = (queueId: UUID): void => {
+  const queue = queueList.filter((i) => i.id === queueId)[0];
+  if (!queue || queue.status !== "processing") return;
+  queue.status = "interrupted";
+  if (queue.type === "convert") {
+    void convertQueue
+      .then(() => inputStream.end())
+      .then(() => interruptConverter());
+  }
+};
+
 export {
   appendFrame,
   appendQueue,
   markAsCompleted,
   processingQueue,
+  processOnInterrupt,
   processOnLoad,
   queueLists,
   sendProgress,

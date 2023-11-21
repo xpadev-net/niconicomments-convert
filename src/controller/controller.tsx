@@ -26,7 +26,7 @@ import { Sidebar } from "@/controller/sidebar";
 
 import Styles from "./controller.module.scss";
 
-const items = [
+const items: { id: string; icon: FC; label: string; component: FC }[] = [
   {
     id: "convert",
     icon: SubtitlesOutlined,
@@ -78,6 +78,7 @@ const Controller: FC = () => {
                 }`}
                 key={item.id}
               >
+                <h2>{item.label}</h2>
                 <item.component />
               </div>
             );

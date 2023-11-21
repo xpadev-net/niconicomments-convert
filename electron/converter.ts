@@ -5,8 +5,9 @@ import type { ConvertQueue } from "@/@types/queue";
 import { Converter } from "./ffmpeg-stream/stream";
 
 let inputStream: Stream.Writable;
+let converter: Converter;
 const startConverter = async (queue: ConvertQueue): Promise<void> => {
-  const converter = new Converter();
+  converter = new Converter();
   converter.createInputFromFile(queue.movie.path, {
     ss: queue.option.ss,
     to: queue.option.to,
@@ -27,4 +28,8 @@ const startConverter = async (queue: ConvertQueue): Promise<void> => {
   await converter.run();
 };
 
-export { inputStream, startConverter };
+const interruptConverter = (): void => {
+  converter?.stop();
+};
+
+export { inputStream, interruptConverter, startConverter };

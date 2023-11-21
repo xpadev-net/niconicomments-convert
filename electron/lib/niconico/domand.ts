@@ -6,7 +6,7 @@ import type * as Stream from "stream";
 
 import type { Cookies, ParsedCookie } from "@/@types/cookies";
 import type { TWatchV3Metadata } from "@/@types/niconico";
-import type { TDomandFormat } from "@/@types/queue";
+import type { MovieQueue, TDomandFormat } from "@/@types/queue";
 import type { AuthType } from "@/@types/setting";
 import type { SpawnResult } from "@/@types/spawn";
 
@@ -24,7 +24,7 @@ import {
 import { spawn } from "../spawn";
 
 const downloadDomand = async (
-  nicoId: string,
+  queue: MovieQueue,
   metadata: TWatchV3Metadata,
   format: TDomandFormat,
   targetPath: string,

@@ -116,7 +116,7 @@ const AuthSetting: FC = () => {
       <div className={Styles.reset}>
         <Replay onClick={onReset} />
       </div>
-      <h2>認証</h2>
+      <h3>認証</h3>
       <RadioGroup value={authSetting.type} onChange={onAuthTypeChange} row>
         <FormControlLabel
           value={"cookie"}

@@ -9,7 +9,8 @@ import { spawn } from "child_process";
 import { createReadStream, createWriteStream, unlink } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import type { Readable, Writable } from "stream";
+import type { Readable } from "stream";
+import type { Writable } from "stream";
 import { PassThrough } from "stream";
 import { promisify } from "util";
 
@@ -17,7 +18,7 @@ import { sendMessageToController } from "../controllerWindow";
 import { ffmpegPath } from "../ffmpeg";
 import { encodeJson } from "../lib/json";
 
-const dbg = console.debug;
+const dbg = console.log;
 const { FFMPEG_PATH = ffmpegPath } = process.env;
 const EXIT_CODES = [0, 255];
 
@@ -239,7 +240,7 @@ export class Converter {
         pipes.push(pipe);
       }
 
-      const command = ["-y", "-v", "error", ...this.getSpawnArgs()];
+      const command = ["-y", "-v", "verbose", ...this.getSpawnArgs()];
       const stdio = this.getStdioArg();
       dbg(`spawn: ${FFMPEG_PATH} ${command.join(" ")}`);
       dbg(`spawn stdio: ${stdio.join(" ")}`);
@@ -267,6 +268,10 @@ export class Converter {
         await pipe.onFinish?.();
       }
     }
+  }
+
+  stop(): void {
+    this.process?.kill("SIGINT");
   }
 
   kill(): void {

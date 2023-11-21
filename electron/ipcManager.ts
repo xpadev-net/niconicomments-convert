@@ -9,6 +9,7 @@ import {
   appendFrame,
   appendQueue,
   markAsCompleted,
+  processOnInterrupt,
   processOnLoad,
 } from "./queue";
 import { store } from "./store";
@@ -32,6 +33,9 @@ const registerListener = (): void => {
         return await selectFile(value.pattern);
       } else if (typeGuard.controller.appendQueue(value)) {
         appendQueue(value.data);
+        return;
+      } else if (typeGuard.controller.interruptQueue(value)) {
+        processOnInterrupt(value.queueId);
         return;
       } else if (typeGuard.controller.getSetting(value)) {
         return store.get(value.key);
