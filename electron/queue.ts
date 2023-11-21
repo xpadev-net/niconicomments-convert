@@ -142,7 +142,8 @@ const startConvert = async (): Promise<void> => {
   sendMessageToRenderer({
     type: "end",
   });
-  processingQueue.status = "completed";
+  if (processingQueue.status === "processing")
+    processingQueue.status = "completed";
   sendProgress();
   void startConvert();
 };
