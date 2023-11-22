@@ -423,9 +423,19 @@ export type TCommentThread = {
   forkLabel: "owner" | "main" | "easy";
 };
 
-export type TCommentOption = {
+export type TCommentPickerMode = "simple" | "custom";
+
+export type TCommentOption = TCommentOptionCustom | TCommentOptionSimple;
+
+export type TCommentOptionCustom = {
+  type: "custom";
   start: string;
   end: TCommentOptionEndPoint;
+  threads: TCommentThread[];
+};
+
+export type TCommentOptionSimple = {
+  type: "simple";
   threads: TCommentThread[];
 };
 

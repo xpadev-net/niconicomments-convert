@@ -86,7 +86,7 @@ const Controller: FC = () => {
                 key={item.id}
               >
                 <h2>{item.label}</h2>
-                {(!item.unmount || item.id === tab) && <item.component />}
+                {item.id === tab && <item.component />}
               </div>
             );
           })}

@@ -1,10 +1,11 @@
-import { TextField } from "@mui/material";
+import { FormControlLabel, Radio, RadioGroup, TextField } from "@mui/material";
 import Button from "@mui/material/Button";
 import { useSetAtom } from "jotai";
-import type { ChangeEvent, FC } from "react";
+import type { ChangeEvent, FC , KeyboardEvent} from "react";
 import { useRef, useState } from "react";
 
 import type { TCommentOption, TWatchV3Metadata } from "@/@types/niconico";
+import type { TCommentPickerMode } from "@/@types/niconico";
 import type { TCommentItemRemote } from "@/@types/queue";
 import { CommentOption } from "@/components/CommentOption";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
@@ -21,6 +22,7 @@ type Props = {
 const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
   const [url, setUrl] = useState("");
   const [metadata, setMetadata] = useState<TWatchV3Metadata | undefined>();
+  const [mode, setMode] = useState<TCommentPickerMode>("simple");
   const [commentOption, setCommentOption] = useState<
     TCommentOption | undefined
   >(undefined);
@@ -65,16 +67,14 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
         });
         return;
       }
-      if (targetMetadata.data.viewer === null) {
-        setMessage({
-          title: "ログインが必須です",
-          content: "コメントのダウンロードにはアカウントが必須です",
-        });
-        return;
-      }
       setMetadata(targetMetadata);
+      setMode(targetMetadata.data.viewer === null ? "simple" : "custom");
       lastUrl.current = nicoId;
     })();
+  };
+  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key !== "Enter") return;
+    updateMetadata();
   };
   const onClick = (): void => {
     void (async () => {
@@ -120,20 +120,41 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
         value={url}
         onChange={onUrlChange}
         onBlur={updateMetadata}
+        onKeyDown={onKeyDown}
         fullWidth={true}
       />
+      {metadata && (
+        <RadioGroup
+          value={mode}
+          onChange={(e) => setMode(e.target.value as TCommentPickerMode)}
+          row
+        >
+          <FormControlLabel
+            value={"simple"}
+            control={<Radio />}
+            label={"簡易"}
+          />
+          <FormControlLabel
+            value={"custom"}
+            control={<Radio />}
+            label={"カスタム"}
+            disabled={metadata.data.viewer === null}
+          />
+        </RadioGroup>
+      )}
       {metadata && (
         <>
           <CommentOption
             update={setCommentOption}
             metadata={metadata.data.comment}
             postedDate={formatDate(new Date(metadata.data.video.registeredAt))}
+            mode={mode}
           />
           <div>
             <Button
               variant={"outlined"}
               onClick={onClick}
-              disabled={!CommentOption || !metadata}
+              disabled={!commentOption || !metadata}
             >
               確定
             </Button>

@@ -21,7 +21,6 @@ import type { TCommentItem, TMovieItem } from "@/@types/queue";
 import type { ApiResponseType } from "@/@types/types";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import { CommentPicker } from "@/controller/comment-picker";
-import { PathDisplay } from "@/controller/display";
 import { MoviePicker } from "@/controller/movie-picker";
 import { typeGuard } from "@/typeGuard";
 import { str2time, time2str } from "@/util/time";
