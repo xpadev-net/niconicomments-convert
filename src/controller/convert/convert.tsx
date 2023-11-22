@@ -170,7 +170,10 @@ const Convert: FC = () => {
               <p>duration: {movie.duration}</p>
               {movie.type === "remote" && (
                 <>
-                  <p>source: {movie.ref.url}</p>
+                  <p>
+                    source: https://nico.ms/{movie.ref.url} (
+                    {movie.ref.format.type})
+                  </p>
                 </>
               )}
             </div>
@@ -193,7 +196,7 @@ const Convert: FC = () => {
               <p>format: {comment.format}</p>
               {comment.type === "remote" && (
                 <>
-                  <p>source: {comment.ref.url}</p>
+                  <p>source: https://nico.ms/{comment.ref.url}</p>
                 </>
               )}
             </div>

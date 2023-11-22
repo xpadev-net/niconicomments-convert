@@ -3,14 +3,14 @@ import Button from "@mui/material/Button";
 import { useSetAtom } from "jotai";
 import type { ChangeEvent, FC } from "react";
 import { useState } from "react";
-import { DMCMoviePicker } from "src/controller/movie-picker/remote/dmc";
-import { DMSMoviePicker } from "src/controller/movie-picker/remote/dms";
 
 import type { TWatchV3Metadata } from "@/@types/niconico";
 import type { TMovieItemRemote, TRemoteMovieItemFormat } from "@/@types/queue";
 import type { TRemoteServerType } from "@/@types/queue";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import Styles from "@/controller/movie/movie.module.scss";
+import { DMCMoviePicker } from "@/controller/movie-picker/remote/dmc";
+import { DMSMoviePicker } from "@/controller/movie-picker/remote/dms";
 import { typeGuard } from "@/typeGuard";
 import { getNicoId, isNicovideoUrl } from "@/util/niconico";
 import { uuid } from "@/util/uuid";
