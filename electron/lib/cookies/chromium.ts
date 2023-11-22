@@ -291,7 +291,7 @@ const getMacDecryptor = async (
     keyName,
     "-s",
     `${keyName} Safe Storage`,
-  ]);
+  ]).promise;
   if (keyResult.code) throw new Error("failed to get chromium key");
   const key = await pbkdf2(keyResult.stdout.trim());
   return (value: Buffer) => {

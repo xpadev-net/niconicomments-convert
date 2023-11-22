@@ -50,19 +50,19 @@ export type TMovieItemRemote = {
   ref: MovieQueue;
 };
 
-export type TRemoteServerType = "delivery" | "domand";
-export type TRemoteMovieItemFormat = TDomandFormat | TDeliveryFormat;
+export type TRemoteServerType = "dmc" | "dms";
+export type TRemoteMovieItemFormat = TDMCFormat | TDMSFormat;
 
-export type TDeliveryFormat = {
-  type: "delivery";
+export type TDMCFormat = {
+  type: "dmc";
   format: {
     audio: string;
     video: string;
   };
 };
 
-export type TDomandFormat = {
-  type: "domand";
+export type TDMSFormat = {
+  type: "dms";
   format: [string, string];
 };
 

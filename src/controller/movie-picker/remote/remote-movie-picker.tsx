@@ -3,14 +3,14 @@ import Button from "@mui/material/Button";
 import { useSetAtom } from "jotai";
 import type { ChangeEvent, FC } from "react";
 import { useState } from "react";
+import { DeliveryMoviePicker } from "src/controller/movie-picker/remote/dmc";
+import { DomandMoviePicker } from "src/controller/movie-picker/remote/dms";
 
 import type { TWatchV3Metadata } from "@/@types/niconico";
 import type { TMovieItemRemote, TRemoteMovieItemFormat } from "@/@types/queue";
 import type { TRemoteServerType } from "@/@types/queue";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import Styles from "@/controller/movie/movie.module.scss";
-import { DeliveryMoviePicker } from "@/controller/movie-picker/remote/delivery";
-import { DomandMoviePicker } from "@/controller/movie-picker/remote/domand";
 import { typeGuard } from "@/typeGuard";
 import { getNicoId, isNicovideoUrl } from "@/util/niconico";
 import { uuid } from "@/util/uuid";
@@ -22,7 +22,7 @@ type Props = {
 const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
   const [url, setUrl] = useState("");
   const [metadata, setMetadata] = useState<TWatchV3Metadata | undefined>();
-  const [mediaServer, setMediaServer] = useState<TRemoteServerType>("delivery");
+  const [mediaServer, setMediaServer] = useState<TRemoteServerType>("dmc");
   const [format, setFormat] = useState<TRemoteMovieItemFormat | undefined>();
   const setMessage = useSetAtom(messageAtom);
   const setIsLoading = useSetAtom(isLoadingAtom);
@@ -63,7 +63,7 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
         });
         return;
       }
-      setMediaServer(targetMetadata.data.media.domand ? "domand" : "delivery");
+      setMediaServer(targetMetadata.data.media.domand ? "dms" : "dmc");
       setMetadata(targetMetadata);
     })();
   };
@@ -146,14 +146,12 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
               label={"domand"}
             />
           </RadioGroup>
-          {mediaServer === "delivery" &&
-            typeGuard.controller.v3Delivery(metadata) && (
-              <DeliveryMoviePicker metadata={metadata} onChange={setFormat} />
-            )}
-          {mediaServer === "domand" &&
-            typeGuard.controller.v3Domand(metadata) && (
-              <DomandMoviePicker metadata={metadata} onChange={setFormat} />
-            )}
+          {mediaServer === "dmc" && typeGuard.controller.v3DMC(metadata) && (
+            <DeliveryMoviePicker metadata={metadata} onChange={setFormat} />
+          )}
+          {mediaServer === "dms" && typeGuard.controller.v3DMS(metadata) && (
+            <DomandMoviePicker metadata={metadata} onChange={setFormat} />
+          )}
           <Button variant={"outlined"} onClick={onClick}>
             確定
           </Button>

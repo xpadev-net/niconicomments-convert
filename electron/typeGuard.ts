@@ -144,9 +144,9 @@ const typeGuard = {
       ((i as CreateSessionResponse).meta.message === "created" ||
         (i as CreateSessionResponse).meta.message === "ok") &&
       typeof (i as CreateSessionResponse).data === "object",
-    v3Delivery: (i: unknown): i is TWatchV3Metadata<"delivery"> =>
+    v3DMC: (i: unknown): i is TWatchV3Metadata<"dmc"> =>
       typeof i === "object" && !!(i as TWatchV3Metadata).data.media.delivery,
-    v3Domand: (i: unknown): i is TWatchV3Metadata<"domand"> =>
+    v3DMS: (i: unknown): i is TWatchV3Metadata<"dms"> =>
       typeof i === "object" && !!(i as TWatchV3Metadata).data.media.domand,
     v1AccessRightsHls: (i: unknown): i is V1AccessRightsHls =>
       typeof i === "object" &&

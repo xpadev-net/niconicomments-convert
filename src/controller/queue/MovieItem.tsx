@@ -46,13 +46,13 @@ type FormatDisplayProps = {
 const FormatDisplay: FC<FormatDisplayProps> = ({ format }) => {
   return (
     <>
-      {format.type === "delivery" && (
+      {format.type === "dmc" && (
         <>
           <p>video: {format.format.video.slice(8)}</p>
           <p>audio: {format.format.audio.slice(8)}</p>
         </>
       )}
-      {format.type === "domand" && (
+      {format.type === "dms" && (
         <>
           <p>video: {format.format[0]}</p>
           <p>audio: {format.format[1]}</p>

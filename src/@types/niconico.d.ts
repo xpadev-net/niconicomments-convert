@@ -1,14 +1,14 @@
-export type TWatchV3Metadata<T extends "delivery" | "domand" | "" = ""> = {
+export type TWatchV3Metadata<T extends "dmc" | "dms" | "" = ""> = {
   meta: {
     status: 200;
   };
   data: {
     comment: V3MetadataComment;
     media: {
-      delivery: T extends "delivery"
+      delivery: T extends "dmc"
         ? V3MetadataDeliveryMedia
         : V3MetadataDeliveryMedia | null;
-      domand: T extends "domand"
+      domand: T extends "dms"
         ? V3MetadataDomandMedia
         : V3MetadataDomandMedia | null;
     };

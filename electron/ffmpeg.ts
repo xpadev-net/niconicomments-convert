@@ -53,13 +53,17 @@ const onStartUp = async (): Promise<void> => {
   target = [];
   if (
     !fs.existsSync(ffmpegPath) ||
-    !(await spawn(ffmpegPath, ["-version"])).stdout.includes(version.ffmpeg)
+    !(await spawn(ffmpegPath, ["-version"]).promise).stdout.includes(
+      version.ffmpeg,
+    )
   ) {
     target.push("ffmpeg");
   }
   if (
     !fs.existsSync(ffprobePath) ||
-    !(await spawn(ffprobePath, ["-version"])).stdout.includes(version.ffmpeg)
+    !(await spawn(ffprobePath, ["-version"]).promise).stdout.includes(
+      version.ffmpeg,
+    )
   ) {
     target.push("ffprobe");
   }

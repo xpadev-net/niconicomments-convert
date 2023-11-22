@@ -6,7 +6,7 @@ import type * as Stream from "stream";
 
 import type { Cookies, ParsedCookie } from "@/@types/cookies";
 import type { TWatchV3Metadata } from "@/@types/niconico";
-import type { MovieQueue, TDomandFormat } from "@/@types/queue";
+import type { TDMSFormat } from "@/@types/queue";
 import type { AuthType } from "@/@types/setting";
 import type { SpawnResult } from "@/@types/spawn";
 
@@ -23,19 +23,20 @@ import {
 } from "../cookie";
 import { spawn } from "../spawn";
 
-const downloadDomand = async (
-  queue: MovieQueue,
+let stop: (() => void) | undefined;
+
+const downloadDMS = async (
   metadata: TWatchV3Metadata,
-  format: TDomandFormat,
+  format: TDMSFormat,
   targetPath: string,
   progress: (total: number, downloaded: number) => void,
 ): Promise<SpawnResult | undefined> => {
-  if (!typeGuard.niconico.v3Domand(metadata)) {
-    if (typeGuard.niconico.v3Delivery(metadata)) {
+  if (!typeGuard.niconico.v3DMS(metadata)) {
+    if (typeGuard.niconico.v3DMC(metadata)) {
       sendMessageToController({
         title: "動画情報の取得に失敗しました",
         message:
-          "Domandサーバー上に動画が見つかりませんでした\nDMCサーバーからの取得を試してみてください\nniconico / download / downloadDomand / invalid server",
+          "DMS上に動画が見つかりませんでした\nDMCからの取得を試してみてください\nlib/niconico/dms.ts / downloadDMS / invalid server",
         type: "message",
       });
       return;
@@ -43,7 +44,7 @@ const downloadDomand = async (
     sendMessageToController({
       title: "動画情報の取得に失敗しました",
       message:
-        "未購入の有料動画などの可能性があります\nniconico / download / invalid metadata",
+        "未購入の有料動画などの可能性があります\nlib/niconico/dms.ts / downloadDMS / invalid metadata",
       type: "message",
     });
     return;
@@ -78,7 +79,7 @@ const downloadDomand = async (
       title: "セッションの作成に失敗しました",
       message: `以下のテキストともに開発者までお問い合わせください
 "${JSON.stringify(accessRights)}"
-niconico / download / invalid metadata`,
+lib/niconico/dms.ts / downloadDMS / invalid accessRights`,
       type: "message",
     });
     return;
@@ -96,7 +97,6 @@ niconico / download / invalid metadata`,
       /https:\/\/.+?\.nicovideo\.jp\/.+?\.m3u8(?:\?sh=[a-zA-Z0-9_-]+)?/g,
     ) || [],
   );
-  console.log("manifests", manifests);
   const getManifestUrl = (format: string): string | undefined => {
     for (const url of manifests) {
       if (url.match(`/${format}.m3u8`)) {
@@ -160,6 +160,7 @@ niconico / download / invalid metadata`,
   };
 
   let tmpDir: string = "";
+  let result: SpawnResult | undefined;
   try {
     tmpDir = fs.mkdtempSync(
       path.join(path.dirname(targetPath), path.basename(targetPath)),
@@ -174,7 +175,6 @@ niconico / download / invalid metadata`,
       key: audioKey,
       manifest: audioManifest,
     } = await getManifests(format.format[1]);
-    console.log("segments", videoSegments, audioSegments);
     const totalSegments = videoSegments.length + audioSegments.length;
     let downloadedSegments = 0;
     const onProgress = (): void => {
@@ -198,7 +198,7 @@ niconico / download / invalid metadata`,
       onProgress,
     );
 
-    await spawn(
+    const _spawn = spawn(
       ffmpegPath,
       [
         "-allowed_extensions",
@@ -224,8 +224,15 @@ niconico / download / invalid metadata`,
       (data) => console.log(data),
       (data) => console.log(data),
     );
+    stop = _spawn.stop;
+    result = await _spawn.promise;
   } catch {
-    // handle error
+    sendMessageToController({
+      title: "動画のダウンロードに失敗しました",
+      message:
+        "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください\nlib/niconico/dms.ts / downloadDMS / failed to download",
+      type: "message",
+    });
   } finally {
     try {
       if (tmpDir) {
@@ -237,6 +244,11 @@ niconico / download / invalid metadata`,
       );
     }
   }
+  return result;
+};
+
+const interruptDMS = (): void => {
+  stop?.();
 };
 
 const fetchWithCookie = (
@@ -301,4 +313,4 @@ const downloadFile = async (
   });
 };
 
-export { downloadDomand };
+export { downloadDMS, interruptDMS };

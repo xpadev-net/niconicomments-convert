@@ -9,11 +9,9 @@ import { sendMessageToController } from "./controllerWindow";
 import { inputStream, interruptConverter, startConverter } from "./converter";
 import { encodeJson } from "./lib/json";
 import { download, downloadComment } from "./lib/niconico";
-import {
-  closeRendererWindow,
-  createRendererWindow,
-  sendMessageToRenderer,
-} from "./rendererWindow";
+import { interruptDMC } from "./lib/niconico/dmc";
+import { interruptDMS } from "./lib/niconico/dms";
+import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
 
 const queueList: Queue[] = [];
 const queueLists: QueueLists = {
@@ -65,7 +63,6 @@ const startMovieDownload = async (): Promise<void> => {
   sendProgress();
   try {
     await download(
-      targetQueue,
       targetQueue.url,
       targetQueue.format,
       targetQueue.path,
@@ -216,6 +213,9 @@ const processOnInterrupt = (queueId: UUID): void => {
     void convertQueue
       .then(() => inputStream.end())
       .then(() => interruptConverter());
+  } else if (queue.type === "movie") {
+    if (queue.format.type === "dmc") interruptDMC();
+    if (queue.format.type === "dms") interruptDMS();
   }
 };
 

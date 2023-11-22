@@ -3,32 +3,34 @@ import type { FC } from "react";
 import { useEffect, useState } from "react";
 
 import type { TWatchV3Metadata } from "@/@types/niconico";
-import type { TDomandFormat } from "@/@types/queue";
+import type { TDMCFormat } from "@/@types/queue";
 import { SelectField } from "@/components/SelectField";
 import Styles from "@/controller/movie/movie.module.scss";
-import { getDomandBestSegment } from "@/util/niconico";
+import { getDeliveryBestSegment } from "@/util/niconico";
 
 type Props = {
-  metadata: TWatchV3Metadata<"domand">;
-  onChange: (val: TDomandFormat | undefined) => void;
+  metadata: TWatchV3Metadata<"dmc">;
+  onChange: (val: TDMCFormat | undefined) => void;
 };
 
-const DomandMoviePicker: FC<Props> = ({ metadata, onChange }) => {
+const DeliveryMoviePicker: FC<Props> = ({ metadata, onChange }) => {
   const [selectedVideo, setSelectedVideo] = useState<string>("");
   const [selectedAudio, setSelectedAudio] = useState<string>("");
   useEffect(() => {
     setSelectedAudio(
-      getDomandBestSegment(metadata.data.media.domand.audios).id,
+      getDeliveryBestSegment(metadata.data.media.delivery.movie.audios).id,
     );
     setSelectedVideo(
-      getDomandBestSegment(metadata.data.media.domand.videos).id,
+      getDeliveryBestSegment(metadata.data.media.delivery.movie.videos).id,
     );
   }, [metadata]);
-
   useEffect(() => {
     onChange({
-      type: "domand",
-      format: [selectedVideo, selectedAudio],
+      type: "dmc",
+      format: {
+        video: selectedVideo,
+        audio: selectedAudio,
+      },
     });
   }, [selectedAudio, selectedVideo]);
   return (
@@ -39,12 +41,12 @@ const DomandMoviePicker: FC<Props> = ({ metadata, onChange }) => {
           variant={"standard"}
           value={selectedVideo}
           defaultValue={
-            getDomandBestSegment(metadata.data.media.domand.videos).id
+            getDeliveryBestSegment(metadata.data.media.delivery.movie.videos).id
           }
           className={Styles.input}
           onChange={(e) => setSelectedVideo(e.target.value)}
         >
-          {metadata.data.media.domand.videos.map((val) => {
+          {metadata.data.media.delivery.movie.videos.map((val) => {
             if (!val.isAvailable) return <></>;
             return (
               <MenuItem key={val.id} value={val.id}>
@@ -60,12 +62,12 @@ const DomandMoviePicker: FC<Props> = ({ metadata, onChange }) => {
           variant={"standard"}
           className={Styles.input}
           defaultValue={
-            getDomandBestSegment(metadata.data.media.domand.audios).id
+            getDeliveryBestSegment(metadata.data.media.delivery.movie.audios).id
           }
           value={selectedAudio}
           onChange={(e) => setSelectedAudio(e.target.value)}
         >
-          {metadata.data.media.domand.audios.map((val) => {
+          {metadata.data.media.delivery.movie.audios.map((val) => {
             return (
               <MenuItem key={val.id} value={val.id}>
                 {val.id}
@@ -78,4 +80,4 @@ const DomandMoviePicker: FC<Props> = ({ metadata, onChange }) => {
   );
 };
 
-export { DomandMoviePicker };
+export { DeliveryMoviePicker };

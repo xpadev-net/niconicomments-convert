@@ -55,7 +55,7 @@ const selectMovie = async (): Promise<
       "-print_format",
       "json",
       "-show_streams",
-    ]);
+    ]).promise;
   } catch (e: unknown) {
     const error = e as SpawnResult;
     return {
