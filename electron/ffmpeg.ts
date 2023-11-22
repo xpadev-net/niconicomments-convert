@@ -7,7 +7,7 @@ import * as path from "path";
 import type * as Stream from "stream";
 
 import {
-  binaryDownloaderWindow,
+  closeBinaryDownloaderWindow,
   createBinaryDownloaderWindow,
   sendMessageToBinaryDownloader,
 } from "./binaryDownloaderWindow";
@@ -70,7 +70,7 @@ const onStartUp = async (): Promise<void> => {
   if (target.length === 0) return;
   await createBinaryDownloaderWindow();
   await downloadBinary(target);
-  binaryDownloaderWindow.close();
+  closeBinaryDownloaderWindow();
 };
 
 const downloadBinary = async (target: lib[]): Promise<void> => {

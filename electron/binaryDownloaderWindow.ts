@@ -6,6 +6,9 @@ import type { ApiResponsesToBinaryDownloader } from "@/@types/response.binaryDow
 import { baseUrl } from "./context";
 
 let binaryDownloaderWindow: BrowserWindow;
+
+let blockClose = false;
+
 const createBinaryDownloaderWindow = async (): Promise<void> => {
   binaryDownloaderWindow = new BrowserWindow({
     width: 400,
@@ -22,8 +25,11 @@ const createBinaryDownloaderWindow = async (): Promise<void> => {
   const appURL = `${baseUrl}?binary-downloader`;
 
   await binaryDownloaderWindow.loadURL(appURL);
+  blockClose = true;
   binaryDownloaderWindow.on("close", (e) => {
-    e.preventDefault();
+    if (blockClose) {
+      e.preventDefault();
+    }
   });
 
   if (!app.isPackaged) {
@@ -38,9 +44,13 @@ const sendMessageToBinaryDownloader = (
     target: "downloader",
   });
 };
+const closeBinaryDownloaderWindow = (): void => {
+  blockClose = false;
+  binaryDownloaderWindow.close();
+};
 
 export {
-  binaryDownloaderWindow,
+  closeBinaryDownloaderWindow,
   createBinaryDownloaderWindow,
   sendMessageToBinaryDownloader,
 };
