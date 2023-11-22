@@ -6,15 +6,24 @@ import { JSDOM } from "jsdom";
 import type { CommentQueue } from "@/@types/queue";
 import type { V1Raw } from "@/@types/types";
 
+import { sendMessageToController } from "../../controllerWindow";
 import { sleep } from "../../utils";
 
 const downloadComment = async (
   queue: CommentQueue,
   updateProgress: (total: number, progress: number) => void,
 ): Promise<void> => {
-  const formattedComments = await downloadV3V1Comment(queue, updateProgress);
-  const xml = convertToXml(formattedComments);
-  fs.writeFileSync(queue.path, xml, "utf-8");
+  try {
+    const formattedComments = await downloadV3V1Comment(queue, updateProgress);
+    const xml = convertToXml(formattedComments);
+    fs.writeFileSync(queue.path, xml, "utf-8");
+  } catch (e) {
+    sendMessageToController({
+      type: "message",
+      title: "コメントのダウンロードに失敗しました",
+      message: `コメントのダウンロードに失敗しました\n動画が存在しているか、ログインできているか確認してみてください\n${e}\nlib/niconico/comments.ts / downloadComment`,
+    });
+  }
 };
 
 const convertToXml = (comments: FormattedComment[]): string => {
