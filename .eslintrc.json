@@ -7,7 +7,8 @@
     "parser": "@typescript-eslint/parser",
     "plugins": [
         "@typescript-eslint",
-        "simple-import-sort"
+        "simple-import-sort",
+        "import"
     ],
     "extends": [
         "eslint:recommended",
@@ -23,6 +24,7 @@
             "@next/next/no-img-element": "off",
             "no-unused-vars": "off",
             "no-control-regex": "off",
+            "import/no-duplicates": "error",
             "simple-import-sort/imports": "error",
             "simple-import-sort/exports": "error",
             "@typescript-eslint/explicit-function-return-type": [

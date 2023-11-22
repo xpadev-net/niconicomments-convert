@@ -9,12 +9,12 @@ import type { ChangeEvent, FC } from "react";
 import { useEffect, useState } from "react";
 
 import type {
+  TCommentOption,
   TCommentOptionEndPoint,
+  TCommentPickerMode,
   TCommentThread,
   V3MetadataComment,
 } from "@/@types/niconico";
-import type { TCommentOption } from "@/@types/niconico";
-import type { TCommentPickerMode } from "@/@types/niconico";
 import { formatDate } from "@/util/time";
 
 import Styles from "./CommentOption.module.scss";

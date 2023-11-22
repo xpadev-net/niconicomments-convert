@@ -12,8 +12,8 @@ type Props = {
 };
 const MovieItem: FC<Props> = ({ queue, className }) => {
   return useMemo(() => {
-    const outputName = queue.path.split(/\/|\\/g).reverse()[0];
-    const url = queue.url.split(/\/|\\/g).reverse()[0];
+    const outputName = queue.path.split(/[/\\]/g).reverse()[0];
+    const url = queue.url.split(/[/\\]/g).reverse()[0];
     if (queue.status !== "processing") {
       return (
         <div className={`${Styles.queue} ${className}`}>

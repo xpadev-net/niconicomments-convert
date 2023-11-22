@@ -27,7 +27,7 @@ const LocalMoviePicker: FC<Props> = ({ onChange }) => {
         setIsLoading(false);
         if (typeGuard.controller.message(data)) {
           setMessage({
-            title: data.title || "未知のエラーが発生しました",
+            title: data.title ?? "未知のエラーが発生しました",
             content: data.message,
           });
           return;

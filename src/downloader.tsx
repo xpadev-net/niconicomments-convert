@@ -33,11 +33,11 @@ const Downloader: FC = () => {
       <div className={Styles.progressWrapper}>
         <LinearProgress
           variant={"determinate"}
-          value={(progress?.progress || 0) * 100}
+          value={(progress?.progress ?? 0) * 100}
           className={Styles.progress}
         />
         <span className={Styles.text}>
-          {Math.floor((progress?.progress || 0) * 100)}%
+          {Math.floor((progress?.progress ?? 0) * 100)}%
         </span>
       </div>
     </div>

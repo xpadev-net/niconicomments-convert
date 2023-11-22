@@ -1,11 +1,14 @@
 import { FormControlLabel, Radio, RadioGroup, TextField } from "@mui/material";
 import Button from "@mui/material/Button";
 import { useSetAtom } from "jotai";
-import type { ChangeEvent, FC , KeyboardEvent} from "react";
+import type { ChangeEvent, FC, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
 
-import type { TCommentOption, TWatchV3Metadata } from "@/@types/niconico";
-import type { TCommentPickerMode } from "@/@types/niconico";
+import type {
+  TCommentOption,
+  TCommentPickerMode,
+  TWatchV3Metadata,
+} from "@/@types/niconico";
 import type { TCommentItemRemote } from "@/@types/queue";
 import { CommentOption } from "@/components/CommentOption";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";

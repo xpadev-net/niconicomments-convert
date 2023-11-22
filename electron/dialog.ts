@@ -1,13 +1,12 @@
-import type { SaveDialogOptions } from "electron";
-import type { OpenDialogReturnValue } from "electron";
+import type { OpenDialogReturnValue, SaveDialogOptions } from "electron";
 import { dialog } from "electron";
 
 import type { FfprobeOutput } from "@/@types/ffmpeg";
 import type {
+  ApiResponseMessage,
   ApiResponseSelectComment,
   ApiResponseSelectMovie,
 } from "@/@types/response.controller";
-import type { ApiResponseMessage } from "@/@types/response.controller";
 import type { SpawnResult } from "@/@types/spawn";
 
 import { sendMessageToController } from "./controllerWindow";
@@ -85,7 +84,9 @@ const selectMovie = async (): Promise<
         "動画ソースが見つかりませんでした\ndialog / selectMovie / empty streams",
     };
   }
-  let width, height, duration;
+  let width: number = 0,
+    height: number = 0,
+    duration: number = 0;
   for (const stream of metadata.streams) {
     if (stream.width) {
       width = stream.width;

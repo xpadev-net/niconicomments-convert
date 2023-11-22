@@ -9,8 +9,7 @@ import { spawn } from "child_process";
 import { createReadStream, createWriteStream, unlink } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import type { Readable } from "stream";
-import type { Writable } from "stream";
+import type { Readable, Writable } from "stream";
 import { PassThrough } from "stream";
 import { promisify } from "util";
 
@@ -36,7 +35,7 @@ function debugStream(stream: Readable | Writable, name: string): void {
 
 function getTmpPath(prefix = "", suffix = ""): string {
   const dir = tmpdir();
-  const id = Math.random().toString(32).substr(2, 10);
+  const id = Math.random().toString(32).substring(2, 12);
   return join(dir, `${prefix}${id}${suffix}`);
 }
 
@@ -99,7 +98,8 @@ export class Converter {
       typeof arg0 == "string" ? [arg0, arg1] : [undefined, arg0];
 
     if (file != null) {
-      return void this.createInputFromFile(file, opts);
+      this.createInputFromFile(file, opts);
+      return;
     }
     if (opts.buffer) {
       delete opts.buffer;
@@ -116,7 +116,8 @@ export class Converter {
       typeof arg0 == "string" ? [arg0, arg1] : [undefined, arg0];
 
     if (file != null) {
-      return void this.createOutputToFile(file, opts);
+      this.createOutputToFile(file, opts);
+      return;
     }
     if (opts.buffer) {
       delete opts.buffer;

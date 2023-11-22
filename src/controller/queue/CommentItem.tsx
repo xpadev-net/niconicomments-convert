@@ -12,7 +12,7 @@ type Props = {
 };
 const CommentItem: FC<Props> = ({ queue, className }) => {
   return useMemo(() => {
-    const outputName = queue.path.split(/\/|\\/g).reverse()[0];
+    const outputName = queue.path.split(/[/\\]/g).reverse()[0];
     const url = queue.url;
     if (queue.status !== "processing") {
       return (

@@ -148,7 +148,7 @@ const Convert: FC = () => {
       if (data.target !== "controller") return;
       if (typeGuard.controller.message(data)) {
         setMessage({
-          title: data.title || "未知のエラーが発生しました",
+          title: data.title ?? "未知のエラーが発生しました",
           content: data.message,
         });
       }
@@ -168,12 +168,10 @@ const Convert: FC = () => {
               <p>path: {movie.path}</p>
               <p>duration: {movie.duration}</p>
               {movie.type === "remote" && (
-                <>
-                  <p>
-                    source: https://nico.ms/{movie.ref.url} (
-                    {movie.ref.format.type})
-                  </p>
-                </>
+                <p>
+                  source: https://nico.ms/{movie.ref.url} (
+                  {movie.ref.format.type})
+                </p>
               )}
             </div>
             <Button variant={"outlined"} size={"small"} onClick={onMovieClick}>
@@ -194,9 +192,7 @@ const Convert: FC = () => {
               <p>path: {comment.path}</p>
               <p>format: {comment.format}</p>
               {comment.type === "remote" && (
-                <>
-                  <p>source: https://nico.ms/{comment.ref.url}</p>
-                </>
+                <p>source: https://nico.ms/{comment.ref.url}</p>
               )}
             </div>
             <Button variant={"outlined"} onClick={onCommentClick}>

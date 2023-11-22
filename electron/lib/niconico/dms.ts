@@ -95,7 +95,7 @@ lib/niconico/dms.ts / downloadDMS / invalid accessRights`,
   const manifests = Array.from(
     manifestRaw.match(
       /https:\/\/.+?\.nicovideo\.jp\/.+?\.m3u8(?:\?sh=[a-zA-Z0-9_-]+)?/g,
-    ) || [],
+    ) ?? [],
   );
   const getManifestUrl = (format: string): string | undefined => {
     for (const url of manifests) {
@@ -276,7 +276,7 @@ const getSegments = (manifest: string): { segments: string[]; key: string } => {
     segments: Array.from(
       manifest.match(
         /https:\/\/.+?\.nicovideo\.jp\/.+?\.cmf[av](?:\?sh=[a-zA-Z0-9_-]+)?/g,
-      ) || [],
+      ) ?? [],
     ),
     key,
   };

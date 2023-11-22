@@ -1,4 +1,4 @@
-import type { AxiosResponse } from "axios";
+import type { AxiosProgressEvent, AxiosResponse } from "axios";
 import axios from "axios";
 import { app } from "electron";
 import * as fs from "fs";
@@ -102,18 +102,19 @@ const downloadFile = async (
   path: string,
 ): Promise<void> => {
   const file = fs.createWriteStream(path);
+  const onDownloadProgress = (status: AxiosProgressEvent): void => {
+    const progress = status.loaded / (status.total ?? 1);
+    sendMessageToBinaryDownloader({
+      type: "downloadProgress",
+      name: name,
+      progress: progress,
+    });
+  };
   return axios({
     method: "get",
     url,
     responseType: "stream",
-    onDownloadProgress: (status) => {
-      const progress = status.loaded / (status.total || 1);
-      sendMessageToBinaryDownloader({
-        type: "downloadProgress",
-        name: name,
-        progress: progress,
-      });
-    },
+    onDownloadProgress,
   }).then((res: AxiosResponse<Stream>) => {
     return new Promise<void>((resolve, reject) => {
       res.data.pipe(file);
@@ -121,7 +122,7 @@ const downloadFile = async (
       file.on("error", (err) => {
         error = err;
         file.close();
-        reject();
+        reject(err);
       });
       file.on("close", () => {
         if (!error) {

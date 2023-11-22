@@ -5,8 +5,11 @@ import type { ChangeEvent, FC, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
 
 import type { TWatchV3Metadata } from "@/@types/niconico";
-import type { TMovieItemRemote, TRemoteMovieItemFormat } from "@/@types/queue";
-import type { TRemoteServerType } from "@/@types/queue";
+import type {
+  TMovieItemRemote,
+  TRemoteMovieItemFormat,
+  TRemoteServerType,
+} from "@/@types/queue";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import Styles from "@/controller/movie/movie.module.scss";
 import { DMCMoviePicker } from "@/controller/movie-picker/remote/dmc";

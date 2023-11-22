@@ -21,7 +21,7 @@ const StatusDisplay: FC<Props> = ({ queue }) => {
     const targetFrameRate = queue.option.fps || 30;
     const totalFrames =
       Math.ceil(
-        (queue.option.to || queue.movie.duration) - (queue.option.ss || 0),
+        (queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0),
       ) * targetFrameRate;
     const progress = queue.progress ? queue.progress / totalFrames : undefined;
     return (

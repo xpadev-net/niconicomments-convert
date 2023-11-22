@@ -16,7 +16,7 @@ import { store } from "./store";
 import { typeGuard } from "./typeGuard";
 
 const registerListener = (): void => {
-  ipcMain.handle("request", async (IpcMainEvent, args) => {
+  ipcMain.handle("request", async (_, args) => {
     try {
       const value = (args as { data: unknown[] }).data[0];
       if (typeGuard.renderer.blob(value)) {

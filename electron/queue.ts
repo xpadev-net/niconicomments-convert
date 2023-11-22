@@ -173,7 +173,7 @@ const processFrame = (data: Uint8Array): void => {
       sendProgress();
       return myStream
         .on("end", () => fulfill())
-        .on("error", () => reject())
+        .on("error", (err) => reject(err))
         .pipe(inputStream, { end: false });
     }).catch((e) => {
       console.warn(e);

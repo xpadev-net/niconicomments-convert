@@ -35,13 +35,9 @@ const createRendererWindow = (): void => {
   }
 };
 
-const closeRendererWindow = (): void => {
-  rendererWindow.close();
-};
-
 const sendMessageToRenderer = (value: ApiResponsesToRenderer): void => {
   if (!isOpen) return;
   rendererWindow.webContents.send("response", { ...value, target: "renderer" });
 };
 
-export { closeRendererWindow, createRendererWindow, sendMessageToRenderer };
+export { createRendererWindow, sendMessageToRenderer };

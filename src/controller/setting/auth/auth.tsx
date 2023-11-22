@@ -33,7 +33,7 @@ const AuthSetting: FC = () => {
         key: "auth",
         host: "controller",
       })) as AuthType | undefined;
-      setAuthSetting(data || { type: "NoAuth" });
+      setAuthSetting(data ?? { type: "NoAuth" });
       const profiles = (await window.api.request({
         type: "getAvailableProfiles",
         host: "controller",
@@ -105,7 +105,7 @@ const AuthSetting: FC = () => {
         key: "auth",
         host: "controller",
       })) as AuthType | undefined;
-      setAuthSetting(data || { type: "NoAuth" });
+      setAuthSetting(data ?? { type: "NoAuth" });
       setIsLoading(false);
     })();
   };

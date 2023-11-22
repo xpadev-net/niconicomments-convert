@@ -21,7 +21,6 @@ const createControllerWindow = (): void => {
   controllerWindow.on("close", (e) => {
     if (processingQueue?.status === "processing") {
       e.preventDefault();
-      return;
     }
   });
 

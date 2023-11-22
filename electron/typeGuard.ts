@@ -2,7 +2,6 @@ import type {
   ChromiumProfilesJson,
   firefoxContainerDefault,
   firefoxContainersJson,
-  firefoxContainerUser,
   ParsedCookie,
 } from "@/@types/cookies";
 import type {
@@ -26,13 +25,13 @@ import type {
   ApiRequestSetSetting,
 } from "@/@types/request.controller";
 import type {
+  ApiRequestBlob,
   ApiRequestBuffer,
   ApiRequestEnd,
   ApiRequestFromRenderer,
   ApiRequestLoad,
+  ApiRequestMessage,
 } from "@/@types/request.renderer";
-import type { ApiRequestMessage } from "@/@types/request.renderer";
-import type { ApiRequestBlob } from "@/@types/request.renderer";
 
 const typeGuard = {
   controller: {
@@ -118,9 +117,6 @@ const typeGuard = {
     defaultContainer: (i: unknown): i is firefoxContainerDefault =>
       typeof i === "object" &&
       typeof (i as firefoxContainerDefault).l10nID === "string",
-    userContainer: (i: unknown): i is firefoxContainerUser =>
-      typeof i === "object" &&
-      typeof (i as firefoxContainerUser).name === "string",
   },
   chromium: {
     profiles: (i: unknown): i is ChromiumProfilesJson =>
