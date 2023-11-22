@@ -26,7 +26,13 @@ import { Sidebar } from "@/controller/sidebar";
 
 import Styles from "./controller.module.scss";
 
-const items: { id: string; icon: FC; label: string; component: FC }[] = [
+const items: {
+  id: string;
+  icon: FC;
+  label: string;
+  component: FC;
+  unmount?: boolean;
+}[] = [
   {
     id: "convert",
     icon: SubtitlesOutlined,
@@ -56,6 +62,7 @@ const items: { id: string; icon: FC; label: string; component: FC }[] = [
     icon: SettingsOutlined,
     label: "設定",
     component: Setting,
+    unmount: true,
   },
 ];
 
@@ -79,7 +86,7 @@ const Controller: FC = () => {
                 key={item.id}
               >
                 <h2>{item.label}</h2>
-                <item.component />
+                {(!item.unmount || item.id === tab) && <item.component />}
               </div>
             );
           })}

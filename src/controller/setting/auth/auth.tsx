@@ -13,6 +13,7 @@ import type { ChangeEvent, FC } from "react";
 import { useLayoutEffect, useState } from "react";
 
 import type { BrowserProfile } from "@/@types/cookies";
+import type { UserData } from "@/@types/niconico";
 import type { AuthByCookieFile, AuthType } from "@/@types/setting";
 import { SelectField } from "@/components/SelectField";
 import { isLoadingAtom } from "@/controller/atoms";
@@ -22,9 +23,9 @@ import Styles from "./auth.module.scss";
 const AuthSetting: FC = () => {
   const setIsLoading = useSetAtom(isLoadingAtom);
   const [authSetting, setAuthSetting] = useState<Partial<AuthType>>();
-  const [availableProfiles, setAvailableProfiles] = useState<BrowserProfile[]>(
-    [],
-  );
+  const [availableProfiles, setAvailableProfiles] = useState<
+    { profile: BrowserProfile; user: UserData; key: string }[]
+  >([]);
   useLayoutEffect(() => {
     void (async () => {
       const data = (await window.api.request({
@@ -36,8 +37,15 @@ const AuthSetting: FC = () => {
       const profiles = (await window.api.request({
         type: "getAvailableProfiles",
         host: "controller",
-      })) as BrowserProfile[];
-      setAvailableProfiles(profiles);
+      })) as { profile: BrowserProfile; user: UserData }[];
+      setAvailableProfiles(
+        profiles.map((item) => {
+          return {
+            ...item,
+            key: `${item.user.data.nickname}#${item.user.data.userId} (${item.profile.browser}:${item.profile.name})`,
+          };
+        }),
+      );
     })();
   }, [0]);
 
@@ -81,7 +89,10 @@ const AuthSetting: FC = () => {
     setAuthSetting({
       type: "browser",
       profile: availableProfiles.reduce<BrowserProfile | undefined>(
-        (pv, val) => (`${val.browser}:${val.name}` === name ? val : pv),
+        (pv, val) =>
+          `${val.profile.browser}:${val.profile.name}` === name
+            ? val.profile
+            : pv,
         undefined,
       ),
     });
@@ -110,6 +121,7 @@ const AuthSetting: FC = () => {
       setIsLoading(false);
     })();
   };
+
   if (!authSetting) return <></>;
   return (
     <div className={Styles.wrapper}>
@@ -163,10 +175,10 @@ const AuthSetting: FC = () => {
             {availableProfiles.map((val) => {
               return (
                 <MenuItem
-                  key={`${val.browser}:${val.name}`}
-                  value={`${val.browser}:${val.name}`}
+                  key={`${val.profile.browser}:${val.profile.name}`}
+                  value={`${val.profile.browser}:${val.profile.name}`}
                 >
-                  {val.browser} ({val.name})
+                  {val.key}
                 </MenuItem>
               );
             })}

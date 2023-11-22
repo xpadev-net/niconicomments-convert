@@ -5,6 +5,7 @@ import type {
   FirefoxProfile,
   ParsedCookie,
 } from "@/@types/cookies";
+import type { UserData } from "@/@types/niconico";
 
 import { typeGuard } from "../typeGuard";
 import {
@@ -17,7 +18,7 @@ import {
 } from "./cookies/firefox";
 
 const getAvailableProfiles = async (): Promise<
-  (FirefoxProfile | ChromiumProfile)[]
+  { profile: FirefoxProfile | ChromiumProfile; user: UserData }[]
 > => {
   return [
     ...(await getAvailableFirefoxProfiles()),
