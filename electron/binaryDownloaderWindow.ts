@@ -22,6 +22,9 @@ const createBinaryDownloaderWindow = async (): Promise<void> => {
   const appURL = `${baseUrl}?binary-downloader`;
 
   await binaryDownloaderWindow.loadURL(appURL);
+  binaryDownloaderWindow.on("close", (e) => {
+    e.preventDefault();
+  });
 
   if (!app.isPackaged) {
     binaryDownloaderWindow.webContents.openDevTools();
