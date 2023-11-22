@@ -28,8 +28,9 @@ const Sidebar: FC<Props> = ({ pages, onChange, value }) => {
           <div
             key={page.id}
             className={`${Styles.item} ${value === page.id && Styles.active}`}
+            onClick={() => onChange(page.id)}
           >
-            <div onClick={() => onChange(page.id)} className={Styles.icon}>
+            <div className={Styles.icon}>
               <page.icon />
             </div>
             {extended && (
