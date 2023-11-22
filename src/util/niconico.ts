@@ -1,8 +1,8 @@
 import type { NicoId } from "@/@types/brand";
 import type {
   V3MetadataAudioItem,
-  V3MetadataDomandAudioItem,
-  V3MetadataDomandVideoItem,
+  V3MetadataDMSAudioItem,
+  V3MetadataDMSVideoItem,
   V3MetadataVideoItem,
 } from "@/@types/niconico";
 
@@ -19,9 +19,9 @@ const getNicoId = (url: string): NicoId | undefined => {
   return match[1] as NicoId;
 };
 
-function getDeliveryBestSegment<
-  T extends V3MetadataAudioItem | V3MetadataVideoItem,
->(input: T[]): T {
+function getDMCBestSegment<T extends V3MetadataAudioItem | V3MetadataVideoItem>(
+  input: T[],
+): T {
   let bestItem = input[0];
   for (const item of input) {
     if (!item.isAvailable) continue;
@@ -32,8 +32,8 @@ function getDeliveryBestSegment<
   return bestItem;
 }
 
-const getDomandBestSegment = <
-  T extends V3MetadataDomandAudioItem | V3MetadataDomandVideoItem,
+const getDMSBestSegment = <
+  T extends V3MetadataDMSAudioItem | V3MetadataDMSVideoItem,
 >(
   input: T[],
 ): T => {
@@ -47,9 +47,4 @@ const getDomandBestSegment = <
   return bestItem;
 };
 
-export {
-  getDeliveryBestSegment,
-  getDomandBestSegment,
-  getNicoId,
-  isNicovideoUrl,
-};
+export { getDMCBestSegment, getDMSBestSegment, getNicoId, isNicovideoUrl };

@@ -6,11 +6,9 @@ export type TWatchV3Metadata<T extends "dmc" | "dms" | "" = ""> = {
     comment: V3MetadataComment;
     media: {
       delivery: T extends "dmc"
-        ? V3MetadataDeliveryMedia
-        : V3MetadataDeliveryMedia | null;
-      domand: T extends "dms"
-        ? V3MetadataDomandMedia
-        : V3MetadataDomandMedia | null;
+        ? V3MetadataDMCMedia
+        : V3MetadataDMCMedia | null;
+      domand: T extends "dms" ? V3MetadataDMSMedia : V3MetadataDMSMedia | null;
     };
     video: {
       id: string;
@@ -70,7 +68,7 @@ export type V3MetadataVideoItem = {
   };
 };
 
-export type V3MetadataDeliveryMedia = {
+export type V3MetadataDMCMedia = {
   recipeId: string;
   encryption: null | {
     encryptedKey: string;
@@ -106,13 +104,13 @@ export type V3MetadataDeliveryMedia = {
   trackingId: string;
 };
 
-export type V3MetadataDomandMedia = {
-  videos: V3MetadataDomandVideoItem[];
-  audios: V3MetadataDomandAudioItem[];
+export type V3MetadataDMSMedia = {
+  videos: V3MetadataDMSVideoItem[];
+  audios: V3MetadataDMSAudioItem[];
   accessRightKey: string;
 };
 
-export type V3MetadataDomandVideoItem = {
+export type V3MetadataDMSVideoItem = {
   id: string;
   isAvailable: boolean;
   label: string;
@@ -123,7 +121,7 @@ export type V3MetadataDomandVideoItem = {
   recommendedHighestAudioQualityLevel: number;
 };
 
-export type V3MetadataDomandAudioItem = {
+export type V3MetadataDMSAudioItem = {
   id: string;
   isAvailable: boolean;
   bitRate: number;

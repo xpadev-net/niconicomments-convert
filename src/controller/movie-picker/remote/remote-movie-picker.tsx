@@ -3,8 +3,8 @@ import Button from "@mui/material/Button";
 import { useSetAtom } from "jotai";
 import type { ChangeEvent, FC } from "react";
 import { useState } from "react";
-import { DeliveryMoviePicker } from "src/controller/movie-picker/remote/dmc";
-import { DomandMoviePicker } from "src/controller/movie-picker/remote/dms";
+import { DMCMoviePicker } from "src/controller/movie-picker/remote/dmc";
+import { DMSMoviePicker } from "src/controller/movie-picker/remote/dms";
 
 import type { TWatchV3Metadata } from "@/@types/niconico";
 import type { TMovieItemRemote, TRemoteMovieItemFormat } from "@/@types/queue";
@@ -134,23 +134,23 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
             row
           >
             <FormControlLabel
-              value={"delivery"}
+              value={"dmc"}
               control={<Radio />}
-              label={"delivery"}
+              label={"DMC"}
               disabled={!metadata.data.media.delivery}
             />
             <FormControlLabel
-              value={"domand"}
+              value={"dms"}
               control={<Radio />}
               disabled={!metadata.data.media.domand}
-              label={"domand"}
+              label={"DMS"}
             />
           </RadioGroup>
           {mediaServer === "dmc" && typeGuard.controller.v3DMC(metadata) && (
-            <DeliveryMoviePicker metadata={metadata} onChange={setFormat} />
+            <DMCMoviePicker metadata={metadata} onChange={setFormat} />
           )}
           {mediaServer === "dms" && typeGuard.controller.v3DMS(metadata) && (
-            <DomandMoviePicker metadata={metadata} onChange={setFormat} />
+            <DMSMoviePicker metadata={metadata} onChange={setFormat} />
           )}
           <Button variant={"outlined"} onClick={onClick}>
             確定

@@ -21,7 +21,7 @@ const downloadDMC = async (
       sendMessageToController({
         title: "動画情報の取得に失敗しました",
         message:
-          "DMCサーバー上に動画が見つかりませんでした\nDomandサーバーからの取得を試してみてください\nlib/niconico/dmc.ts / downloadDMC / invalid server",
+          "DMC上に動画が見つかりませんでした\nDMSからの取得を試してみてください\nlib/niconico/dmc.ts / downloadDMC / invalid server",
         type: "message",
       });
       return;
