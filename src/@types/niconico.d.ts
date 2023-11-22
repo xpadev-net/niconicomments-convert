@@ -42,6 +42,19 @@ export type TWatchV3Metadata<T extends "dmc" | "dms" | "" = ""> = {
       commentableUserTypeForPayment: string;
       "9d091f87": boolean;
     };
+    viewer: V3MetadataViewerItem | null;
+  };
+};
+
+export type V3MetadataViewerItem = {
+  id: number;
+  nickname: string;
+  isPremium: boolean;
+  allowSensitiveContents: boolean;
+  existence: {
+    age: number;
+    prefecture: string;
+    sex: string;
   };
 };
 

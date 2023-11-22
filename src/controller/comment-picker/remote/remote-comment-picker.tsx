@@ -65,6 +65,13 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
         });
         return;
       }
+      if (targetMetadata.data.viewer === null) {
+        setMessage({
+          title: "ログインが必須です",
+          content: "コメントのダウンロードにはアカウントが必須です",
+        });
+        return;
+      }
       setMetadata(targetMetadata);
       lastUrl.current = nicoId;
     })();
