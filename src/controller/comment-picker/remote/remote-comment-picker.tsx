@@ -2,7 +2,7 @@ import { TextField } from "@mui/material";
 import Button from "@mui/material/Button";
 import { useSetAtom } from "jotai";
 import type { ChangeEvent, FC } from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import type { TCommentOption, TWatchV3Metadata } from "@/@types/niconico";
 import type { TCommentItemRemote } from "@/@types/queue";
@@ -26,6 +26,8 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
   >(undefined);
   const setMessage = useSetAtom(messageAtom);
   const setIsLoading = useSetAtom(isLoadingAtom);
+  const lastUrl = useRef<string>("");
+
   const onUrlChange = (e: ChangeEvent<HTMLInputElement>): void => {
     setMetadata(undefined);
     setUrl(e.target.value);
@@ -33,7 +35,15 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
   const updateMetadata = (): void => {
     void (async () => {
       const nicoId = getNicoId(url);
-      if (!isNicovideoUrl(url) || metadata || !nicoId) return;
+      if (!isNicovideoUrl(url) || metadata || !nicoId) {
+        if (!url || lastUrl.current === nicoId) return;
+        setMessage({
+          title: "URLが正しくありません",
+          content:
+            "以下のような形式のURLを入力してください\nhttps://www.nicovideo.jp/watch/sm9\nhttps://nico.ms/sm9\ncontroller/movie-picker/remote/remote-movie-picker.tsx / getFormats",
+        });
+        return;
+      }
       setIsLoading(true);
       const targetMetadata = (await window.api.request({
         type: "getNiconicoMovieMetadata",
@@ -56,6 +66,7 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
         return;
       }
       setMetadata(targetMetadata);
+      lastUrl.current = nicoId;
     })();
   };
   const onClick = (): void => {
