@@ -18,9 +18,11 @@ const startConverter = async (queue: ConvertQueue): Promise<void> => {
   });
   converter.output(queue.output.path, {
     vcodec: "libx264",
+    format: "yuv420",
+    pix_fmt: "yuv420p",
     "b:v": "0",
     crf: "30",
-    filter_complex: `[0:v]fps=fps=${queue.option.fps},pad=width=max(iw\\, ih*(16/9)):height=ow/(16/9):x=(ow-iw)/2:y=(oh-ih)/2,scale=w=1920:h=1080[3];[3][1:v]overlay[out_v]`,
+    filter_complex: `[0:v]fps=fps=${queue.option.fps},pad=width=max(iw\\, ih*(16/9)):height=ow/(16/9):x=(ow-iw)/2:y=(oh-ih)/2,scale=w=1920:h=1080[3];[3][1:v]overlay=format=rgb[out_v]`,
     "map:v": "[out_v]",
     "map:a": "0:a",
     r: queue.option.fps,
