@@ -1,3 +1,4 @@
+import { Menu } from "@mui/icons-material";
 import type { FC } from "react";
 import { useState } from "react";
 
@@ -7,45 +8,36 @@ type Props = {
   pages: {
     id: string;
     icon: FC;
-    component: FC;
+    label: string;
   }[];
+  onChange: (val: string) => void;
+  value: string;
 };
 
-const Sidebar: FC<Props> = ({ pages }) => {
-  const [openingPage, setOpeningPage] = useState<string | undefined>(undefined);
-  const togglePage = (i: string): void => {
-    if (i === openingPage) {
-      setOpeningPage(undefined);
-    } else {
-      setOpeningPage(i);
-    }
-  };
+const Sidebar: FC<Props> = ({ pages, onChange, value }) => {
+  const [extended, setExtended] = useState<boolean>(false);
   return (
-    <div className={Styles.wrapper}>
+    <div className={`${Styles.wrapper} ${extended && Styles.extend}`}>
+      <div className={Styles.item} onClick={() => setExtended((pv) => !pv)}>
+        <div className={Styles.icon}>
+          <Menu />
+        </div>
+      </div>
       {pages.map((page) => {
         return (
-          <div key={page.id}>
-            <div
-              onClick={() => togglePage(page.id)}
-              className={`${Styles.icon} ${
-                openingPage === page.id && Styles.active
-              }`}
-            >
+          <div
+            key={page.id}
+            className={`${Styles.item} ${value === page.id && Styles.active}`}
+            onClick={() => onChange(page.id)}
+          >
+            <div className={Styles.icon}>
               <page.icon />
             </div>
-            <div
-              className={`${Styles.overlay} ${
-                openingPage === "queue" && Styles.visible
-              }`}
-              onClick={() => setOpeningPage(undefined)}
-            >
-              <div
-                className={Styles.container}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <page.component />
+            {extended && (
+              <div>
+                <span>{page.label}</span>
               </div>
-            </div>
+            )}
           </div>
         );
       })}

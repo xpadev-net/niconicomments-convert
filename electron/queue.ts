@@ -1,14 +1,21 @@
 import * as fs from "fs";
 import * as Stream from "stream";
 
+import type { UUID } from "@/@types/brand";
 import type { ConvertQueue, Queue, QueueLists } from "@/@types/queue";
 import type { ApiResponseLoad } from "@/@types/response.renderer";
 
-import { sendMessageToController } from "./controllerWindow";
-import { inputStream, startConverter } from "./converter";
+import { sendMessageToController } from "./controller-window";
+import { inputStream, interruptConverter, startConverter } from "./converter";
 import { encodeJson } from "./lib/json";
-import { download, downloadComment } from "./lib/niconico";
-import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
+import {
+  download,
+  downloadComment,
+  interruptCommentDownload,
+} from "./lib/niconico";
+import { interruptDMC } from "./lib/niconico/dmc";
+import { interruptDMS } from "./lib/niconico/dms";
+import { createRendererWindow, sendMessageToRenderer } from "./renderer-window";
 
 const queueList: Queue[] = [];
 const queueLists: QueueLists = {
@@ -136,20 +143,19 @@ const startConvert = async (): Promise<void> => {
   sendMessageToRenderer({
     type: "end",
   });
-  processingQueue.status = "completed";
+  if (processingQueue.status === "processing")
+    processingQueue.status = "completed";
   sendProgress();
   void startConvert();
 };
 
 const appendFrame = (frameId: number, data: Uint8Array): void => {
   frameQueue[frameId] = data;
-  console.log("receive: ", frameId, lastFrame, endFrame);
   if (frameId !== lastFrame + 1) {
     return;
   }
   while (frameQueue[lastFrame + 1]) {
     lastFrame++;
-    console.log("process: ", frameId, lastFrame, endFrame);
     processFrame(frameQueue[lastFrame]);
     delete frameQueue[lastFrame];
   }
@@ -159,6 +165,7 @@ const appendFrame = (frameId: number, data: Uint8Array): void => {
 };
 
 const processFrame = (data: Uint8Array): void => {
+  if (processingQueue.status !== "processing") return;
   convertQueue = convertQueue.then(() =>
     new Promise<void>((fulfill, reject) => {
       const myStream = new Stream.Readable();
@@ -170,7 +177,7 @@ const processFrame = (data: Uint8Array): void => {
       sendProgress();
       return myStream
         .on("end", () => fulfill())
-        .on("error", () => reject())
+        .on("error", (err) => reject(err))
         .pipe(inputStream, { end: false });
     }).catch((e) => {
       console.warn(e);
@@ -202,11 +209,28 @@ const processOnLoad = (): ApiResponseLoad => {
   };
 };
 
+const processOnInterrupt = (queueId: UUID): void => {
+  const queue = queueList.filter((i) => i.id === queueId)[0];
+  if (!queue || queue.status !== "processing") return;
+  queue.status = "interrupted";
+  if (queue.type === "convert") {
+    void convertQueue
+      .then(() => inputStream.end())
+      .then(() => interruptConverter());
+  } else if (queue.type === "movie") {
+    if (queue.format.type === "dmc") interruptDMC();
+    if (queue.format.type === "dms") interruptDMS();
+  } else if (queue.type === "comment") {
+    interruptCommentDownload();
+  }
+};
+
 export {
   appendFrame,
   appendQueue,
   markAsCompleted,
   processingQueue,
+  processOnInterrupt,
   processOnLoad,
   queueLists,
   sendProgress,

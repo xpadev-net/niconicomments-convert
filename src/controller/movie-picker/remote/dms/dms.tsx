@@ -3,31 +3,27 @@ import type { FC } from "react";
 import { useEffect, useState } from "react";
 
 import type { TWatchV3Metadata } from "@/@types/niconico";
-import type { TDomandFormat } from "@/@types/queue";
-import { SelectField } from "@/components/SelectField";
+import type { TDMSFormat } from "@/@types/queue";
+import { SelectField } from "@/components/select-field";
 import Styles from "@/controller/movie/movie.module.scss";
-import { getDomandBestSegment } from "@/util/niconico";
+import { getDMSBestSegment } from "@/util/niconico";
 
 type Props = {
-  metadata: TWatchV3Metadata<"domand">;
-  onChange: (val: TDomandFormat | undefined) => void;
+  metadata: TWatchV3Metadata<"dms">;
+  onChange: (val: TDMSFormat | undefined) => void;
 };
 
-const DomandMoviePicker: FC<Props> = ({ metadata, onChange }) => {
+const DMSMoviePicker: FC<Props> = ({ metadata, onChange }) => {
   const [selectedVideo, setSelectedVideo] = useState<string>("");
   const [selectedAudio, setSelectedAudio] = useState<string>("");
   useEffect(() => {
-    setSelectedAudio(
-      getDomandBestSegment(metadata.data.media.domand.audios).id,
-    );
-    setSelectedVideo(
-      getDomandBestSegment(metadata.data.media.domand.videos).id,
-    );
+    setSelectedAudio(getDMSBestSegment(metadata.data.media.domand.audios).id);
+    setSelectedVideo(getDMSBestSegment(metadata.data.media.domand.videos).id);
   }, [metadata]);
 
   useEffect(() => {
     onChange({
-      type: "domand",
+      type: "dms",
       format: [selectedVideo, selectedAudio],
     });
   }, [selectedAudio, selectedVideo]);
@@ -38,9 +34,7 @@ const DomandMoviePicker: FC<Props> = ({ metadata, onChange }) => {
           label={"動画"}
           variant={"standard"}
           value={selectedVideo}
-          defaultValue={
-            getDomandBestSegment(metadata.data.media.domand.videos).id
-          }
+          defaultValue={getDMSBestSegment(metadata.data.media.domand.videos).id}
           className={Styles.input}
           onChange={(e) => setSelectedVideo(e.target.value)}
         >
@@ -59,9 +53,7 @@ const DomandMoviePicker: FC<Props> = ({ metadata, onChange }) => {
           label={"音声"}
           variant={"standard"}
           className={Styles.input}
-          defaultValue={
-            getDomandBestSegment(metadata.data.media.domand.audios).id
-          }
+          defaultValue={getDMSBestSegment(metadata.data.media.domand.audios).id}
           value={selectedAudio}
           onChange={(e) => setSelectedAudio(e.target.value)}
         >
@@ -78,4 +70,4 @@ const DomandMoviePicker: FC<Props> = ({ metadata, onChange }) => {
   );
 };
 
-export { DomandMoviePicker };
+export { DMSMoviePicker };

@@ -1,26 +1,27 @@
 import type { CreateSessionRequest, TWatchV3Metadata } from "@/@types/niconico";
-import type { TDeliveryFormat } from "@/@types/queue";
+import type { TDMCFormat } from "@/@types/queue";
 import type { SpawnResult } from "@/@types/spawn";
 
-import { sendMessageToController } from "../../controllerWindow";
+import { sendMessageToController } from "../../controller-window";
 import { ffmpegPath } from "../../ffmpeg";
-import { typeGuard } from "../../typeGuard";
+import { typeGuard } from "../../type-guard";
 import { time2num } from "../../utils/time";
 import { spawn } from "../spawn";
 
-const downloadDelivery = async (
-  nicoId: string,
+let stop: (() => void) | undefined;
+
+const downloadDMC = async (
   metadata: TWatchV3Metadata,
-  format: TDeliveryFormat,
+  format: TDMCFormat,
   path: string,
   progress: (total: number, downloaded: number) => void,
 ): Promise<SpawnResult | undefined> => {
-  if (!typeGuard.niconico.v3Delivery(metadata)) {
-    if (typeGuard.niconico.v3Domand(metadata)) {
+  if (!typeGuard.niconico.v3DMC(metadata)) {
+    if (typeGuard.niconico.v3DMS(metadata)) {
       sendMessageToController({
         title: "動画情報の取得に失敗しました",
         message:
-          "DMCサーバー上に動画が見つかりませんでした\nDomandサーバーからの取得を試してみてください\nniconico / download / downloadDelivery / invalid server",
+          "DMC上に動画が見つかりませんでした\nDMSからの取得を試してみてください\nlib/niconico/dmc.ts / downloadDMC / invalid server",
         type: "message",
       });
       return;
@@ -28,7 +29,7 @@ const downloadDelivery = async (
     sendMessageToController({
       title: "動画情報の取得に失敗しました",
       message:
-        "未購入の有料動画などの可能性があります\nniconico / download / invalid metadata",
+        "未購入の有料動画などの可能性があります\nlib/niconico/dmc.ts / downloadDMC / invalid metadata",
       type: "message",
     });
     return;
@@ -65,7 +66,7 @@ const downloadDelivery = async (
     sendMessageToController({
       title: "セッションの作成に失敗しました",
       message:
-        "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください\nniconico / download / failed to create session",
+        "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください\nlib/niconico/dmc.ts / downloadDMC / invalid session",
       type: "message",
     });
     return;
@@ -90,7 +91,7 @@ const downloadDelivery = async (
         sendMessageToController({
           title: "セッションの更新に失敗しました",
           message:
-            "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください\nniconico / download / failed to renew session",
+            "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください\nlib/niconico/dmc.ts / downloadDMC / invalid session",
           type: "message",
         });
         throw new Error("failed to renew session");
@@ -110,33 +111,50 @@ const downloadDelivery = async (
     }
     progress(total, downloaded);
   };
-  const result = await spawn(
+  const _spawn = spawn(
     ffmpegPath,
     ["-i", lastSession.session.content_uri, "-c", "copy", path, "-y"],
     undefined,
     onData,
     onData,
   );
-  clearInterval(heartbeatInterval);
-  const delReq = await fetch(
-    `https://api.dmc.nico/api/sessions/${lastSession.session.id}?_format=json&_method=DELETE`,
-    {
-      method: "POST",
-      headers: {
-        Origin: "https://www.nicovideo.jp",
-        Referer: "https://www.nicovideo.jp",
-        "Content-Type": "text/plain;charset=UTF-8",
+  let cancelled = false;
+  stop = () => {
+    cancelled = true;
+    _spawn.stop();
+  };
+  try {
+    const result = await _spawn.promise;
+    clearInterval(heartbeatInterval);
+    const delReq = await fetch(
+      `https://api.dmc.nico/api/sessions/${lastSession.session.id}?_format=json&_method=DELETE`,
+      {
+        method: "POST",
+        headers: {
+          Origin: "https://www.nicovideo.jp",
+          Referer: "https://www.nicovideo.jp",
+          "Content-Type": "text/plain;charset=UTF-8",
+        },
+        body: JSON.stringify(lastSession),
       },
-      body: JSON.stringify(lastSession),
-    },
-  );
-  await delReq.json();
-  return result;
+    );
+    await delReq.json();
+    return result;
+  } catch (e) {
+    if (!cancelled) {
+      sendMessageToController({
+        title: "動画のダウンロードに失敗しました",
+        message:
+          "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください\nlib/niconico/dms.ts / downloadDMS / failed to download",
+        type: "message",
+      });
+    }
+  }
 };
 
 const createSessionCreateRequestBody = (
-  metadata: TWatchV3Metadata<"delivery">,
-  format: TDeliveryFormat,
+  metadata: TWatchV3Metadata<"dmc">,
+  format: TDMCFormat,
 ): CreateSessionRequest => {
   const sessionBody: CreateSessionRequest = {
     session: {
@@ -211,4 +229,8 @@ const createSessionCreateRequestBody = (
   return sessionBody;
 };
 
-export { downloadDelivery };
+const interruptDMC = (): void => {
+  stop?.();
+};
+
+export { downloadDMC, interruptDMC };

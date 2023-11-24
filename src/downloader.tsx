@@ -2,11 +2,11 @@ import { LinearProgress } from "@mui/material";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 
-import type { ApiResponseDownloadProgress } from "@/@types/response.binaryDownloader";
+import type { ApiResponseDownloadProgress } from "@/@types/response.binary-downloader";
 import type { ApiResponseType } from "@/@types/types";
 
 import Styles from "./downloader.module.scss";
-import { typeGuard } from "./typeGuard";
+import { typeGuard } from "./type-guard";
 
 const Downloader: FC = () => {
   const [progress, setProgress] = useState<
@@ -33,11 +33,11 @@ const Downloader: FC = () => {
       <div className={Styles.progressWrapper}>
         <LinearProgress
           variant={"determinate"}
-          value={(progress?.progress || 0) * 100}
+          value={(progress?.progress ?? 0) * 100}
           className={Styles.progress}
         />
         <span className={Styles.text}>
-          {Math.floor((progress?.progress || 0) * 100)}%
+          {Math.floor((progress?.progress ?? 0) * 100)}%
         </span>
       </div>
     </div>

@@ -4,13 +4,18 @@ import type { NicoId, UUID } from "@/@types/brand";
 import type { TCommentOption, V3MetadataComment } from "@/@types/niconico";
 import type { CommentFormat } from "@/@types/niconicomments";
 
-type status = "queued" | "processing" | "completed" | "fail";
+export type Status =
+  | "queued"
+  | "processing"
+  | "completed"
+  | "fail"
+  | "interrupted";
 
 export type Queue = ConvertQueue | MovieQueue | CommentQueue;
 
 type BaseQueue = {
   id: UUID;
-  status: status;
+  status: Status;
   message?: string;
   progress: number;
 };
@@ -45,19 +50,19 @@ export type TMovieItemRemote = {
   ref: MovieQueue;
 };
 
-export type TRemoteServerType = "delivery" | "domand";
-export type TRemoteMovieItemFormat = TDomandFormat | TDeliveryFormat;
+export type TRemoteServerType = "dmc" | "dms";
+export type TRemoteMovieItemFormat = TDMCFormat | TDMSFormat;
 
-export type TDeliveryFormat = {
-  type: "delivery";
+export type TDMCFormat = {
+  type: "dmc";
   format: {
     audio: string;
     video: string;
   };
 };
 
-export type TDomandFormat = {
-  type: "domand";
+export type TDMSFormat = {
+  type: "dms";
   format: [string, string];
 };
 

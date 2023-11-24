@@ -1,9 +1,9 @@
 import type { TRemoteMovieItemFormat } from "@/@types/queue";
 import type { SpawnResult } from "@/@types/spawn";
 
-import { sendMessageToController } from "../../controllerWindow";
-import { downloadDelivery } from "./delivery";
-import { downloadDomand } from "./domand";
+import { sendMessageToController } from "../../controller-window";
+import { downloadDMC } from "./dmc";
+import { downloadDMS } from "./dms";
 import { getMetadata } from "./utils";
 
 const download = async (
@@ -22,11 +22,11 @@ const download = async (
     });
     return;
   }
-  if (format.type === "delivery") {
-    return await downloadDelivery(nicoId, metadata, format, path, progress);
+  if (format.type === "dmc") {
+    return await downloadDMC(metadata, format, path, progress);
   }
-  if (format.type === "domand") {
-    return await downloadDomand(nicoId, metadata, format, path, progress);
+  if (format.type === "dms") {
+    return await downloadDMS(metadata, format, path, progress);
   }
 };
 

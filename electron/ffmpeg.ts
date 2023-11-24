@@ -1,4 +1,4 @@
-import type { AxiosResponse } from "axios";
+import type { AxiosProgressEvent, AxiosResponse } from "axios";
 import axios from "axios";
 import { app } from "electron";
 import * as fs from "fs";
@@ -7,10 +7,10 @@ import * as path from "path";
 import type * as Stream from "stream";
 
 import {
-  binaryDownloaderWindow,
+  closeBinaryDownloaderWindow,
   createBinaryDownloaderWindow,
   sendMessageToBinaryDownloader,
-} from "./binaryDownloaderWindow";
+} from "./binary-downloader-window";
 import { spawn } from "./lib/spawn";
 
 type lib = "ffmpeg" | "ffprobe";
@@ -53,20 +53,24 @@ const onStartUp = async (): Promise<void> => {
   target = [];
   if (
     !fs.existsSync(ffmpegPath) ||
-    !(await spawn(ffmpegPath, ["-version"])).stdout.includes(version.ffmpeg)
+    !(await spawn(ffmpegPath, ["-version"]).promise).stdout.includes(
+      version.ffmpeg,
+    )
   ) {
     target.push("ffmpeg");
   }
   if (
     !fs.existsSync(ffprobePath) ||
-    !(await spawn(ffprobePath, ["-version"])).stdout.includes(version.ffmpeg)
+    !(await spawn(ffprobePath, ["-version"]).promise).stdout.includes(
+      version.ffmpeg,
+    )
   ) {
     target.push("ffprobe");
   }
   if (target.length === 0) return;
   await createBinaryDownloaderWindow();
   await downloadBinary(target);
-  binaryDownloaderWindow.close();
+  closeBinaryDownloaderWindow();
 };
 
 const downloadBinary = async (target: lib[]): Promise<void> => {
@@ -98,18 +102,19 @@ const downloadFile = async (
   path: string,
 ): Promise<void> => {
   const file = fs.createWriteStream(path);
+  const onDownloadProgress = (status: AxiosProgressEvent): void => {
+    const progress = status.loaded / (status.total ?? 1);
+    sendMessageToBinaryDownloader({
+      type: "downloadProgress",
+      name: name,
+      progress: progress,
+    });
+  };
   return axios({
     method: "get",
     url,
     responseType: "stream",
-    onDownloadProgress: (status) => {
-      const progress = status.loaded / (status.total || 1);
-      sendMessageToBinaryDownloader({
-        type: "downloadProgress",
-        name: name,
-        progress: progress,
-      });
-    },
+    onDownloadProgress,
   }).then((res: AxiosResponse<Stream>) => {
     return new Promise<void>((resolve, reject) => {
       res.data.pipe(file);
@@ -117,7 +122,7 @@ const downloadFile = async (
       file.on("error", (err) => {
         error = err;
         file.close();
-        reject();
+        reject(err);
       });
       file.on("close", () => {
         if (!error) {

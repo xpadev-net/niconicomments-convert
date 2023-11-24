@@ -1,4 +1,14 @@
 .wrapper {
   margin: 5px;
   user-select: none;
+  .item {
+    display: flex;
+    flex-direction: row;
+    align-items: start;
+    .metadata {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+  }
 }

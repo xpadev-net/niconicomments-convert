@@ -1,17 +1,20 @@
 import { FormControlLabel, Radio, RadioGroup, TextField } from "@mui/material";
 import Button from "@mui/material/Button";
 import { useSetAtom } from "jotai";
-import type { ChangeEvent, FC } from "react";
-import { useState } from "react";
+import type { ChangeEvent, FC, KeyboardEvent } from "react";
+import { useRef, useState } from "react";
 
 import type { TWatchV3Metadata } from "@/@types/niconico";
-import type { TMovieItemRemote, TRemoteMovieItemFormat } from "@/@types/queue";
-import type { TRemoteServerType } from "@/@types/queue";
+import type {
+  TMovieItemRemote,
+  TRemoteMovieItemFormat,
+  TRemoteServerType,
+} from "@/@types/queue";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import Styles from "@/controller/movie/movie.module.scss";
-import { DeliveryMoviePicker } from "@/controller/movie-picker/remote/delivery";
-import { DomandMoviePicker } from "@/controller/movie-picker/remote/domand";
-import { typeGuard } from "@/typeGuard";
+import { DMCMoviePicker } from "@/controller/movie-picker/remote/dmc";
+import { DMSMoviePicker } from "@/controller/movie-picker/remote/dms";
+import { typeGuard } from "@/type-guard";
 import { getNicoId, isNicovideoUrl } from "@/util/niconico";
 import { uuid } from "@/util/uuid";
 
@@ -22,10 +25,11 @@ type Props = {
 const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
   const [url, setUrl] = useState("");
   const [metadata, setMetadata] = useState<TWatchV3Metadata | undefined>();
-  const [mediaServer, setMediaServer] = useState<TRemoteServerType>("delivery");
+  const [mediaServer, setMediaServer] = useState<TRemoteServerType>("dmc");
   const [format, setFormat] = useState<TRemoteMovieItemFormat | undefined>();
   const setMessage = useSetAtom(messageAtom);
   const setIsLoading = useSetAtom(isLoadingAtom);
+  const lastUrl = useRef<string>("");
   const onUrlChange = (e: ChangeEvent<HTMLInputElement>): void => {
     setMetadata(undefined);
     setUrl(e.target.value);
@@ -34,11 +38,11 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
     void (async () => {
       const nicoId = getNicoId(url);
       if (!isNicovideoUrl(url) || metadata || !nicoId) {
-        if (!url) return;
+        if (!url || lastUrl.current === nicoId) return;
         setMessage({
           title: "URLが正しくありません",
           content:
-            "以下のような形式のURLを入力してください\nhttps://www.nicovideo.jp/watch/sm9\nhttps://nico.ms/sm9",
+            "以下のような形式のURLを入力してください\nhttps://www.nicovideo.jp/watch/sm9\nhttps://nico.ms/sm9\ncontroller/movie-picker/remote/remote-movie-picker.tsx / getFormats",
         });
         return;
       }
@@ -63,9 +67,14 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
         });
         return;
       }
-      setMediaServer(targetMetadata.data.media.domand ? "domand" : "delivery");
+      setMediaServer(targetMetadata.data.media.domand ? "dms" : "dmc");
       setMetadata(targetMetadata);
+      lastUrl.current = nicoId;
     })();
+  };
+  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key !== "Enter") return;
+    getFormats();
   };
   const onClick = (): void => {
     void (async () => {
@@ -74,7 +83,7 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
         setMessage({
           title: "URLが正しくありません",
           content:
-            "以下のような形式のURLを入力してください\nhttps://www.nicovideo.jp/watch/sm9\nhttps://nico.ms/sm9",
+            "以下のような形式のURLを入力してください\nhttps://www.nicovideo.jp/watch/sm9\nhttps://nico.ms/sm9\ncontroller/movie-picker/remote/remote-movie-picker.tsx / onClick",
         });
         return;
       }
@@ -122,6 +131,7 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
         value={url}
         onChange={onUrlChange}
         onBlur={getFormats}
+        onKeyDown={onKeyDown}
         fullWidth={true}
       />
       {metadata && (
@@ -134,26 +144,24 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
             row
           >
             <FormControlLabel
-              value={"delivery"}
+              value={"dmc"}
               control={<Radio />}
-              label={"delivery"}
+              label={"DMC"}
               disabled={!metadata.data.media.delivery}
             />
             <FormControlLabel
-              value={"domand"}
+              value={"dms"}
               control={<Radio />}
               disabled={!metadata.data.media.domand}
-              label={"domand"}
+              label={"DMS"}
             />
           </RadioGroup>
-          {mediaServer === "delivery" &&
-            typeGuard.controller.v3Delivery(metadata) && (
-              <DeliveryMoviePicker metadata={metadata} onChange={setFormat} />
-            )}
-          {mediaServer === "domand" &&
-            typeGuard.controller.v3Domand(metadata) && (
-              <DomandMoviePicker metadata={metadata} onChange={setFormat} />
-            )}
+          {mediaServer === "dmc" && typeGuard.controller.v3DMC(metadata) && (
+            <DMCMoviePicker metadata={metadata} onChange={setFormat} />
+          )}
+          {mediaServer === "dms" && typeGuard.controller.v3DMS(metadata) && (
+            <DMSMoviePicker metadata={metadata} onChange={setFormat} />
+          )}
           <Button variant={"outlined"} onClick={onClick}>
             確定
           </Button>

@@ -2,7 +2,7 @@ import NiconiComments from "@xpadev-net/niconicomments";
 
 import type { ApiResponseLoad } from "@/@types/response.renderer";
 import { transformComments } from "@/renderer/comment-utils";
-import { typeGuard } from "@/typeGuard";
+import { typeGuard } from "@/type-guard";
 import { encodeJson } from "@/util/json";
 import { sleep } from "@/util/sleep";
 
@@ -56,7 +56,6 @@ const startRenderer = async (): Promise<void> => {
   let convertedFrames = 0;
 
   const sendBlob = (frameId: number, blob: Blob): void => {
-    console.log("sendblob", frameId);
     void blob.arrayBuffer().then((buffer) => {
       void window.api.request({
         type: "blob",
@@ -84,11 +83,11 @@ const startRenderer = async (): Promise<void> => {
   );
   message.innerText = "";
   let generatedFrames = 0,
-    offset = Math.ceil((queue.option.ss || 0) * 100);
+    offset = Math.ceil((queue.option.ss ?? 0) * 100);
   const targetFrameRate = queue.option.fps || 30;
   const totalFrames =
     Math.ceil(
-      (queue.option.to || queue.movie.duration) - (queue.option.ss || 0),
+      (queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0),
     ) * targetFrameRate;
   const process = async (): Promise<void> => {
     for (let i = 0; i < targetFrameRate; i++) {

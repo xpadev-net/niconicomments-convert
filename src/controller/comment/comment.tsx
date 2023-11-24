@@ -21,11 +21,7 @@ const Comment: FC = () => {
       setIsLoading(false);
     })();
   };
-  return (
-    <>
-      <RemoteCommentPicker key={key} onChange={download} />
-    </>
-  );
+  return <RemoteCommentPicker key={key} onChange={download} />;
 };
 
 export { Comment };

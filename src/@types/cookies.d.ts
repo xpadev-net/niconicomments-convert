@@ -5,8 +5,6 @@ export type ChromiumBrowser =
   | "edge"
   | "opera"
   | "vivaldi";
-export type Browser = ChromiumBrowser | "firefox" | "safari";
-export type Platform = "win32" | "darwin";
 
 export type FirefoxProfile = FirefoxBasicProfile | FirefoxContainer;
 

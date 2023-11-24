@@ -1,12 +1,16 @@
-import { TextField } from "@mui/material";
+import { FormControlLabel, Radio, RadioGroup, TextField } from "@mui/material";
 import Button from "@mui/material/Button";
 import { useSetAtom } from "jotai";
-import type { ChangeEvent, FC } from "react";
-import { useState } from "react";
+import type { ChangeEvent, FC, KeyboardEvent } from "react";
+import { useRef, useState } from "react";
 
-import type { TCommentOption, TWatchV3Metadata } from "@/@types/niconico";
+import type {
+  TCommentOption,
+  TCommentPickerMode,
+  TWatchV3Metadata,
+} from "@/@types/niconico";
 import type { TCommentItemRemote } from "@/@types/queue";
-import { CommentOption } from "@/components/CommentOption";
+import { CommentOption } from "@/components/comment-option";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import { getNicoId, isNicovideoUrl } from "@/util/niconico";
 import { formatDate } from "@/util/time";
@@ -21,11 +25,14 @@ type Props = {
 const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
   const [url, setUrl] = useState("");
   const [metadata, setMetadata] = useState<TWatchV3Metadata | undefined>();
+  const [mode, setMode] = useState<TCommentPickerMode>("simple");
   const [commentOption, setCommentOption] = useState<
     TCommentOption | undefined
   >(undefined);
   const setMessage = useSetAtom(messageAtom);
   const setIsLoading = useSetAtom(isLoadingAtom);
+  const lastUrl = useRef<string>("");
+
   const onUrlChange = (e: ChangeEvent<HTMLInputElement>): void => {
     setMetadata(undefined);
     setUrl(e.target.value);
@@ -33,7 +40,15 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
   const updateMetadata = (): void => {
     void (async () => {
       const nicoId = getNicoId(url);
-      if (!isNicovideoUrl(url) || metadata || !nicoId) return;
+      if (!isNicovideoUrl(url) || metadata || !nicoId) {
+        if (!url || lastUrl.current === nicoId) return;
+        setMessage({
+          title: "URLが正しくありません",
+          content:
+            "以下のような形式のURLを入力してください\nhttps://www.nicovideo.jp/watch/sm9\nhttps://nico.ms/sm9\ncontroller/movie-picker/remote/remote-movie-picker.tsx / getFormats",
+        });
+        return;
+      }
       setIsLoading(true);
       const targetMetadata = (await window.api.request({
         type: "getNiconicoMovieMetadata",
@@ -56,7 +71,13 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
         return;
       }
       setMetadata(targetMetadata);
+      setMode(targetMetadata.data.viewer === null ? "simple" : "custom");
+      lastUrl.current = nicoId;
     })();
+  };
+  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key !== "Enter") return;
+    updateMetadata();
   };
   const onClick = (): void => {
     void (async () => {
@@ -102,20 +123,41 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
         value={url}
         onChange={onUrlChange}
         onBlur={updateMetadata}
+        onKeyDown={onKeyDown}
         fullWidth={true}
       />
+      {metadata && (
+        <RadioGroup
+          value={mode}
+          onChange={(e) => setMode(e.target.value as TCommentPickerMode)}
+          row
+        >
+          <FormControlLabel
+            value={"simple"}
+            control={<Radio />}
+            label={"簡易"}
+          />
+          <FormControlLabel
+            value={"custom"}
+            control={<Radio />}
+            label={"カスタム"}
+            disabled={metadata.data.viewer === null}
+          />
+        </RadioGroup>
+      )}
       {metadata && (
         <>
           <CommentOption
             update={setCommentOption}
             metadata={metadata.data.comment}
             postedDate={formatDate(new Date(metadata.data.video.registeredAt))}
+            mode={mode}
           />
           <div>
             <Button
               variant={"outlined"}
               onClick={onClick}
-              disabled={!CommentOption || !metadata}
+              disabled={!commentOption || !metadata}
             >
               確定
             </Button>

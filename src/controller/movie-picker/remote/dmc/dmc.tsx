@@ -3,30 +3,30 @@ import type { FC } from "react";
 import { useEffect, useState } from "react";
 
 import type { TWatchV3Metadata } from "@/@types/niconico";
-import type { TDeliveryFormat } from "@/@types/queue";
-import { SelectField } from "@/components/SelectField";
+import type { TDMCFormat } from "@/@types/queue";
+import { SelectField } from "@/components/select-field";
 import Styles from "@/controller/movie/movie.module.scss";
-import { getDeliveryBestSegment } from "@/util/niconico";
+import { getDMCBestSegment } from "@/util/niconico";
 
 type Props = {
-  metadata: TWatchV3Metadata<"delivery">;
-  onChange: (val: TDeliveryFormat | undefined) => void;
+  metadata: TWatchV3Metadata<"dmc">;
+  onChange: (val: TDMCFormat | undefined) => void;
 };
 
-const DeliveryMoviePicker: FC<Props> = ({ metadata, onChange }) => {
+const DMCMoviePicker: FC<Props> = ({ metadata, onChange }) => {
   const [selectedVideo, setSelectedVideo] = useState<string>("");
   const [selectedAudio, setSelectedAudio] = useState<string>("");
   useEffect(() => {
     setSelectedAudio(
-      getDeliveryBestSegment(metadata.data.media.delivery.movie.audios).id,
+      getDMCBestSegment(metadata.data.media.delivery.movie.audios).id,
     );
     setSelectedVideo(
-      getDeliveryBestSegment(metadata.data.media.delivery.movie.videos).id,
+      getDMCBestSegment(metadata.data.media.delivery.movie.videos).id,
     );
   }, [metadata]);
   useEffect(() => {
     onChange({
-      type: "delivery",
+      type: "dmc",
       format: {
         video: selectedVideo,
         audio: selectedAudio,
@@ -41,7 +41,7 @@ const DeliveryMoviePicker: FC<Props> = ({ metadata, onChange }) => {
           variant={"standard"}
           value={selectedVideo}
           defaultValue={
-            getDeliveryBestSegment(metadata.data.media.delivery.movie.videos).id
+            getDMCBestSegment(metadata.data.media.delivery.movie.videos).id
           }
           className={Styles.input}
           onChange={(e) => setSelectedVideo(e.target.value)}
@@ -62,7 +62,7 @@ const DeliveryMoviePicker: FC<Props> = ({ metadata, onChange }) => {
           variant={"standard"}
           className={Styles.input}
           defaultValue={
-            getDeliveryBestSegment(metadata.data.media.delivery.movie.audios).id
+            getDMCBestSegment(metadata.data.media.delivery.movie.audios).id
           }
           value={selectedAudio}
           onChange={(e) => setSelectedAudio(e.target.value)}
@@ -80,4 +80,4 @@ const DeliveryMoviePicker: FC<Props> = ({ metadata, onChange }) => {
   );
 };
 
-export { DeliveryMoviePicker };
+export { DMCMoviePicker };

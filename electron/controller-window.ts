@@ -4,6 +4,7 @@ import * as path from "path";
 import type { ApiResponsesToController } from "@/@types/response.controller";
 
 import { baseUrl } from "./context";
+import { processingQueue } from "./queue";
 
 let controllerWindow: BrowserWindow;
 const createControllerWindow = (): void => {
@@ -17,6 +18,11 @@ const createControllerWindow = (): void => {
     },
   });
   controllerWindow.removeMenu();
+  controllerWindow.on("close", (e) => {
+    if (processingQueue?.status === "processing") {
+      e.preventDefault();
+    }
+  });
 
   const appURL = `${baseUrl}`;
 

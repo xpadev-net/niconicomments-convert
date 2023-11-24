@@ -1,11 +1,15 @@
-import { DownloadingOutlined } from "@mui/icons-material";
+import {
+  ChatOutlined,
+  DownloadingOutlined,
+  SettingsOutlined,
+  SlideshowOutlined,
+  SubtitlesOutlined,
+} from "@mui/icons-material";
 import {
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Tab,
-  Tabs,
 } from "@mui/material";
 import Button from "@mui/material/Button";
 import { useAtom, useAtomValue } from "jotai";
@@ -22,47 +26,70 @@ import { Sidebar } from "@/controller/sidebar";
 
 import Styles from "./controller.module.scss";
 
+const items: {
+  id: string;
+  icon: FC;
+  label: string;
+  component: FC;
+  unmount?: boolean;
+}[] = [
+  {
+    id: "convert",
+    icon: SubtitlesOutlined,
+    label: "変換",
+    component: Convert,
+  },
+  {
+    id: "movieDownload",
+    icon: SlideshowOutlined,
+    label: "動画",
+    component: Movie,
+  },
+  {
+    id: "commentDownload",
+    icon: ChatOutlined,
+    label: "コメント",
+    component: Comment,
+  },
+  {
+    id: "queue",
+    icon: DownloadingOutlined,
+    label: "キュー",
+    component: QueueDisplay,
+  },
+  {
+    id: "setting",
+    icon: SettingsOutlined,
+    label: "設定",
+    component: Setting,
+    unmount: true,
+  },
+];
+
 const Controller: FC = () => {
-  const [tab, setTab] = useState<number>(0);
+  const [tab, setTab] = useState<string>("convert");
   const [message, setMessage] = useAtom(messageAtom);
   const isLoading = useAtomValue(isLoadingAtom);
   return (
     <>
       <div className={Styles.wrapper}>
-        <div className={Styles.main}>
-          <Tabs
-            variant={"fullWidth"}
-            value={tab}
-            onChange={(_, value) => setTab(Number(value))}
-          >
-            <Tab label={"変換"} value={0} />
-            <Tab label={"動画"} value={1} />
-            <Tab label={"コメント"} value={2} />
-            <Tab label={"設定"} value={3} />
-          </Tabs>
-          <div className={`${Styles.tabItem} ${tab === 0 && Styles.active}`}>
-            <Convert />
-          </div>
-          <div className={`${Styles.tabItem} ${tab === 1 && Styles.active}`}>
-            <Movie />
-          </div>
-          <div className={`${Styles.tabItem} ${tab === 2 && Styles.active}`}>
-            <Comment />
-          </div>
-          <div className={`${Styles.tabItem} ${Styles.active}`}>
-            {tab === 3 && <Setting />}
-          </div>
+        <div className={Styles.tab}>
+          <Sidebar pages={items} value={tab} onChange={(val) => setTab(val)} />
         </div>
-        <div className={Styles.queue}>
-          <Sidebar
-            pages={[
-              {
-                id: "queue",
-                icon: DownloadingOutlined,
-                component: QueueDisplay,
-              },
-            ]}
-          />
+        <div className={Styles.main}>
+          {items.map((item) => {
+            return (
+              <div
+                className={`${Styles.tabItem} ${
+                  item.id === tab && Styles.active
+                }`}
+                key={item.id}
+              >
+                <h2>{item.label}</h2>
+                {item.id === tab && <item.component />}
+              </div>
+            );
+          })}
         </div>
       </div>
       <Dialog open={!!message} onClose={() => setMessage(undefined)}>

@@ -22,7 +22,7 @@ import type { ApiResponseType } from "@/@types/types";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import { CommentPicker } from "@/controller/comment-picker";
 import { MoviePicker } from "@/controller/movie-picker";
-import { typeGuard } from "@/typeGuard";
+import { typeGuard } from "@/type-guard";
 import { str2time, time2str } from "@/util/time";
 import { uuid } from "@/util/uuid";
 
@@ -148,7 +148,7 @@ const Convert: FC = () => {
       if (data.target !== "controller") return;
       if (typeGuard.controller.message(data)) {
         setMessage({
-          title: data.title || "未知のエラーが発生しました",
+          title: data.title ?? "未知のエラーが発生しました",
           content: data.message,
         });
       }
@@ -160,36 +160,51 @@ const Convert: FC = () => {
   }, []);
   return (
     <div className={Styles.wrapper}>
-      <Button variant={"outlined"} onClick={onMovieClick}>
-        動画を選択
-      </Button>
-      <Button variant={"outlined"} onClick={onCommentClick}>
-        コメントを選択
-      </Button>
-      {movie && (
-        <div>
-          <h3>動画</h3>
-          <p>path: {movie.path}</p>
-          <p>duration: {movie.duration}</p>
-          {movie.type === "remote" && (
-            <>
-              <p>source: {movie.ref.url}</p>
-            </>
-          )}
-        </div>
-      )}
-      {comment && (
-        <div>
-          <h3>コメント</h3>
-          <p>path: {comment.path}</p>
-          <p>format: {comment.format}</p>
-          {comment.type === "remote" && (
-            <>
-              <p>source: {comment.ref.url}</p>
-            </>
-          )}
-        </div>
-      )}
+      <div>
+        <h3>動画</h3>
+        {movie ? (
+          <div className={Styles.item}>
+            <div className={Styles.metadata}>
+              <p>path: {movie.path}</p>
+              <p>duration: {movie.duration}</p>
+              {movie.type === "remote" && (
+                <p>
+                  source: https://nico.ms/{movie.ref.url} (
+                  {movie.ref.format.type})
+                </p>
+              )}
+            </div>
+            <Button variant={"outlined"} size={"small"} onClick={onMovieClick}>
+              変更
+            </Button>
+          </div>
+        ) : (
+          <Button variant={"outlined"} onClick={onMovieClick}>
+            動画を選択
+          </Button>
+        )}
+      </div>
+      <div>
+        <h3>コメント</h3>
+        {comment ? (
+          <div className={Styles.item}>
+            <div className={Styles.metadata}>
+              <p>path: {comment.path}</p>
+              <p>format: {comment.format}</p>
+              {comment.type === "remote" && (
+                <p>source: https://nico.ms/{comment.ref.url}</p>
+              )}
+            </div>
+            <Button variant={"outlined"} onClick={onCommentClick}>
+              変更
+            </Button>
+          </div>
+        ) : (
+          <Button variant={"outlined"} onClick={onCommentClick}>
+            コメントを選択
+          </Button>
+        )}
+      </div>
       {movie && comment && (
         <section>
           <div>

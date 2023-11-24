@@ -7,8 +7,9 @@ import type {
   l10nID,
   moz_cookies,
 } from "@/@types/cookies";
+import type { UserData } from "@/@types/niconico";
 
-import { typeGuard } from "../../typeGuard";
+import { typeGuard } from "../../type-guard";
 import { convertToEncodedCookie } from "../cookie";
 import { fetchAll, openClonedDB } from "../db";
 import { getUserInfo } from "../niconico";
@@ -38,16 +39,19 @@ const containerNames: { [key in l10nID]: string } = {
   "userContextShopping.label": "ショッピング",
 };
 
-const getAvailableFirefoxProfiles = async (): Promise<FirefoxProfile[]> => {
+const getAvailableFirefoxProfiles = async (): Promise<
+  { profile: FirefoxProfile; user: UserData }[]
+> => {
   const rootDir = getFirefoxRootDir();
   if (!fs.existsSync(rootDir)) {
     return [];
   }
   const files = fs.readdirSync(rootDir);
-  const profiles: FirefoxProfile[] = [];
+  const profiles: { profile: FirefoxProfile; user: UserData }[] = [];
   const addProfile = async (profile: FirefoxProfile): Promise<void> => {
-    if (await isLoggedIn(profile)) {
-      profiles.push(profile);
+    const user = await getUser(profile);
+    if (user) {
+      profiles.push({ profile, user });
     }
   };
   for (const item of files) {
@@ -104,12 +108,12 @@ const getAvailableFirefoxProfiles = async (): Promise<FirefoxProfile[]> => {
   return profiles;
 };
 
-const isLoggedIn = async (profile: FirefoxProfile): Promise<boolean> => {
+const getUser = async (
+  profile: FirefoxProfile,
+): Promise<UserData | undefined> => {
   const cookies = await getFirefoxCookies(profile);
-  if (!(cookies["user_session"] && cookies["user_session_secure"]))
-    return false;
-  const user = await getUserInfo(convertToEncodedCookie(cookies));
-  return !!user;
+  if (!(cookies["user_session"] && cookies["user_session_secure"])) return;
+  return await getUserInfo(convertToEncodedCookie(cookies));
 };
 
 const getFirefoxCookies = async (profile: FirefoxProfile): Promise<Cookies> => {

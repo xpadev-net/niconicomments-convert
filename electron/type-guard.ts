@@ -2,7 +2,6 @@ import type {
   ChromiumProfilesJson,
   firefoxContainerDefault,
   firefoxContainersJson,
-  firefoxContainerUser,
   ParsedCookie,
 } from "@/@types/cookies";
 import type {
@@ -17,7 +16,9 @@ import type {
   ApiRequestFromController,
   ApiRequestGetAvailableProfiles,
   ApiRequestGetNiconicoMovieMetadata,
+  ApiRequestGetQueue,
   ApiRequestGetSetting,
+  ApiRequestInterruptQueue,
   ApiRequestSelectComment,
   ApiRequestSelectFile,
   ApiRequestSelectMovie,
@@ -25,13 +26,13 @@ import type {
   ApiRequestSetSetting,
 } from "@/@types/request.controller";
 import type {
+  ApiRequestBlob,
   ApiRequestBuffer,
   ApiRequestEnd,
   ApiRequestFromRenderer,
   ApiRequestLoad,
+  ApiRequestMessage,
 } from "@/@types/request.renderer";
-import type { ApiRequestMessage } from "@/@types/request.renderer";
-import type { ApiRequestBlob } from "@/@types/request.renderer";
 
 const typeGuard = {
   controller: {
@@ -82,6 +83,14 @@ const typeGuard = {
       (i as ApiRequestFromController).host === "controller" &&
       (i as ApiRequestGetNiconicoMovieMetadata).type ===
         "getNiconicoMovieMetadata",
+    interruptQueue: (i: unknown): i is ApiRequestInterruptQueue =>
+      typeof i === "object" &&
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestInterruptQueue).type === "interruptQueue",
+    getQueue: (i: unknown): i is ApiRequestGetQueue =>
+      typeof i === "object" &&
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestGetQueue).type === "getQueue",
   },
   renderer: {
     buffer: (i: unknown): i is ApiRequestBuffer =>
@@ -113,9 +122,6 @@ const typeGuard = {
     defaultContainer: (i: unknown): i is firefoxContainerDefault =>
       typeof i === "object" &&
       typeof (i as firefoxContainerDefault).l10nID === "string",
-    userContainer: (i: unknown): i is firefoxContainerUser =>
-      typeof i === "object" &&
-      typeof (i as firefoxContainerUser).name === "string",
   },
   chromium: {
     profiles: (i: unknown): i is ChromiumProfilesJson =>
@@ -139,9 +145,9 @@ const typeGuard = {
       ((i as CreateSessionResponse).meta.message === "created" ||
         (i as CreateSessionResponse).meta.message === "ok") &&
       typeof (i as CreateSessionResponse).data === "object",
-    v3Delivery: (i: unknown): i is TWatchV3Metadata<"delivery"> =>
+    v3DMC: (i: unknown): i is TWatchV3Metadata<"dmc"> =>
       typeof i === "object" && !!(i as TWatchV3Metadata).data.media.delivery,
-    v3Domand: (i: unknown): i is TWatchV3Metadata<"domand"> =>
+    v3DMS: (i: unknown): i is TWatchV3Metadata<"dms"> =>
       typeof i === "object" && !!(i as TWatchV3Metadata).data.media.domand,
     v1AccessRightsHls: (i: unknown): i is V1AccessRightsHls =>
       typeof i === "object" &&

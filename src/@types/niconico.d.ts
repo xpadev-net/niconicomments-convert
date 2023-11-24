@@ -1,16 +1,14 @@
-export type TWatchV3Metadata<T extends "delivery" | "domand" | "" = ""> = {
+export type TWatchV3Metadata<T extends "dmc" | "dms" | "" = ""> = {
   meta: {
     status: 200;
   };
   data: {
     comment: V3MetadataComment;
     media: {
-      delivery: T extends "delivery"
-        ? V3MetadataDeliveryMedia
-        : V3MetadataDeliveryMedia | null;
-      domand: T extends "domand"
-        ? V3MetadataDomandMedia
-        : V3MetadataDomandMedia | null;
+      delivery: T extends "dmc"
+        ? V3MetadataDMCMedia
+        : V3MetadataDMCMedia | null;
+      domand: T extends "dms" ? V3MetadataDMSMedia : V3MetadataDMSMedia | null;
     };
     video: {
       id: string;
@@ -44,6 +42,19 @@ export type TWatchV3Metadata<T extends "delivery" | "domand" | "" = ""> = {
       commentableUserTypeForPayment: string;
       "9d091f87": boolean;
     };
+    viewer: V3MetadataViewerItem | null;
+  };
+};
+
+export type V3MetadataViewerItem = {
+  id: number;
+  nickname: string;
+  isPremium: boolean;
+  allowSensitiveContents: boolean;
+  existence: {
+    age: number;
+    prefecture: string;
+    sex: string;
   };
 };
 
@@ -70,7 +81,7 @@ export type V3MetadataVideoItem = {
   };
 };
 
-export type V3MetadataDeliveryMedia = {
+export type V3MetadataDMCMedia = {
   recipeId: string;
   encryption: null | {
     encryptedKey: string;
@@ -106,13 +117,13 @@ export type V3MetadataDeliveryMedia = {
   trackingId: string;
 };
 
-export type V3MetadataDomandMedia = {
-  videos: V3MetadataDomandVideoItem[];
-  audios: V3MetadataDomandAudioItem[];
+export type V3MetadataDMSMedia = {
+  videos: V3MetadataDMSVideoItem[];
+  audios: V3MetadataDMSAudioItem[];
   accessRightKey: string;
 };
 
-export type V3MetadataDomandVideoItem = {
+export type V3MetadataDMSVideoItem = {
   id: string;
   isAvailable: boolean;
   label: string;
@@ -123,7 +134,7 @@ export type V3MetadataDomandVideoItem = {
   recommendedHighestAudioQualityLevel: number;
 };
 
-export type V3MetadataDomandAudioItem = {
+export type V3MetadataDMSAudioItem = {
   id: string;
   isAvailable: boolean;
   bitRate: number;
@@ -412,9 +423,19 @@ export type TCommentThread = {
   forkLabel: "owner" | "main" | "easy";
 };
 
-export type TCommentOption = {
+export type TCommentPickerMode = "simple" | "custom";
+
+export type TCommentOption = TCommentOptionCustom | TCommentOptionSimple;
+
+export type TCommentOptionCustom = {
+  type: "custom";
   start: string;
   end: TCommentOptionEndPoint;
+  threads: TCommentThread[];
+};
+
+export type TCommentOptionSimple = {
+  type: "simple";
   threads: TCommentThread[];
 };
 

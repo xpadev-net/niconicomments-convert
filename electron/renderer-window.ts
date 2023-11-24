@@ -34,9 +34,13 @@ const createRendererWindow = (): void => {
     rendererWindow.webContents.openDevTools();
   }
 };
+
 const sendMessageToRenderer = (value: ApiResponsesToRenderer): void => {
   if (!isOpen) return;
-  rendererWindow.webContents.send("response", { ...value, target: "renderer" });
+  rendererWindow?.webContents.send("response", {
+    ...value,
+    target: "renderer",
+  });
 };
 
 export { createRendererWindow, sendMessageToRenderer };

@@ -13,11 +13,11 @@ import type { Readable, Writable } from "stream";
 import { PassThrough } from "stream";
 import { promisify } from "util";
 
-import { sendMessageToController } from "../controllerWindow";
+import { sendMessageToController } from "../controller-window";
 import { ffmpegPath } from "../ffmpeg";
 import { encodeJson } from "../lib/json";
 
-const dbg = console.debug;
+const dbg = console.log;
 const { FFMPEG_PATH = ffmpegPath } = process.env;
 const EXIT_CODES = [0, 255];
 
@@ -35,7 +35,7 @@ function debugStream(stream: Readable | Writable, name: string): void {
 
 function getTmpPath(prefix = "", suffix = ""): string {
   const dir = tmpdir();
-  const id = Math.random().toString(32).substr(2, 10);
+  const id = Math.random().toString(32).substring(2, 12);
   return join(dir, `${prefix}${id}${suffix}`);
 }
 
@@ -98,7 +98,8 @@ export class Converter {
       typeof arg0 == "string" ? [arg0, arg1] : [undefined, arg0];
 
     if (file != null) {
-      return void this.createInputFromFile(file, opts);
+      this.createInputFromFile(file, opts);
+      return;
     }
     if (opts.buffer) {
       delete opts.buffer;
@@ -115,7 +116,8 @@ export class Converter {
       typeof arg0 == "string" ? [arg0, arg1] : [undefined, arg0];
 
     if (file != null) {
-      return void this.createOutputToFile(file, opts);
+      this.createOutputToFile(file, opts);
+      return;
     }
     if (opts.buffer) {
       delete opts.buffer;
@@ -239,7 +241,7 @@ export class Converter {
         pipes.push(pipe);
       }
 
-      const command = ["-y", "-v", "error", ...this.getSpawnArgs()];
+      const command = ["-y", "-v", "verbose", ...this.getSpawnArgs()];
       const stdio = this.getStdioArg();
       dbg(`spawn: ${FFMPEG_PATH} ${command.join(" ")}`);
       dbg(`spawn stdio: ${stdio.join(" ")}`);
@@ -267,6 +269,10 @@ export class Converter {
         await pipe.onFinish?.();
       }
     }
+  }
+
+  stop(): void {
+    this.process?.kill("SIGINT");
   }
 
   kill(): void {

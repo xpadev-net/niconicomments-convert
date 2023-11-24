@@ -1,11 +1,14 @@
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
 
-import type { ApiResponsesToBinaryDownloader } from "@/@types/response.binaryDownloader";
+import type { ApiResponsesToBinaryDownloader } from "@/@types/response.binary-downloader";
 
 import { baseUrl } from "./context";
 
 let binaryDownloaderWindow: BrowserWindow;
+
+let blockClose = false;
+
 const createBinaryDownloaderWindow = async (): Promise<void> => {
   binaryDownloaderWindow = new BrowserWindow({
     width: 400,
@@ -22,6 +25,12 @@ const createBinaryDownloaderWindow = async (): Promise<void> => {
   const appURL = `${baseUrl}?binary-downloader`;
 
   await binaryDownloaderWindow.loadURL(appURL);
+  blockClose = true;
+  binaryDownloaderWindow.on("close", (e) => {
+    if (blockClose) {
+      e.preventDefault();
+    }
+  });
 
   if (!app.isPackaged) {
     binaryDownloaderWindow.webContents.openDevTools();
@@ -35,9 +44,13 @@ const sendMessageToBinaryDownloader = (
     target: "downloader",
   });
 };
+const closeBinaryDownloaderWindow = (): void => {
+  blockClose = false;
+  binaryDownloaderWindow.close();
+};
 
 export {
-  binaryDownloaderWindow,
+  closeBinaryDownloaderWindow,
   createBinaryDownloaderWindow,
   sendMessageToBinaryDownloader,
 };

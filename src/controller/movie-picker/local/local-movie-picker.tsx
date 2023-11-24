@@ -6,7 +6,7 @@ import { useCallback, useState } from "react";
 import type { TMovieItemLocal } from "@/@types/queue";
 import type { Movie } from "@/@types/types";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
-import { typeGuard } from "@/typeGuard";
+import { typeGuard } from "@/type-guard";
 
 type Props = {
   onChange: (val: TMovieItemLocal | undefined) => void;
@@ -27,7 +27,7 @@ const LocalMoviePicker: FC<Props> = ({ onChange }) => {
         setIsLoading(false);
         if (typeGuard.controller.message(data)) {
           setMessage({
-            title: data.title || "未知のエラーが発生しました",
+            title: data.title ?? "未知のエラーが発生しました",
             content: data.message,
           });
           return;

@@ -1,7 +1,7 @@
 {
   "name": "niconicomments-convert",
   "private": false,
-  "version": "0.0.16",
+  "version": "0.0.17",
   "type": "commonjs",
   "license": "MIT",
   "main": "build/electron/electron.js",
@@ -53,6 +53,7 @@
     "electron-builder": "^24.6.4",
     "eslint": "^8.53.0",
     "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "husky": "^8.0.3",
     "lint-staged": "^14.0.1",

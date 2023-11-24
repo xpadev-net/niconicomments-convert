@@ -2,12 +2,12 @@ import type { TWatchV3Metadata, UserData } from "@/@types/niconico";
 import type { AuthType } from "@/@types/setting";
 
 import { store } from "../../store";
-import { typeGuard } from "../../typeGuard";
+import { typeGuard } from "../../type-guard";
 import { convertToEncodedCookie, getCookies } from "../cookie";
 import { encodeJson } from "../json";
 
-const userInfoCache: { [key: string]: UserData | false } = {};
-const getUserInfo = async (cookies: string): Promise<UserData | false> => {
+const userInfoCache: { [key: string]: UserData | undefined } = {};
+const getUserInfo = async (cookies: string): Promise<UserData | undefined> => {
   if (Object.prototype.hasOwnProperty.call(userInfoCache, cookies))
     return userInfoCache[cookies];
   const req = await fetch(
@@ -20,8 +20,8 @@ const getUserInfo = async (cookies: string): Promise<UserData | false> => {
   );
   const res = (await req.json()) as unknown;
   if (!typeGuard.niconico.userData(res)) {
-    userInfoCache[cookies] = false;
-    return false;
+    userInfoCache[cookies] = undefined;
+    return undefined;
   }
   userInfoCache[cookies] = res;
   return res;

@@ -10,9 +10,10 @@ import type {
   columnInfo,
   Cookies,
 } from "@/@types/cookies";
+import type { UserData } from "@/@types/niconico";
 import type { winProtect } from "@/@types/win-protect";
 
-import { typeGuard } from "../../typeGuard";
+import { typeGuard } from "../../type-guard";
 import { convertToEncodedCookie } from "../cookie";
 import { fetchAll, openClonedDB } from "../db";
 import { getUserInfo } from "../niconico";
@@ -122,7 +123,7 @@ const getChromiumKeyName = (browser: ChromiumBrowser): string => {
 
 const getAvailableChromiumProfiles = async (
   browser: ChromiumBrowser,
-): Promise<ChromiumProfile[]> => {
+): Promise<{ profile: ChromiumProfile; user: UserData }[]> => {
   try {
     const root = getChromiumRootDir(browser);
     const localStatePath = path.join(root, "Local State");
@@ -131,10 +132,11 @@ const getAvailableChromiumProfiles = async (
       fs.readFileSync(localStatePath, "utf-8"),
     ) as unknown;
     if (!typeGuard.chromium.profiles(metadata)) return [];
-    const profiles: ChromiumProfile[] = [];
+    const profiles: { profile: ChromiumProfile; user: UserData }[] = [];
     const addProfile = async (profile: ChromiumProfile): Promise<void> => {
-      if (await isLoggedIn(profile)) {
-        profiles.push(profile);
+      const user = await getUser(profile);
+      if (user) {
+        profiles.push({ profile, user });
       }
     };
     for (const key of Object.keys(metadata.profile.info_cache)) {
@@ -164,16 +166,15 @@ const getAvailableChromiumProfiles = async (
   }
 };
 
-const isLoggedIn = async (profile: ChromiumProfile): Promise<boolean> => {
+const getUser = async (
+  profile: ChromiumProfile,
+): Promise<UserData | undefined> => {
   try {
-    if (process.platform === "darwin") return true;
     const cookies = await getChromiumCookies(profile);
-    if (!(cookies["user_session"] && cookies["user_session_secure"]))
-      return false;
-    const user = await getUserInfo(convertToEncodedCookie(cookies));
-    return !!user;
+    if (!(cookies["user_session"] && cookies["user_session_secure"])) return;
+    return await getUserInfo(convertToEncodedCookie(cookies));
   } catch (_) {
-    return false;
+    return;
   }
 };
 
@@ -290,7 +291,7 @@ const getMacDecryptor = async (
     keyName,
     "-s",
     `${keyName} Safe Storage`,
-  ]);
+  ]).promise;
   if (keyResult.code) throw new Error("failed to get chromium key");
   const key = await pbkdf2(keyResult.stdout.trim());
   return (value: Buffer) => {

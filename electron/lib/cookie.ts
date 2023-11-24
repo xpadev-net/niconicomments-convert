@@ -5,8 +5,9 @@ import type {
   FirefoxProfile,
   ParsedCookie,
 } from "@/@types/cookies";
+import type { UserData } from "@/@types/niconico";
 
-import { typeGuard } from "../typeGuard";
+import { typeGuard } from "../type-guard";
 import {
   getAvailableChromiumProfiles,
   getChromiumCookies,
@@ -17,7 +18,7 @@ import {
 } from "./cookies/firefox";
 
 const getAvailableProfiles = async (): Promise<
-  (FirefoxProfile | ChromiumProfile)[]
+  { profile: FirefoxProfile | ChromiumProfile; user: UserData }[]
 > => {
   return [
     ...(await getAvailableFirefoxProfiles()),
@@ -45,18 +46,6 @@ const convertToEncodedCookie = (cookie: Cookies): string => {
     cookieString += `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
   }
   return cookieString;
-};
-const convertToFfmpegCookie = (cookie: Cookies): string[] => {
-  const cookies = [];
-  for (const key in cookie) {
-    const value = cookie[key];
-    cookies.push(
-      `${encodeURIComponent(key)}=${encodeURIComponent(
-        value,
-      )}; domain=.nicovideo.jp; path=/`,
-    );
-  }
-  return cookies;
 };
 
 const parseCookie = (...cookies: string[]): ParsedCookie[] => {
@@ -110,7 +99,6 @@ const formatCookies = (
 
 export {
   convertToEncodedCookie,
-  convertToFfmpegCookie,
   filterCookies,
   formatCookies,
   getAvailableProfiles,

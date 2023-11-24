@@ -1,0 +1,31 @@
+.queue {
+  padding: 10px;
+  .id {
+    font-size: 12px;
+  }
+  .path {
+    display: grid;
+    grid-template-columns: fit-content(100%) 1fr;
+  }
+  .row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+  .progressWrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 10px;
+    flex: 1;
+    .progress {
+      flex: 1;
+    }
+    .text {
+      margin-left: 10px;
+      width: 50px;
+      text-align: right;
+    }
+  }
+}
