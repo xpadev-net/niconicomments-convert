@@ -118,23 +118,38 @@ const downloadDMC = async (
     onData,
     onData,
   );
-  stop = _spawn.stop;
-  const result = await _spawn.promise;
-  clearInterval(heartbeatInterval);
-  const delReq = await fetch(
-    `https://api.dmc.nico/api/sessions/${lastSession.session.id}?_format=json&_method=DELETE`,
-    {
-      method: "POST",
-      headers: {
-        Origin: "https://www.nicovideo.jp",
-        Referer: "https://www.nicovideo.jp",
-        "Content-Type": "text/plain;charset=UTF-8",
+  let cancelled = false;
+  stop = () => {
+    cancelled = true;
+    _spawn.stop();
+  };
+  try {
+    const result = await _spawn.promise;
+    clearInterval(heartbeatInterval);
+    const delReq = await fetch(
+      `https://api.dmc.nico/api/sessions/${lastSession.session.id}?_format=json&_method=DELETE`,
+      {
+        method: "POST",
+        headers: {
+          Origin: "https://www.nicovideo.jp",
+          Referer: "https://www.nicovideo.jp",
+          "Content-Type": "text/plain;charset=UTF-8",
+        },
+        body: JSON.stringify(lastSession),
       },
-      body: JSON.stringify(lastSession),
-    },
-  );
-  await delReq.json();
-  return result;
+    );
+    await delReq.json();
+    return result;
+  } catch (e) {
+    if (!cancelled) {
+      sendMessageToController({
+        title: "動画のダウンロードに失敗しました",
+        message:
+          "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください\nlib/niconico/dms.ts / downloadDMS / failed to download",
+        type: "message",
+      });
+    }
+  }
 };
 
 const createSessionCreateRequestBody = (
