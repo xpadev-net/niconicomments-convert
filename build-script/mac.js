@@ -9,7 +9,7 @@ builder.build({
                 'target': 'dmg',
                 'arch': [
                     'x64',
-                    'arm64'
+                    'universal'
                 ]
             }
         }
