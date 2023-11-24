@@ -14,6 +14,8 @@ import type { V1Raw } from "@/@types/types";
 import { sendMessageToController } from "../../controllerWindow";
 import { sleep } from "../../utils";
 
+let interrupt = false;
+
 const downloadComment = async (
   queue: CommentQueue,
   updateProgress: (total: number, progress: number) => void,
@@ -106,6 +108,7 @@ const downloadV3V1CustomComment = async (
   metadata: V3MetadataComment,
   updateProgress: (total: number, progress: number) => void,
 ): Promise<FormattedComment[]> => {
+  interrupt = false;
   const userList: string[] = [];
   const comments: FormattedComment[] = [];
   const start = Math.floor(new Date(option.start).getTime() / 1000);
@@ -136,6 +139,7 @@ const downloadV3V1CustomComment = async (
         when > Math.floor(new Date(option.end.date).getTime() / 1000)) ||
       (option.end.type === "count" && threadComments.length < option.end.count)
     ) {
+      if (interrupt) return comments;
       await sleep(1000);
       const req = await fetch(`${metadata.nvComment.server}/v1/threads`, {
         method: "POST",
@@ -215,6 +219,10 @@ const convertV3ToFormatted = (
   return comments;
 };
 
+const interruptCommentDownload = (): void => {
+  interrupt = true;
+};
+
 /**
  * v1 apiのpostedAtはISO 8601のtimestampなのでDate関数を使ってunix timestampに変換
  * @param date {string} ISO 8601 timestamp
@@ -223,4 +231,4 @@ const convertV3ToFormatted = (
 const date2time = (date: string): number =>
   Math.floor(new Date(date).getTime() / 1000);
 
-export { downloadComment };
+export { downloadComment, interruptCommentDownload };
