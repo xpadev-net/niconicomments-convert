@@ -5,6 +5,7 @@ import type { ApiResponsesToRenderer } from "@/@types/response.renderer";
 
 import { baseUrl } from "./context";
 import { processingQueue } from "./queue";
+import { store } from "./store";
 
 let rendererWindow: BrowserWindow;
 let isOpen = false;
@@ -18,6 +19,7 @@ const createRendererWindow = (): void => {
       contextIsolation: true,
       backgroundThrottling: false,
     },
+    show: !!(store.get("showRendererWindow") ?? true),
   });
   isOpen = true;
   rendererWindow.removeMenu();
