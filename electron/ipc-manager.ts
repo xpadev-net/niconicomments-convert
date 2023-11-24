@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 
-import { sendMessageToController } from "./controllerWindow";
+import { sendMessageToController } from "./controller-window";
 import { selectComment, selectFile, selectMovie, selectOutput } from "./dialog";
 import { getAvailableProfiles } from "./lib/cookie";
 import { encodeJson } from "./lib/json";
@@ -13,7 +13,7 @@ import {
   processOnLoad,
 } from "./queue";
 import { store } from "./store";
-import { typeGuard } from "./typeGuard";
+import { typeGuard } from "./type-guard";
 
 const registerListener = (): void => {
   ipcMain.handle("request", async (_, args) => {

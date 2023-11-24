@@ -2,10 +2,10 @@ import type { FC } from "react";
 import { useEffect, useState } from "react";
 
 import type { Queue } from "@/@types/queue";
-import { CommentItem } from "@/controller/queue/CommentItem";
-import { ConvertItem } from "@/controller/queue/ConvertItem";
-import { MovieItem } from "@/controller/queue/MovieItem";
-import { typeGuard } from "@/typeGuard";
+import { CommentItem } from "@/controller/queue/comment-item";
+import { ConvertItem } from "@/controller/queue/convert-item";
+import { MovieItem } from "@/controller/queue/movie-item";
+import { typeGuard } from "@/type-guard";
 
 import Styles from "./queue.module.scss";
 

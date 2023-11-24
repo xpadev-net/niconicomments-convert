@@ -2,7 +2,7 @@ import NiconiComments from "@xpadev-net/niconicomments";
 
 import type { ApiResponseLoad } from "@/@types/response.renderer";
 import { transformComments } from "@/renderer/comment-utils";
-import { typeGuard } from "@/typeGuard";
+import { typeGuard } from "@/type-guard";
 import { encodeJson } from "@/util/json";
 import { sleep } from "@/util/sleep";
 

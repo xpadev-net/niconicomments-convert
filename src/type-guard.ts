@@ -1,5 +1,5 @@
 import type { TWatchV3Metadata } from "@/@types/niconico";
-import type { ApiResponseDownloadProgress } from "@/@types/response.binaryDownloader";
+import type { ApiResponseDownloadProgress } from "@/@types/response.binary-downloader";
 import type {
   ApiResponseEnd,
   ApiResponseMessage,

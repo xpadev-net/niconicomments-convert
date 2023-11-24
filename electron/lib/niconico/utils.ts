@@ -2,7 +2,7 @@ import type { TWatchV3Metadata, UserData } from "@/@types/niconico";
 import type { AuthType } from "@/@types/setting";
 
 import { store } from "../../store";
-import { typeGuard } from "../../typeGuard";
+import { typeGuard } from "../../type-guard";
 import { convertToEncodedCookie, getCookies } from "../cookie";
 import { encodeJson } from "../json";
 

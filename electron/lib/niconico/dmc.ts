@@ -2,9 +2,9 @@ import type { CreateSessionRequest, TWatchV3Metadata } from "@/@types/niconico";
 import type { TDMCFormat } from "@/@types/queue";
 import type { SpawnResult } from "@/@types/spawn";
 
-import { sendMessageToController } from "../../controllerWindow";
+import { sendMessageToController } from "../../controller-window";
 import { ffmpegPath } from "../../ffmpeg";
-import { typeGuard } from "../../typeGuard";
+import { typeGuard } from "../../type-guard";
 import { time2num } from "../../utils/time";
 import { spawn } from "../spawn";
 

@@ -2,11 +2,11 @@ import { LinearProgress } from "@mui/material";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 
-import type { ApiResponseDownloadProgress } from "@/@types/response.binaryDownloader";
+import type { ApiResponseDownloadProgress } from "@/@types/response.binary-downloader";
 import type { ApiResponseType } from "@/@types/types";
 
 import Styles from "./downloader.module.scss";
-import { typeGuard } from "./typeGuard";
+import { typeGuard } from "./type-guard";
 
 const Downloader: FC = () => {
   const [progress, setProgress] = useState<

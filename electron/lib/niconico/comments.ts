@@ -11,7 +11,7 @@ import type {
 import type { CommentQueue } from "@/@types/queue";
 import type { V1Raw } from "@/@types/types";
 
-import { sendMessageToController } from "../../controllerWindow";
+import { sendMessageToController } from "../../controller-window";
 import { sleep } from "../../utils";
 
 let interrupt = false;

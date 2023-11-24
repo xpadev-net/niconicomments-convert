@@ -6,7 +6,7 @@ import { useCallback, useState } from "react";
 import type { TCommentItemLocal } from "@/@types/queue";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import Styles from "@/controller/comment-picker/remote/remote-comment-picker.module.scss";
-import { typeGuard } from "@/typeGuard";
+import { typeGuard } from "@/type-guard";
 
 type Props = {
   onChange: (val: TCommentItemLocal | undefined) => void;

@@ -22,7 +22,7 @@ import type { ApiResponseType } from "@/@types/types";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import { CommentPicker } from "@/controller/comment-picker";
 import { MoviePicker } from "@/controller/movie-picker";
-import { typeGuard } from "@/typeGuard";
+import { typeGuard } from "@/type-guard";
 import { str2time, time2str } from "@/util/time";
 import { uuid } from "@/util/uuid";
 

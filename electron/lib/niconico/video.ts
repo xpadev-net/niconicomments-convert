@@ -1,7 +1,7 @@
 import type { TRemoteMovieItemFormat } from "@/@types/queue";
 import type { SpawnResult } from "@/@types/spawn";
 
-import { sendMessageToController } from "../../controllerWindow";
+import { sendMessageToController } from "../../controller-window";
 import { downloadDMC } from "./dmc";
 import { downloadDMS } from "./dms";
 import { getMetadata } from "./utils";

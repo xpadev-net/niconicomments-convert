@@ -15,7 +15,7 @@ import { useLayoutEffect, useState } from "react";
 import type { BrowserProfile } from "@/@types/cookies";
 import type { UserData } from "@/@types/niconico";
 import type { AuthByCookieFile, AuthType } from "@/@types/setting";
-import { SelectField } from "@/components/SelectField";
+import { SelectField } from "@/components/select-field";
 import { isLoadingAtom } from "@/controller/atoms";
 
 import Styles from "./auth.module.scss";

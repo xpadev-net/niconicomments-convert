@@ -5,7 +5,7 @@ import type { UUID } from "@/@types/brand";
 import type { ConvertQueue, Queue, QueueLists } from "@/@types/queue";
 import type { ApiResponseLoad } from "@/@types/response.renderer";
 
-import { sendMessageToController } from "./controllerWindow";
+import { sendMessageToController } from "./controller-window";
 import { inputStream, interruptConverter, startConverter } from "./converter";
 import { encodeJson } from "./lib/json";
 import {
@@ -15,7 +15,7 @@ import {
 } from "./lib/niconico";
 import { interruptDMC } from "./lib/niconico/dmc";
 import { interruptDMS } from "./lib/niconico/dms";
-import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
+import { createRendererWindow, sendMessageToRenderer } from "./renderer-window";
 
 const queueList: Queue[] = [];
 const queueLists: QueueLists = {

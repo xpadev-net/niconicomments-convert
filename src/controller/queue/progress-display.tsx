@@ -1,7 +1,7 @@
 import { LinearProgress } from "@mui/material";
 import type { FC } from "react";
 
-import Styles from "@/controller/queue/ConvertItem.module.scss";
+import Styles from "@/controller/queue/convert-item.module.scss";
 
 type Props = {
   progress: number | undefined;

@@ -10,7 +10,7 @@ import type {
   TWatchV3Metadata,
 } from "@/@types/niconico";
 import type { TCommentItemRemote } from "@/@types/queue";
-import { CommentOption } from "@/components/CommentOption";
+import { CommentOption } from "@/components/comment-option";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import { getNicoId, isNicovideoUrl } from "@/util/niconico";
 import { formatDate } from "@/util/time";
