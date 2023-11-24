@@ -8,10 +8,10 @@ builder.build({
             'target': {
                 'target': 'dmg',
                 'arch': [
-                    'x64',
-                    'arm64'
+                    'x64'
                 ]
-            }
+            },
+            singleArchFiles: "*"
         }
     },
     publish: "never"
