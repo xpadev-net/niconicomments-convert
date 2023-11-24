@@ -8,7 +8,11 @@ import type { ApiResponseLoad } from "@/@types/response.renderer";
 import { sendMessageToController } from "./controllerWindow";
 import { inputStream, interruptConverter, startConverter } from "./converter";
 import { encodeJson } from "./lib/json";
-import { download, downloadComment } from "./lib/niconico";
+import {
+  download,
+  downloadComment,
+  interruptCommentDownload,
+} from "./lib/niconico";
 import { interruptDMC } from "./lib/niconico/dmc";
 import { interruptDMS } from "./lib/niconico/dms";
 import { createRendererWindow, sendMessageToRenderer } from "./rendererWindow";
@@ -216,6 +220,8 @@ const processOnInterrupt = (queueId: UUID): void => {
   } else if (queue.type === "movie") {
     if (queue.format.type === "dmc") interruptDMC();
     if (queue.format.type === "dms") interruptDMS();
+  } else if (queue.type === "comment") {
+    interruptCommentDownload();
   }
 };
 
