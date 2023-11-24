@@ -11,6 +11,7 @@ import {
   markAsCompleted,
   processOnInterrupt,
   processOnLoad,
+  sendProgress,
 } from "./queue";
 import { store } from "./store";
 import { typeGuard } from "./type-guard";
@@ -45,6 +46,9 @@ const registerListener = (): void => {
         return await getAvailableProfiles();
       } else if (typeGuard.controller.getNiconicoMovieMetadata(value)) {
         return await getMetadata(value.nicoId);
+      } else if (typeGuard.controller.getQueue(value)) {
+        sendProgress();
+        return;
       } else if (typeGuard.renderer.load(value)) {
         return processOnLoad();
       } else if (typeGuard.renderer.message(value)) {
