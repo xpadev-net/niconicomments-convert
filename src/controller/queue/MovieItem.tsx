@@ -1,8 +1,11 @@
+import { StopOutlined } from "@mui/icons-material";
+import { IconButton } from "@mui/material";
 import type { FC } from "react";
 import { useMemo } from "react";
 
 import type { MovieQueue, TRemoteMovieItemFormat } from "@/@types/queue";
-import { ProgressDisplay } from "@/controller/queue/ProgressDisplay";
+import { GridDisplay } from "@/controller/display";
+import { StatusDisplay } from "@/controller/queue/StatusDisplay";
 
 import Styles from "./ConvertItem.module.scss";
 
@@ -12,28 +15,15 @@ type Props = {
 };
 const MovieItem: FC<Props> = ({ queue, className }) => {
   return useMemo(() => {
-    const outputName = queue.path.split(/[/\\]/g).reverse()[0];
-    const url = queue.url.split(/[/\\]/g).reverse()[0];
-    if (queue.status !== "processing") {
-      return (
-        <div className={`${Styles.queue} ${className}`}>
-          <p>id: {url}</p>
-          <FormatDisplay format={queue.format} />
-          <p>output: {outputName}</p>
-          <p>status: {queue.status}</p>
-        </div>
-      );
-    }
-
     return (
       <div className={`${Styles.queue} ${className}`}>
-        <p>id: {url}</p>
-        <FormatDisplay format={queue.format} />
-        <p>path: {outputName}</p>
-        <p>status: processing</p>
-        <div className={Styles.progressWrapper}>
-          <ProgressDisplay progress={queue.progress} />
+        <p className={Styles.id}>#{queue.id}</p>
+        <div className={Styles.path}>
+          <GridDisplay label={"入力"} value={queue.url} />
+          <GridDisplay label={"出力"} value={queue.path} />
+          <FormatDisplay format={queue.format} />
         </div>
+        <StatusDisplay queue={queue} />
       </div>
     );
   }, [queue]);
@@ -48,14 +38,14 @@ const FormatDisplay: FC<FormatDisplayProps> = ({ format }) => {
     <>
       {format.type === "dmc" && (
         <>
-          <p>video: {format.format.video.slice(8)}</p>
-          <p>audio: {format.format.audio.slice(8)}</p>
+          <GridDisplay label={"映像"} value={format.format.video.slice(8)} />
+          <GridDisplay label={"音声"} value={format.format.audio.slice(8)} />
         </>
       )}
       {format.type === "dms" && (
         <>
-          <p>video: {format.format[0]}</p>
-          <p>audio: {format.format[1]}</p>
+          <GridDisplay label={"映像"} value={format.format[0]} />
+          <GridDisplay label={"音声"} value={format.format[1]} />
         </>
       )}
     </>

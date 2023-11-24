@@ -2,7 +2,8 @@ import type { FC } from "react";
 import { useMemo } from "react";
 
 import type { CommentQueue } from "@/@types/queue";
-import { ProgressDisplay } from "@/controller/queue/ProgressDisplay";
+import { GridDisplay } from "@/controller/display";
+import { StatusDisplay } from "@/controller/queue/StatusDisplay";
 
 import Styles from "./ConvertItem.module.scss";
 
@@ -12,26 +13,14 @@ type Props = {
 };
 const CommentItem: FC<Props> = ({ queue, className }) => {
   return useMemo(() => {
-    const outputName = queue.path.split(/[/\\]/g).reverse()[0];
-    const url = queue.url;
-    if (queue.status !== "processing") {
-      return (
-        <div className={`${Styles.queue} ${className}`}>
-          <p>id: {url}</p>
-          <p>output: {outputName}</p>
-          <p>status: {queue.status}</p>
-        </div>
-      );
-    }
-
     return (
       <div className={`${Styles.queue} ${className}`}>
-        <p>id: {url}</p>
-        <p>path: {outputName}</p>
-        <p>status: processing</p>
-        <div className={Styles.progressWrapper}>
-          <ProgressDisplay progress={queue.progress} />
+        <p className={Styles.id}>#{queue.id}</p>
+        <div className={Styles.path}>
+          <GridDisplay label={"入力"} value={queue.url} />
+          <GridDisplay label={"出力"} value={queue.path} />
         </div>
+        <StatusDisplay queue={queue} />
       </div>
     );
   }, [queue]);

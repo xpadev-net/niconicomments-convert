@@ -1,1 +1,1 @@
-export * from "./PathDisplay";
+export * from "./grid-display";
