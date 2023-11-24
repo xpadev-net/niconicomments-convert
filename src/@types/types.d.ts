@@ -7,7 +7,7 @@ import type {
 import type {
   ApiResponsesToBinaryDownloader,
   ApiResponseToBinaryDownloader,
-} from "@/@types/response.binaryDownloader";
+} from "@/@types/response.binary-downloader";
 import type {
   ApiResponsesToRenderer,
   ApiResponseToRenderer,

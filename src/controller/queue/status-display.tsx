@@ -3,8 +3,8 @@ import { IconButton } from "@mui/material";
 import type { FC } from "react";
 
 import type { Queue, Status } from "@/@types/queue";
-import Styles from "@/controller/queue/ConvertItem.module.scss";
-import { ProgressDisplay } from "@/controller/queue/ProgressDisplay";
+import Styles from "@/controller/queue/convert-item.module.scss";
+import { ProgressDisplay } from "@/controller/queue/progress-display";
 
 const labels: { [key in Status]: string } = {
   queued: "他のキューの終了を待っています",

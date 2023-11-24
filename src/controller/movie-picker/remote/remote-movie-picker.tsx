@@ -14,7 +14,7 @@ import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import Styles from "@/controller/movie/movie.module.scss";
 import { DMCMoviePicker } from "@/controller/movie-picker/remote/dmc";
 import { DMSMoviePicker } from "@/controller/movie-picker/remote/dms";
-import { typeGuard } from "@/typeGuard";
+import { typeGuard } from "@/type-guard";
 import { getNicoId, isNicovideoUrl } from "@/util/niconico";
 import { uuid } from "@/util/uuid";
 

@@ -7,7 +7,7 @@ import type {
 } from "@/@types/cookies";
 import type { UserData } from "@/@types/niconico";
 
-import { typeGuard } from "../typeGuard";
+import { typeGuard } from "../type-guard";
 import {
   getAvailableChromiumProfiles,
   getChromiumCookies,

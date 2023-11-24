@@ -9,7 +9,7 @@ import type {
 } from "@/@types/cookies";
 import type { UserData } from "@/@types/niconico";
 
-import { typeGuard } from "../../typeGuard";
+import { typeGuard } from "../../type-guard";
 import { convertToEncodedCookie } from "../cookie";
 import { fetchAll, openClonedDB } from "../db";
 import { getUserInfo } from "../niconico";

@@ -56,6 +56,10 @@ export type ApiRequestInterruptQueue = {
   queueId: UUID;
 };
 
+export type ApiRequestGetQueue = {
+  type: "getQueue";
+};
+
 export type ApiRequestsFromController =
   | ApiRequestAppendQueue
   | ApiRequestSelectComment
@@ -68,6 +72,7 @@ export type ApiRequestsFromController =
   | ApiRequestDownloadMovie
   | ApiRequestGetAvailableProfiles
   | ApiRequestGetNiconicoMovieMetadata
-  | ApiRequestInterruptQueue;
+  | ApiRequestInterruptQueue
+  | ApiRequestGetQueue;
 
 export {};

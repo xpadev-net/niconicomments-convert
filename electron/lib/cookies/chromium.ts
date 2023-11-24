@@ -13,7 +13,7 @@ import type {
 import type { UserData } from "@/@types/niconico";
 import type { winProtect } from "@/@types/win-protect";
 
-import { typeGuard } from "../../typeGuard";
+import { typeGuard } from "../../type-guard";
 import { convertToEncodedCookie } from "../cookie";
 import { fetchAll, openClonedDB } from "../db";
 import { getUserInfo } from "../niconico";

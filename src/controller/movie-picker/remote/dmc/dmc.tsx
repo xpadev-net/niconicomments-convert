@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import type { TWatchV3Metadata } from "@/@types/niconico";
 import type { TDMCFormat } from "@/@types/queue";
-import { SelectField } from "@/components/SelectField";
+import { SelectField } from "@/components/select-field";
 import Styles from "@/controller/movie/movie.module.scss";
 import { getDMCBestSegment } from "@/util/niconico";
 

@@ -10,7 +10,7 @@ import {
   closeBinaryDownloaderWindow,
   createBinaryDownloaderWindow,
   sendMessageToBinaryDownloader,
-} from "./binaryDownloaderWindow";
+} from "./binary-downloader-window";
 import { spawn } from "./lib/spawn";
 
 type lib = "ffmpeg" | "ffprobe";

@@ -16,6 +16,7 @@ import type {
   ApiRequestFromController,
   ApiRequestGetAvailableProfiles,
   ApiRequestGetNiconicoMovieMetadata,
+  ApiRequestGetQueue,
   ApiRequestGetSetting,
   ApiRequestInterruptQueue,
   ApiRequestSelectComment,
@@ -86,6 +87,10 @@ const typeGuard = {
       typeof i === "object" &&
       (i as ApiRequestFromController).host === "controller" &&
       (i as ApiRequestInterruptQueue).type === "interruptQueue",
+    getQueue: (i: unknown): i is ApiRequestGetQueue =>
+      typeof i === "object" &&
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestGetQueue).type === "getQueue",
   },
   renderer: {
     buffer: (i: unknown): i is ApiRequestBuffer =>

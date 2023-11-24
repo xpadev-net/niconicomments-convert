@@ -5,9 +5,9 @@ import { useMemo } from "react";
 
 import type { MovieQueue, TRemoteMovieItemFormat } from "@/@types/queue";
 import { GridDisplay } from "@/controller/display";
-import { StatusDisplay } from "@/controller/queue/StatusDisplay";
+import { StatusDisplay } from "@/controller/queue/status-display";
 
-import Styles from "./ConvertItem.module.scss";
+import Styles from "./convert-item.module.scss";
 
 type Props = {
   queue: MovieQueue;

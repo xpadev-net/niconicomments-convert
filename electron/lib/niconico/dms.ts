@@ -10,10 +10,10 @@ import type { TDMSFormat } from "@/@types/queue";
 import type { AuthType } from "@/@types/setting";
 import type { SpawnResult } from "@/@types/spawn";
 
-import { sendMessageToController } from "../../controllerWindow";
+import { sendMessageToController } from "../../controller-window";
 import { ffmpegPath } from "../../ffmpeg";
 import { store } from "../../store";
-import { typeGuard } from "../../typeGuard";
+import { typeGuard } from "../../type-guard";
 import {
   convertToEncodedCookie,
   filterCookies,

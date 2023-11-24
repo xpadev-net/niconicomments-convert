@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 
-import { sendMessageToController } from "./controllerWindow";
+import { sendMessageToController } from "./controller-window";
 import { selectComment, selectFile, selectMovie, selectOutput } from "./dialog";
 import { getAvailableProfiles } from "./lib/cookie";
 import { encodeJson } from "./lib/json";
@@ -11,9 +11,10 @@ import {
   markAsCompleted,
   processOnInterrupt,
   processOnLoad,
+  sendProgress,
 } from "./queue";
 import { store } from "./store";
-import { typeGuard } from "./typeGuard";
+import { typeGuard } from "./type-guard";
 
 const registerListener = (): void => {
   ipcMain.handle("request", async (_, args) => {
@@ -45,6 +46,9 @@ const registerListener = (): void => {
         return await getAvailableProfiles();
       } else if (typeGuard.controller.getNiconicoMovieMetadata(value)) {
         return await getMetadata(value.nicoId);
+      } else if (typeGuard.controller.getQueue(value)) {
+        sendProgress();
+        return;
       } else if (typeGuard.renderer.load(value)) {
         return processOnLoad();
       } else if (typeGuard.renderer.message(value)) {

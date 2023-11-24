@@ -17,7 +17,7 @@ import type {
 } from "@/@types/niconico";
 import { formatDate } from "@/util/time";
 
-import Styles from "./CommentOption.module.scss";
+import Styles from "./comment-option.module.scss";
 
 const forkLabel: { [key: string]: string } = {
   owner: "投稿者コメント",
