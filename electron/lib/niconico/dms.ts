@@ -161,6 +161,7 @@ lib/niconico/dms.ts / downloadDMS / invalid accessRights`,
 
   let tmpDir: string = "";
   let result: SpawnResult | undefined;
+  let cancelled = false;
   try {
     tmpDir = fs.mkdtempSync(
       path.join(path.dirname(targetPath), path.basename(targetPath)),
@@ -224,15 +225,20 @@ lib/niconico/dms.ts / downloadDMS / invalid accessRights`,
       (data) => console.log(data),
       (data) => console.log(data),
     );
-    stop = _spawn.stop;
+    stop = () => {
+      cancelled = true;
+      _spawn.stop();
+    };
     result = await _spawn.promise;
   } catch {
-    sendMessageToController({
-      title: "動画のダウンロードに失敗しました",
-      message:
-        "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください\nlib/niconico/dms.ts / downloadDMS / failed to download",
-      type: "message",
-    });
+    if (!cancelled) {
+      sendMessageToController({
+        title: "動画のダウンロードに失敗しました",
+        message:
+          "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください\nlib/niconico/dms.ts / downloadDMS / failed to download",
+        type: "message",
+      });
+    }
   } finally {
     try {
       if (tmpDir) {

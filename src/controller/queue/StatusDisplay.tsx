@@ -1,3 +1,5 @@
+import { StopOutlined } from "@mui/icons-material";
+import { IconButton } from "@mui/material";
 import type { FC } from "react";
 
 import type { Queue, Status } from "@/@types/queue";
@@ -17,16 +19,37 @@ type Props = {
 };
 
 const StatusDisplay: FC<Props> = ({ queue }) => {
-  if (queue.type === "convert" && queue.status === "processing") {
-    const targetFrameRate = queue.option.fps || 30;
-    const totalFrames =
-      Math.ceil(
-        (queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0),
-      ) * targetFrameRate;
-    const progress = queue.progress ? queue.progress / totalFrames : undefined;
+  const progress = (() => {
+    if (queue.status !== "processing") return undefined;
+    if (queue.type === "convert") {
+      const targetFrameRate = queue.option.fps || 30;
+      const totalFrames =
+        Math.ceil(
+          (queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0),
+        ) * targetFrameRate;
+      return queue.progress ? queue.progress / totalFrames : undefined;
+    }
+    return queue.progress;
+  })();
+  if (queue.status === "processing") {
     return (
-      <div className={Styles.progressWrapper}>
-        <ProgressDisplay progress={progress} />
+      <div className={Styles.row}>
+        <div className={Styles.progressWrapper}>
+          <ProgressDisplay progress={progress} />
+        </div>
+        {queue.status === "processing" && (
+          <IconButton
+            onClick={() => {
+              void window.api.request({
+                host: "controller",
+                type: "interruptQueue",
+                queueId: queue.id,
+              });
+            }}
+          >
+            <StopOutlined />
+          </IconButton>
+        )}
       </div>
     );
   }
