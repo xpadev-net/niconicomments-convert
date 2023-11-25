@@ -58,6 +58,7 @@ const DMSMoviePicker: FC<Props> = ({ metadata, onChange }) => {
           onChange={(e) => setSelectedAudio(e.target.value)}
         >
           {metadata.data.media.domand.audios.map((val) => {
+            if (!val.isAvailable) return <></>;
             return (
               <MenuItem key={val.id} value={val.id}>
                 {val.id}
