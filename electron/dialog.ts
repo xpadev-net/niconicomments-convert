@@ -1,5 +1,6 @@
 import type { OpenDialogReturnValue, SaveDialogOptions } from "electron";
 import { dialog } from "electron";
+import * as path from "path";
 
 import type { FfprobeOutput } from "@/@types/ffmpeg";
 import type {
@@ -13,6 +14,7 @@ import { sendMessageToController } from "./controller-window";
 import { ffprobePath } from "./ffmpeg";
 import { encodeJson } from "./lib/json";
 import { spawn } from "./lib/spawn";
+import { store } from "./store";
 import { identifyCommentFormat } from "./utils/niconicomments";
 
 const selectFile = async (
@@ -114,20 +116,26 @@ const selectMovie = async (): Promise<
 const selectComment = async (): Promise<
   ApiResponseSelectComment | undefined
 > => {
-  const path = await dialog.showOpenDialog({
-    properties: ["openFile"],
-    filters: [
-      { name: "formatted/legacy/v1/owner JSON", extensions: ["json"] },
-      { name: "niconicome XML", extensions: ["xml"] },
-      { name: "legacyOwner TXT", extensions: ["txt"] },
-      {
-        name: "All Files",
-        extensions: ["*"],
-      },
-    ],
+  const lastExt = `${store.get("commentFileExt")}`;
+  const formats = [
+    { name: "formatted/legacy/v1/owner JSON", extensions: ["json"] },
+    { name: "niconicome XML", extensions: ["xml"] },
+    { name: "legacyOwner TXT", extensions: ["txt"] },
+    {
+      name: "All Files",
+      extensions: ["*"],
+    },
+  ].sort((item) => {
+    return item.extensions.includes(lastExt.slice(1)) ? -1 : 0;
   });
-  if (path.canceled) return;
-  const filePath = path.filePaths[0];
+  const pathResult = await dialog.showOpenDialog({
+    properties: ["openFile"],
+    filters: formats,
+  });
+  if (pathResult.canceled) return;
+  const filePath = pathResult.filePaths[0];
+  const ext = path.extname(filePath);
+  store.set("commentFileExt", ext);
   const format = identifyCommentFormat(filePath);
   if (!format) {
     sendMessageToController({
@@ -139,7 +147,7 @@ const selectComment = async (): Promise<
   }
   return {
     type: "selectComment",
-    path: path.filePaths[0],
+    path: pathResult.filePaths[0],
     format: format,
   };
 };
