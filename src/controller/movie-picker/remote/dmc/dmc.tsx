@@ -68,6 +68,7 @@ const DMCMoviePicker: FC<Props> = ({ metadata, onChange }) => {
           onChange={(e) => setSelectedAudio(e.target.value)}
         >
           {metadata.data.media.delivery.movie.audios.map((val) => {
+            if (!val.isAvailable) return <></>;
             return (
               <MenuItem key={val.id} value={val.id}>
                 {val.id}
