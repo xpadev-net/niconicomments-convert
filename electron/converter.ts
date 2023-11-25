@@ -18,7 +18,6 @@ const startConverter = async (queue: ConvertQueue): Promise<void> => {
   });
   converter.output(queue.output.path, {
     vcodec: "libx264",
-    format: "yuv420",
     pix_fmt: "yuv420p",
     "b:v": "0",
     crf: "30",
