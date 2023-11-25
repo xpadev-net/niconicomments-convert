@@ -17,11 +17,14 @@ const startConverter = async (queue: ConvertQueue): Promise<void> => {
     r: queue.option.fps,
   });
   converter.output(queue.output.path, {
-    vcodec: "libx264",
-    pix_fmt: "yuv420p",
+    sws_flags: "spline+accurate_rnd+full_chroma_int",
     "b:v": "0",
     crf: "30",
-    filter_complex: `[0:v]fps=fps=${queue.option.fps},pad=width=max(iw\\, ih*(16/9)):height=ow/(16/9):x=(ow-iw)/2:y=(oh-ih)/2,scale=w=1920:h=1080[3];[1:v]scale=out_color_matrix=bt709[4];[3][4]overlay=format=rgb[out_v]`,
+    filter_complex: `[0:v]fps=fps=${queue.option.fps},pad=width=max(iw\\, ih*(16/9)):height=ow/(16/9):x=(ow-iw)/2:y=(oh-ih)/2,scale=w=1920:h=1080[3];[1:v]format=yuva444p,colorspace=bt709:iall=bt601-6-525:fast=1[4];[1:v]format=rgba,alphaextract[5];[4][5]alphamerge[6];[3][6]overlay[out_v]`,
+    color_range: 1,
+    colorspace: 1,
+    color_primaries: 1,
+    color_trc: 1,
     "map:v": "[out_v]",
     "map:a": "0:a",
     r: queue.option.fps,
