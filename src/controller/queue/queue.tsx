@@ -18,6 +18,10 @@ const QueueDisplay: FC = () => {
       }
     };
     window.api.onResponse(callback);
+    void window.api.request({
+      type: "getQueue",
+      host: "controller",
+    });
     return () => window.api.remove(callback);
   }, []);
   return (
