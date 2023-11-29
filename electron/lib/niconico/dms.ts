@@ -93,9 +93,7 @@ lib/niconico/dms.ts / downloadDMS / invalid accessRights`,
   );
   const manifestRaw = await manifestReq.text();
   const manifests = Array.from(
-    manifestRaw.match(
-      /https:\/\/.+?\.nicovideo\.jp\/.+?\.m3u8(?:\?sh=[a-zA-Z0-9_-]+)?/g,
-    ) ?? [],
+    manifestRaw.match(/https:\/\/.+?\.nicovideo\.jp\/.+?\.m3u8[^"]+/g) ?? [],
   );
   const getManifestUrl = (format: string): string | undefined => {
     for (const url of manifests) {
@@ -273,16 +271,15 @@ const fetchWithCookie = (
 
 const getSegments = (manifest: string): { segments: string[]; key: string } => {
   const key = manifest.match(
-    /https:\/\/.+?\.nicovideo\.jp\/.+?\.key(?:\?sh=[a-zA-Z0-9_-]+)?/g,
+    /https:\/\/.+?\.nicovideo\.jp\/.+?\.key[^"\n]*/g,
   )?.[0];
   if (!key) {
     throw new Error("failed to get key");
   }
   return {
     segments: Array.from(
-      manifest.match(
-        /https:\/\/.+?\.nicovideo\.jp\/.+?\.cmf[av](?:\?sh=[a-zA-Z0-9_-]+)?/g,
-      ) ?? [],
+      manifest.match(/https:\/\/.+?\.nicovideo\.jp\/.+?\.cmf[av][^"\n]*/g) ??
+        [],
     ),
     key,
   };
