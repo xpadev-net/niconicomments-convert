@@ -193,6 +193,7 @@ const sendProgress = (): void => {
     data: queueList,
   });
   typeof processingQueue?.progress === "number" &&
+    processingQueue.status === "processing" &&
     sendMessageToRenderer({
       type: "reportProgress",
       converted: processingQueue.progress,
