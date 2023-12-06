@@ -36,11 +36,12 @@ const getFfmpegOptions = (queue: ConvertQueue): FfmpegOptions => {
     "{height}": queue.option.height.toString(),
   };
   for (const key of Object.keys(options)) {
-    const value = options[key];
+    let value = options[key];
     if (!value) continue;
     for (const [k, v] of Object.entries(replace)) {
-      options[key] = value.replace(k, v);
+      value = value.replace(k, v);
     }
+    options[key] = value;
   }
   return options;
 };
