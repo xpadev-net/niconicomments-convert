@@ -1,4 +1,4 @@
-import { AddOutlined, DeleteOutlined } from "@mui/icons-material";
+import { AddOutlined, DeleteOutlined, Replay } from "@mui/icons-material";
 import { IconButton } from "@mui/material";
 import TextField from "@mui/material/TextField";
 import type { FC } from "react";
@@ -58,6 +58,15 @@ const ConvertSetting: FC = () => {
       return result;
     });
   };
+  const onReset = (): void => {
+    setOption(defaultOptions);
+    void window.api.request({
+      type: "setSetting",
+      key: "ffmpegOptions",
+      data: defaultOptions,
+      host: "controller",
+    });
+  };
   const addItem = (): void => {
     setOption((pv) => {
       const result = { ...pv, "": "" };
@@ -73,6 +82,11 @@ const ConvertSetting: FC = () => {
   return (
     <div className={Styles.wrapper}>
       <h3>変換</h3>
+      <div className={Styles.reset}>
+        <IconButton onClick={onReset}>
+          <Replay />
+        </IconButton>
+      </div>
       <ul className={Styles.list}>
         <li>
           <span>[[FPS]]</span>: 変換時に指定するFPS
