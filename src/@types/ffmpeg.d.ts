@@ -7,7 +7,7 @@ export type FfprobeOutput = {
 };
 
 export type FfmpegOptions = {
-  [key: string]: string | number;
+  [key: string]: string;
 };
 
 export {};

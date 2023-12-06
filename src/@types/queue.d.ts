@@ -77,6 +77,8 @@ export type ConvertQueue = BaseQueue & {
     ss: number | undefined;
     to: number | undefined;
     fps: number;
+    width: number;
+    height: number;
     format: CommentFormat;
     options: Options;
   };
