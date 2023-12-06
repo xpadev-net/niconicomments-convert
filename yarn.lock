@@ -1283,10 +1283,10 @@
   resolved "https://registry.yarnpkg.com/@xmldom/xmldom/-/xmldom-0.8.10.tgz#a1337ca426aa61cef9fe15b5b28e340a72f6fa99"
   integrity sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw==
 
-"@xpadev-net/niconicomments@^0.2.65":
-  version "0.2.65"
-  resolved "https://registry.yarnpkg.com/@xpadev-net/niconicomments/-/niconicomments-0.2.65.tgz#9817b4d3ca5231ffc5b3a92899ecc216fae84aec"
-  integrity sha512-noJvWwvthOTEJuc5kPkRFydGi/dReNG+cdPVpTBT2HkeN2OlqFsh8wiGqtneUWqhEQC8VxRCaGavyURRFy8C1A==
+"@xpadev-net/niconicomments@^0.2.66":
+  version "0.2.66"
+  resolved "https://registry.yarnpkg.com/@xpadev-net/niconicomments/-/niconicomments-0.2.66.tgz#eaf1a48358426b9f1848ef0bcf560e057767d206"
+  integrity sha512-uYpdxqdkIK0CyoLptgjPOZ7loIkoRfUH3BoAq7WzWAwEIcV9NmIRykFn6UgKisDM4hJozwi3IlRgyUhk/Y3lOg==
 
 abbrev@1:
   version "1.1.1"
