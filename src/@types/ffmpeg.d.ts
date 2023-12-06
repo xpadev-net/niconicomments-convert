@@ -5,4 +5,9 @@ export type FfprobeOutput = {
     duration?: number;
   }[];
 };
+
+export type FfmpegOptions = {
+  [key: string]: string | number;
+};
+
 export {};
