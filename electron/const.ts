@@ -15,4 +15,4 @@ const defaultOptions: FfmpegOptions = {
   r: "{FPS}",
 };
 
-export {defaultOptions}
+export { defaultOptions };

@@ -27,13 +27,14 @@ const interruptConverter = (): void => {
   converter?.stop();
 };
 
-const getFfmpegOptions = (queue:ConvertQueue):FfmpegOptions => {
-  const options = (store.get("ffmpegOptions") as FfmpegOptions|undefined)??defaultOptions
+const getFfmpegOptions = (queue: ConvertQueue): FfmpegOptions => {
+  const options =
+    (store.get("ffmpegOptions") as FfmpegOptions | undefined) ?? defaultOptions;
   const replace = {
     "{FPS}": queue.option.fps.toString(),
     "{width}": queue.option.width.toString(),
     "{height}": queue.option.height.toString(),
-  }
+  };
   for (const key of Object.keys(options)) {
     const value = options[key];
     if (!value) continue;
@@ -42,6 +43,6 @@ const getFfmpegOptions = (queue:ConvertQueue):FfmpegOptions => {
     }
   }
   return options;
-}
+};
 
 export { inputStream, interruptConverter, startConverter };
