@@ -92,10 +92,7 @@ const ConvertSetting: FC = () => {
           <span>{"{FPS}"}</span>: 変換時に指定するFPS
         </li>
         <li>
-          <span>
-            {"{width}"},{"{height}"}
-          </span>
-          : 変換時に指定する解像度
+          <span>{"{width}, {height}"}</span>: 変換時に指定する解像度
         </li>
       </ul>
       <div>
