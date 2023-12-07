@@ -74,6 +74,8 @@ const startRenderer = async (): Promise<void> => {
   message.innerText = "コメントを処理しています...";
   const { format, data } = transformComments(queue.comment.format, commentData);
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+  canvas.width = queue.option.width;
+  canvas.height = queue.option.height;
   const nico = new NiconiComments(canvas, data, {
     ...queue.option.options,
     format,

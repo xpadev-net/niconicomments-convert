@@ -2,6 +2,7 @@ import { Replay } from "@mui/icons-material";
 import {
   Button,
   FormControlLabel,
+  IconButton,
   MenuItem,
   Radio,
   RadioGroup,
@@ -126,7 +127,9 @@ const AuthSetting: FC = () => {
   return (
     <div className={Styles.wrapper}>
       <div className={Styles.reset}>
-        <Replay onClick={onReset} />
+        <IconButton onClick={onReset}>
+          <Replay />
+        </IconButton>
       </div>
       <h3>認証</h3>
       <RadioGroup value={authSetting.type} onChange={onAuthTypeChange} row>

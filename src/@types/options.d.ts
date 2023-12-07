@@ -17,6 +17,8 @@ export type VideoOptions = {
   fps: number;
   start?: number;
   end?: number;
+  width: number;
+  height: number;
 };
 
 type OptionItem<T> = {
