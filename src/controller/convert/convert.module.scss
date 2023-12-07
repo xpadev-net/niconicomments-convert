@@ -11,4 +11,12 @@
       flex: 1;
     }
   }
+  .resolution {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    .resolutionText {
+      padding-bottom: 5px;
+    }
+  }
 }

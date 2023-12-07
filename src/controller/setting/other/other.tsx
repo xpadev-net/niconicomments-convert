@@ -17,6 +17,7 @@ const OtherSetting: FC = () => {
   }, []);
   return (
     <div>
+      <h3>その他</h3>
       <FormControlLabel
         control={
           <Switch

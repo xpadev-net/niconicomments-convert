@@ -1,0 +1,25 @@
+.wrapper {
+  position: relative;
+  .reset {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+  .list {
+    padding-left: 20px;
+  }
+  .block {
+    display: flex;
+    flex-direction: row;
+    .key {
+      width: 150px;
+    }
+    .value {
+      flex: 1;
+    }
+    .delete {
+      width: 48px;
+      height: 48px;
+    }
+  }
+}

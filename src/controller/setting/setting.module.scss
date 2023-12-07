@@ -1,11 +1,5 @@
 .wrapper {
-  position: relative;
-  .reset {
-    position: absolute;
-    top: 0;
-    right: 0;
-  }
-  .input {
-    width: 100%;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }

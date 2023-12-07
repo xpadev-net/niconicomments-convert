@@ -19,6 +19,7 @@ import type { UUID } from "@/@types/brand";
 import type { NiconicommentsOptions, Options } from "@/@types/options";
 import type { TCommentItem, TMovieItem } from "@/@types/queue";
 import type { ApiResponseType } from "@/@types/types";
+import { SelectField } from "@/components/select-field";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import { CommentPicker } from "@/controller/comment-picker";
 import { MoviePicker } from "@/controller/movie-picker";
@@ -27,6 +28,14 @@ import { str2time, time2str } from "@/util/time";
 import { uuid } from "@/util/uuid";
 
 import Styles from "./convert.module.scss";
+
+const resolution = [
+  { width: 1920, height: 1080, label: "1920x1080" },
+  { width: 1280, height: 720, label: "1280x720" },
+  { width: 1024, height: 576, label: "1024x576" },
+  { width: 640, height: 360, label: "640x360" },
+  { width: 320, height: 180, label: "320x180" },
+] as const satisfies { width: number; height: number; label: string }[];
 
 const initialConfig: Options = {
   nico: {
@@ -58,6 +67,8 @@ const initialConfig: Options = {
   },
   video: {
     fps: 30,
+    width: 1920,
+    height: 1080,
   },
 };
 
@@ -128,6 +139,8 @@ const Convert: FC = () => {
             ss: options.video.start,
             to: options.video.end,
             fps: options.video.fps,
+            width: options.video.width,
+            height: (options.video.width * 9) / 16,
             format: comment.format,
             options: {
               ...nicoOption,
@@ -256,6 +269,30 @@ const Convert: FC = () => {
           </div>
           <FormGroup>
             <h3>設定</h3>
+            <SelectField label={"解像度"} className={Styles.input}>
+              <Select
+                label={"解像度"}
+                variant={"standard"}
+                className={Styles.input}
+                defaultValue={"1920x1080"}
+                value={`${options.video.width}x${options.video.height}`}
+                onChange={(e) => {
+                  const [width, height] = e.target.value.split("x").map(Number);
+                  setOptions({
+                    ...options,
+                    video: { ...options.video, width, height },
+                  });
+                }}
+              >
+                {resolution.map((val) => {
+                  return (
+                    <MenuItem key={val.label} value={val.label}>
+                      {val.label}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </SelectField>
             {Object.keys(options.nico).map((key) => {
               const item = options.nico[key as keyof NiconicommentsOptions];
               if (item.type === "boolean") {
