@@ -5,17 +5,15 @@ import type { AuthType } from "@/@types/setting";
 import type { SpawnResult } from "@/@types/spawn";
 
 import { sendMessageToController } from "../../controller-window";
-import { ffmpegPath } from "../../ffmpeg";
 import { store } from "../../store";
 import { typeGuard } from "../../type-guard";
-import { time2num } from "../../utils/time";
+import { DownloadM3U8 } from "../../utils/ffmpeg";
 import {
   convertToEncodedCookie,
   formatCookies,
   getCookies,
   parseCookie,
 } from "../cookie";
-import { spawn } from "../spawn";
 
 let stop: (() => void) | undefined;
 
@@ -23,7 +21,7 @@ const downloadDMS = async (
   metadata: TWatchV3Metadata,
   format: TDMSFormat,
   targetPath: string,
-  progress: (total: number, downloaded: number) => void,
+  progress: (total: number, downloaded: number, eta: number) => void,
 ): Promise<SpawnResult | undefined> => {
   if (!typeGuard.niconico.v3DMS(metadata)) {
     if (typeGuard.niconico.v3DMC(metadata)) {
@@ -80,19 +78,7 @@ lib/niconico/dms.ts / downloadDMS / invalid accessRights`,
   }
   const parsedCookie = parseCookie(...accessRightsReq.headers.getSetCookie());
 
-  let total = 0,
-    downloaded = 0;
-  const onData = (data: string): void => {
-    let match;
-    if ((match = data.match(/Duration: ([0-9:.]+),/))) {
-      total = time2num(match[1]);
-    } else if ((match = data.match(/time=([0-9:.]+) /))) {
-      downloaded = time2num(match[1]);
-    }
-    progress(total, downloaded);
-  };
-  const _spawn = spawn(
-    ffmpegPath,
+  const { stop: _stop, promise } = DownloadM3U8(
     [
       "-cookies",
       formatCookies(parsedCookie, true).join("\n"),
@@ -103,17 +89,15 @@ lib/niconico/dms.ts / downloadDMS / invalid accessRights`,
       targetPath,
       "-y",
     ],
-    undefined,
-    onData,
-    onData,
+    progress,
   );
   let cancelled = false;
   stop = () => {
     cancelled = true;
-    _spawn.stop();
+    _stop();
   };
   try {
-    return await _spawn.promise;
+    return await promise;
   } catch {
     if (!cancelled) {
       sendMessageToController({

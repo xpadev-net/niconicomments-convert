@@ -13,8 +13,8 @@ import type { Readable, Writable } from "stream";
 import { PassThrough } from "stream";
 import { promisify } from "util";
 
+import { ffmpegPath } from "../assets";
 import { sendMessageToController } from "../controller-window";
-import { ffmpegPath } from "../ffmpeg";
 import { encodeJson } from "../lib/json";
 
 const dbg = console.log;

@@ -10,8 +10,8 @@ import type {
 } from "@/@types/response.controller";
 import type { SpawnResult } from "@/@types/spawn";
 
+import { ffprobePath } from "./assets";
 import { sendMessageToController } from "./controller-window";
-import { ffprobePath } from "./ffmpeg";
 import { encodeJson } from "./lib/json";
 import { spawn } from "./lib/spawn";
 import { store } from "./store";
