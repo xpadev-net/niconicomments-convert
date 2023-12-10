@@ -6,7 +6,6 @@ on:
     branches:
       - develop
       - master
-      - improve/queue-display
 
 jobs:
   qodana:
