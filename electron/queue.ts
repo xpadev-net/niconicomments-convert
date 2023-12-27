@@ -145,15 +145,20 @@ const startConvert = async (): Promise<void> => {
     createRendererWindow();
     sendProgress();
     await startConverter(queued[0]);
-    sendMessageToRenderer({
-      type: "end",
-    });
     if (processingQueue.status === "processing")
       processingQueue.status = "completed";
   } catch (e) {
     logger.error("failed to convert", e);
     processingQueue.status = "fail";
+    sendMessageToController({
+      type: "message",
+      title: "書き出し中にエラーが発生しました",
+      message: `エラー内容:\n${encodeError(e)}`,
+    });
   }
+  sendMessageToRenderer({
+    type: "end",
+  });
   sendProgress();
   void startConvert();
 };
