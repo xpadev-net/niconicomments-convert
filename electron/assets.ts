@@ -1,6 +1,5 @@
 import type { AxiosProgressEvent, AxiosResponse } from "axios";
 import axios from "axios";
-import { app } from "electron";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -12,6 +11,7 @@ import {
   sendMessageToBinaryDownloader,
 } from "./binary-downloader-window";
 import { spawn } from "./lib/spawn";
+import { rootPath } from "./utils/fs";
 
 type lib = "ffmpeg" | "ffprobe";
 
@@ -19,7 +19,7 @@ let target: lib[] = [];
 
 const ext = process.platform === "win32" ? ".exe" : "";
 
-const basePath = path.join(__dirname, app.isPackaged ? "../../../" : "", "bin"),
+const basePath = path.join(rootPath, "bin"),
   ffmpegPath = path.join(basePath, `ffmpeg${ext}`),
   ffprobePath = path.join(basePath, `ffprobe${ext}`);
 
