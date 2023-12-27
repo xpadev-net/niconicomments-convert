@@ -2,10 +2,10 @@ import log from "electron-log/main";
 import * as fs from "fs";
 import * as path from "path";
 
-import { baseUrl } from "../context";
+import { basePath } from "../context";
 
 export const initLogger = (): void => {
-  const logDir = path.join(baseUrl, "logs");
+  const logDir = path.join(basePath, "logs");
   if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir);
   }

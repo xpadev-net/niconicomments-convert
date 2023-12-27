@@ -10,7 +10,7 @@ import {
   createBinaryDownloaderWindow,
   sendMessageToBinaryDownloader,
 } from "./binary-downloader-window";
-import { baseUrl } from "./context";
+import { basePath } from "./context";
 import { spawn } from "./lib/spawn";
 
 type lib = "ffmpeg" | "ffprobe";
@@ -19,9 +19,9 @@ let target: lib[] = [];
 
 const ext = process.platform === "win32" ? ".exe" : "";
 
-const basePath = path.join(baseUrl, "bin"),
-  ffmpegPath = path.join(basePath, `ffmpeg${ext}`),
-  ffprobePath = path.join(basePath, `ffprobe${ext}`);
+const binPath = path.join(basePath, "bin"),
+  ffmpegPath = path.join(binPath, `ffmpeg${ext}`),
+  ffprobePath = path.join(binPath, `ffprobe${ext}`);
 
 const assetsBaseUrl = {
   ffmpeg:
@@ -74,8 +74,8 @@ const onStartUp = async (): Promise<void> => {
 };
 
 const downloadBinary = async (target: lib[]): Promise<void> => {
-  if (!fs.existsSync(basePath)) {
-    await fs.promises.mkdir(basePath, { recursive: true });
+  if (!fs.existsSync(binPath)) {
+    await fs.promises.mkdir(binPath, { recursive: true });
   }
   if (target.includes("ffmpeg")) {
     await downloadFile(
