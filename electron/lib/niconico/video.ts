@@ -10,7 +10,7 @@ const download = async (
   nicoId: string,
   format: TRemoteMovieItemFormat,
   path: string,
-  progress: (total: number, downloaded: number) => void,
+  progress: (total: number, downloaded: number, eta: number) => void,
 ): Promise<SpawnResult | undefined> => {
   const metadata = await getMetadata(nicoId);
   if (!metadata) {

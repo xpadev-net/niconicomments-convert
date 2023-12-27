@@ -13,23 +13,23 @@ import type { Readable, Writable } from "stream";
 import { PassThrough } from "stream";
 import { promisify } from "util";
 
-import { sendMessageToController } from "../controller-window";
-import { ffmpegPath } from "../ffmpeg";
-import { encodeJson } from "../lib/json";
+import { ffmpegPath } from "../assets";
+import { getLogger } from "../lib/log";
 
-const dbg = console.log;
+const logger = getLogger("[ffmpeg-stream]");
+
 const { FFMPEG_PATH = ffmpegPath } = process.env;
 const EXIT_CODES = [0, 255];
 
 function debugStream(stream: Readable | Writable, name: string): void {
   stream.on("error", (err) => {
-    dbg(`${name} error: ${err.message}`);
+    logger.debug(`${name} error: ${err.message}`);
   });
   stream.on("data", (data: string | Buffer) => {
-    dbg(`${name} data: ${data.length} bytes`);
+    logger.debug(`${name} data: ${data.length} bytes`);
   });
   stream.on("finish", () => {
-    dbg(`${name} finish`);
+    logger.debug(`${name} finish`);
   });
 }
 
@@ -190,11 +190,11 @@ export class Converter {
           const writer = createWriteStream(file);
           stream.pipe(writer);
           stream.on("end", () => {
-            dbg("input buffered stream end");
+            logger.debug("input buffered stream end");
             resolve();
           });
           stream.on("error", (err) => {
-            dbg(`input buffered stream error: ${err.message}`);
+            logger.error(`input buffered stream error`, err);
             return reject(err);
           });
         });
@@ -218,11 +218,11 @@ export class Converter {
           const reader = createReadStream(file);
           reader.pipe(stream);
           reader.on("end", () => {
-            dbg("output buffered stream end");
+            logger.debug("output buffered stream end");
             resolve();
           });
           reader.on("error", (err: Error) => {
-            dbg(`output buffered stream error: ${err.message}`);
+            logger.error(`output buffered stream error`, err);
             reject(err);
           });
         });
@@ -236,15 +236,15 @@ export class Converter {
     const pipes: Pipe[] = [];
     try {
       for (const pipe of this.pipes) {
-        dbg(`prepare ${pipe.type}`);
+        logger.debug(`prepare ${pipe.type}`);
         await pipe.onBegin?.();
         pipes.push(pipe);
       }
 
       const command = ["-y", "-v", "verbose", ...this.getSpawnArgs()];
       const stdio = this.getStdioArg();
-      dbg(`spawn: ${FFMPEG_PATH} ${command.join(" ")}`);
-      dbg(`spawn stdio: ${stdio.join(" ")}`);
+      logger.log(`spawn: ${FFMPEG_PATH} ${command.join(" ")}`);
+      logger.log(`spawn stdio: ${stdio.join(" ")}`);
       this.process = spawn(FFMPEG_PATH, command, { stdio });
       const finished = this.handleProcess();
 
@@ -258,16 +258,15 @@ export class Converter {
       }
 
       await finished;
-    } catch (e) {
-      sendMessageToController({
-        type: "message",
-        title: "変換中にエラーが発生しました",
-        message: `エラー内容:\n${encodeJson(e)}`,
-      });
-    } finally {
       for (const pipe of pipes) {
         await pipe.onFinish?.();
       }
+    } catch (e) {
+      for (const pipe of pipes) {
+        await pipe.onFinish?.();
+      }
+      logger.error(e);
+      throw e;
     }
   }
 
@@ -315,7 +314,6 @@ export class Converter {
   private async handleProcess(): Promise<void> {
     await new Promise<void>((resolve, reject): void => {
       let logSectionNum = 0;
-      const logLines: string[] = [];
 
       if (this.process == null) return reject(Error(`Converter not started`));
 
@@ -331,27 +329,24 @@ export class Converter {
             if (/^\s/u.exec(line) == null) logSectionNum++;
             // only log sections following the first one
             if (logSectionNum > 1) {
-              dbg(`log: ${line}`);
-              logLines.push(line);
+              logger.log("[ffmpeg]", line);
             }
           }
         });
       }
 
       this.process.on("error", (err) => {
-        dbg(`error: ${err.message}`);
+        logger.error("[ffmpeg]", err);
         return reject(err);
       });
 
       this.process.on("exit", (code, signal) => {
-        dbg(`exit: code=${code ?? "unknown"} sig=${signal ?? "unknown"}`);
-        console.log(
+        logger.log(
           `exit: code=${code ?? "unknown"} sig=${signal ?? "unknown"}`,
         );
         if (code == null) return resolve();
         if (EXIT_CODES.includes(code)) return resolve();
-        const log = logLines.map((line) => `  ${line}`).join("\n");
-        reject(Error(`Converting failed\n${log}`));
+        reject(Error(`Converting failed`));
       });
     });
   }

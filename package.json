@@ -1,7 +1,7 @@
 {
   "name": "niconicomments-convert",
   "private": false,
-  "version": "0.0.22",
+  "version": "0.0.23",
   "type": "commonjs",
   "license": "MIT",
   "main": "build/electron/electron.js",
@@ -29,6 +29,7 @@
     "@mui/material": "^5.14.20",
     "@xpadev-net/niconicomments": "^0.2.67",
     "axios": "^1.6.2",
+    "electron-log": "^5.0.2",
     "electron-store": "^8.1.0",
     "jotai": "^2.6.0",
     "jsdom": "^23.0.1",

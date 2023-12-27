@@ -3,10 +3,8 @@ import type { TDMCFormat } from "@/@types/queue";
 import type { SpawnResult } from "@/@types/spawn";
 
 import { sendMessageToController } from "../../controller-window";
-import { ffmpegPath } from "../../ffmpeg";
 import { typeGuard } from "../../type-guard";
-import { time2num } from "../../utils/time";
-import { spawn } from "../spawn";
+import { DownloadM3U8 } from "../../utils/ffmpeg";
 
 let stop: (() => void) | undefined;
 
@@ -14,7 +12,7 @@ const downloadDMC = async (
   metadata: TWatchV3Metadata,
   format: TDMCFormat,
   path: string,
-  progress: (total: number, downloaded: number) => void,
+  progress: (total: number, downloaded: number, eta: number) => void,
 ): Promise<SpawnResult | undefined> => {
   if (!typeGuard.niconico.v3DMC(metadata)) {
     if (typeGuard.niconico.v3DMS(metadata)) {
@@ -100,31 +98,17 @@ const downloadDMC = async (
     })();
   }, 30 * 1000);
 
-  let total = 0,
-    downloaded = 0;
-  const onData = (data: string): void => {
-    let match;
-    if ((match = data.match(/Duration: ([0-9:.]+),/))) {
-      total = time2num(match[1]);
-    } else if ((match = data.match(/time=([0-9:.]+) /))) {
-      downloaded = time2num(match[1]);
-    }
-    progress(total, downloaded);
-  };
-  const _spawn = spawn(
-    ffmpegPath,
+  const { stop: _stop, promise } = DownloadM3U8(
     ["-i", lastSession.session.content_uri, "-c", "copy", path, "-y"],
-    undefined,
-    onData,
-    onData,
+    progress,
   );
   let cancelled = false;
   stop = () => {
+    _stop();
     cancelled = true;
-    _spawn.stop();
   };
   try {
-    const result = await _spawn.promise;
+    const result = await promise;
     clearInterval(heartbeatInterval);
     const delReq = await fetch(
       `https://api.dmc.nico/api/sessions/${lastSession.session.id}?_format=json&_method=DELETE`,

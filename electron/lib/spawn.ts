@@ -15,11 +15,11 @@ function spawn(
   p.stdout.setEncoding("utf-8");
   p.stdout.on("data", (data: string) => {
     stdout += data;
-    onData && onData(data.toString().trim());
+    onData?.(data.toString().trim());
   });
   p.stderr.on("data", (data: string) => {
     stderr += data;
-    onError && onError(data.toString().trim());
+    onError?.(data.toString().trim());
   });
   return {
     promise: new Promise<SpawnResult>((resolve, reject) => {

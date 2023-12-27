@@ -1,8 +1,8 @@
 {
     "parserOptions": {
         "sourceType": "module",
-            "ecmaVersion": 2019,
-            "project": ["./tsconfig.eslint.json"]
+        "ecmaVersion": 2019,
+        "project": ["./tsconfig.eslint.json"]
     },
     "parser": "@typescript-eslint/parser",
     "plugins": [
@@ -18,16 +18,16 @@
     ],
     "rules": {
         "@typescript-eslint/restrict-template-expressions": "off",
-            "@typescript-eslint/unbound-method": "off",
-            "@typescript-eslint/consistent-type-imports": "error",
-            "@typescript-eslint/no-unused-vars": "error",
-            "@next/next/no-img-element": "off",
-            "no-unused-vars": "off",
-            "no-control-regex": "off",
-            "import/no-duplicates": "error",
-            "simple-import-sort/imports": "error",
-            "simple-import-sort/exports": "error",
-            "@typescript-eslint/explicit-function-return-type": [
+        "@typescript-eslint/unbound-method": "off",
+        "@typescript-eslint/consistent-type-imports": "error",
+        "@typescript-eslint/no-unused-vars": "error",
+        "@next/next/no-img-element": "off",
+        "no-unused-vars": "off",
+        "no-control-regex": "off",
+        "import/no-duplicates": "error",
+        "simple-import-sort/imports": "error",
+        "simple-import-sort/exports": "error",
+        "@typescript-eslint/explicit-function-return-type": [
             "error",
             {
                 "allowTypedFunctionExpressions": true,

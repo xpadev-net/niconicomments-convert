@@ -7,7 +7,8 @@ import type { ApiResponseLoad } from "@/@types/response.renderer";
 
 import { sendMessageToController } from "./controller-window";
 import { inputStream, interruptConverter, startConverter } from "./converter";
-import { encodeJson } from "./lib/json";
+import { encodeError } from "./lib/json";
+import { getLogger } from "./lib/log";
 import {
   download,
   downloadComment,
@@ -16,6 +17,8 @@ import {
 import { interruptDMC } from "./lib/niconico/dmc";
 import { interruptDMS } from "./lib/niconico/dms";
 import { createRendererWindow, sendMessageToRenderer } from "./renderer-window";
+
+const logger = getLogger("[queue]");
 
 const queueList: Queue[] = [];
 const queueLists: QueueLists = {
@@ -77,12 +80,12 @@ const startMovieDownload = async (): Promise<void> => {
     );
     targetQueue.status = "completed";
   } catch (e) {
-    console.error(e);
+    logger.error("failed to download movie", e);
     targetQueue.status = "fail";
     sendMessageToController({
       type: "message",
       title: "動画のダウンロード中にエラーが発生しました",
-      message: `エラー内容:\n${encodeJson(e)}`,
+      message: `エラー内容:\n${encodeError(e)}`,
     });
   }
   sendProgress();
@@ -109,11 +112,12 @@ const startCommentDownload = async (): Promise<void> => {
     });
     targetQueue.status = "completed";
   } catch (e) {
+    logger.error("failed to download comment", e);
     targetQueue.status = "fail";
     sendMessageToController({
       type: "message",
       title: "コメントのダウンロード中にエラーが発生しました",
-      message: `エラー内容:\n${encodeJson(e)}`,
+      message: `エラー内容:\n${encodeError(e)}`,
     });
   }
   sendProgress();
@@ -133,18 +137,28 @@ const startConvert = async (): Promise<void> => {
     const queue = queueList.filter((i) => i.id === queueId)[0];
     if (queue?.status !== "completed") return;
   }
-  processingQueue = queued[0];
-  processingQueue.status = "processing";
-  processingQueue.progress = 0;
-  lastFrame = 0;
-  createRendererWindow();
-  sendProgress();
-  await startConverter(queued[0]);
+  try {
+    processingQueue = queued[0];
+    processingQueue.status = "processing";
+    processingQueue.progress = 0;
+    lastFrame = 0;
+    createRendererWindow();
+    sendProgress();
+    await startConverter(queued[0]);
+    if (processingQueue.status === "processing")
+      processingQueue.status = "completed";
+  } catch (e) {
+    logger.error("failed to convert", e);
+    processingQueue.status = "fail";
+    sendMessageToController({
+      type: "message",
+      title: "書き出し中にエラーが発生しました",
+      message: `エラー内容:\n${encodeError(e)}`,
+    });
+  }
   sendMessageToRenderer({
     type: "end",
   });
-  if (processingQueue.status === "processing")
-    processingQueue.status = "completed";
   sendProgress();
   void startConvert();
 };
