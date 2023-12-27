@@ -14,8 +14,6 @@ import { PassThrough } from "stream";
 import { promisify } from "util";
 
 import { ffmpegPath } from "../assets";
-import { sendMessageToController } from "../controller-window";
-import { encodeJson } from "../lib/json";
 import { getLogger } from "../lib/log";
 
 const logger = getLogger("[ffmpeg-stream]");
@@ -260,17 +258,15 @@ export class Converter {
       }
 
       await finished;
-    } catch (e) {
-      logger.error(e);
-      sendMessageToController({
-        type: "message",
-        title: "変換中にエラーが発生しました",
-        message: `エラー内容:\n${encodeJson(e)}`,
-      });
-    } finally {
       for (const pipe of pipes) {
         await pipe.onFinish?.();
       }
+    } catch (e) {
+      for (const pipe of pipes) {
+        await pipe.onFinish?.();
+      }
+      logger.error(e);
+      throw e;
     }
   }
 
