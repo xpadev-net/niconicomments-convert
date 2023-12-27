@@ -10,8 +10,8 @@ import {
   createBinaryDownloaderWindow,
   sendMessageToBinaryDownloader,
 } from "./binary-downloader-window";
+import { baseUrl } from "./context";
 import { spawn } from "./lib/spawn";
-import { rootPath } from "./utils/fs";
 
 type lib = "ffmpeg" | "ffprobe";
 
@@ -19,11 +19,11 @@ let target: lib[] = [];
 
 const ext = process.platform === "win32" ? ".exe" : "";
 
-const basePath = path.join(rootPath, "bin"),
+const basePath = path.join(baseUrl, "bin"),
   ffmpegPath = path.join(basePath, `ffmpeg${ext}`),
   ffprobePath = path.join(basePath, `ffprobe${ext}`);
 
-const baseUrl = {
+const assetsBaseUrl = {
   ffmpeg:
     "https://github.com/descriptinc/ffmpeg-ffprobe-static/releases/download/b4.4.0-rc.11/",
 };
@@ -80,14 +80,14 @@ const downloadBinary = async (target: lib[]): Promise<void> => {
   if (target.includes("ffmpeg")) {
     await downloadFile(
       "ffmpeg",
-      `${baseUrl.ffmpeg}ffmpeg-${distro.ffmpeg}`,
+      `${assetsBaseUrl.ffmpeg}ffmpeg-${distro.ffmpeg}`,
       ffmpegPath,
     );
   }
   if (target.includes("ffprobe")) {
     await downloadFile(
       "ffprobe",
-      `${baseUrl.ffmpeg}ffprobe-${distro.ffmpeg}`,
+      `${assetsBaseUrl.ffmpeg}ffprobe-${distro.ffmpeg}`,
       ffprobePath,
     );
   }
