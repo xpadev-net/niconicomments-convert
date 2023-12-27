@@ -3,6 +3,7 @@ import { app, BrowserWindow, globalShortcut } from "electron";
 import { onStartUp } from "./assets";
 import { createControllerWindow } from "./controller-window";
 import { registerListener } from "./ipc-manager";
+import { initLogger } from "./lib/log";
 
 app.on("window-all-closed", () => {
   app.quit();
@@ -32,4 +33,5 @@ if (app.isPackaged) {
     globalShortcut.unregister("F5");
   });
 }
+initLogger();
 registerListener();

@@ -3,7 +3,8 @@ import { ipcMain } from "electron";
 import { sendMessageToController } from "./controller-window";
 import { selectComment, selectFile, selectMovie, selectOutput } from "./dialog";
 import { getAvailableProfiles } from "./lib/cookie";
-import { encodeJson } from "./lib/json";
+import { encodeError, encodeJson } from "./lib/json";
+import { getLogger } from "./lib/log";
 import { getMetadata } from "./lib/niconico";
 import {
   appendFrame,
@@ -16,10 +17,12 @@ import {
 import { store } from "./store";
 import { typeGuard } from "./type-guard";
 
+const logger = getLogger("[ipcManager]");
+
 const registerListener = (): void => {
   ipcMain.handle("request", async (_, args) => {
+    const value = (args as { data: unknown[] }).data[0];
     try {
-      const value = (args as { data: unknown[] }).data[0];
       if (typeGuard.renderer.blob(value)) {
         appendFrame(value.frameId, value.data);
       } else if (typeGuard.renderer.end(value)) {
@@ -54,6 +57,7 @@ const registerListener = (): void => {
       } else if (typeGuard.renderer.message(value)) {
         sendMessageToController(value);
       } else {
+        logger.error("unknown ipc message", "ipcMessage:", value);
         sendMessageToController({
           type: "message",
           title: "未知のエラーが発生しました",
@@ -63,12 +67,19 @@ const registerListener = (): void => {
         });
       }
     } catch (e: unknown) {
+      logger.error(
+        "failed to process ipc message",
+        "ipcMessage:",
+        value,
+        "error:",
+        e,
+      );
       sendMessageToController({
         type: "message",
         title: "予期しないエラーが発生しました",
         message: `IPCメッセージ:\n${encodeJson(
           args,
-        )}\nエラー内容:\n${encodeJson(e)}\nipcManager / catchError`,
+        )}\nエラー内容:\n${encodeError(e)}\nipcManager / catchError`,
       });
     }
   });

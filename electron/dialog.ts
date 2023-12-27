@@ -12,10 +12,13 @@ import type { SpawnResult } from "@/@types/spawn";
 
 import { ffprobePath } from "./assets";
 import { sendMessageToController } from "./controller-window";
-import { encodeJson } from "./lib/json";
+import { encodeError } from "./lib/json";
+import { getLogger } from "./lib/log";
 import { spawn } from "./lib/spawn";
 import { store } from "./store";
 import { identifyCommentFormat } from "./utils/niconicomments";
+
+const logger = getLogger("[dialog]");
 
 const selectFile = async (
   pattern: Electron.FileFilter[],
@@ -59,6 +62,7 @@ const selectMovie = async (): Promise<
     ]).promise;
   } catch (e: unknown) {
     const error = e as SpawnResult;
+    logger.error("failed to execute ffprobe", "error:", error);
     return {
       type: "message",
       title: "動画ファイルの解析に失敗しました",
@@ -68,17 +72,25 @@ const selectMovie = async (): Promise<
   try {
     metadata = JSON.parse(ffprobe.stdout) as FfprobeOutput;
   } catch (e) {
+    logger.error(
+      "failed to parse ffprobe output",
+      "error:",
+      e,
+      "stdout:",
+      ffprobe.stdout,
+    );
     return {
       type: "message",
       title: "動画ファイルの解析に失敗しました",
       message: `ffprobeの出力のパースに失敗しました\nffprobeの出力:\n${
         ffprobe.stdout
-      }\nエラー内容:\n${encodeJson(
+      }\nエラー内容:\n${encodeError(
         e,
       )}\ndialog / selectMovie / failed to parse ffprobe output`,
     };
   }
   if (!metadata.streams || !Array.isArray(metadata.streams)) {
+    logger.error("movie source not found", "metadata:", metadata);
     return {
       type: "message",
       title: "動画ファイルの解析に失敗しました",
@@ -101,6 +113,7 @@ const selectMovie = async (): Promise<
     }
   }
   if (!(height && width && duration)) {
+    logger.error("failed to get resolution or duration", "metadata:", metadata);
     return {
       type: "message",
       title: "動画ファイルの解析に失敗しました",
@@ -138,6 +151,7 @@ const selectComment = async (): Promise<
   store.set("commentFileExt", ext);
   const format = identifyCommentFormat(filePath);
   if (!format) {
+    console.error("failed to identify comment format", "filePath:", filePath);
     sendMessageToController({
       type: "message",
       title: "非対応のフォーマットです",

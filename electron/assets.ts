@@ -1,6 +1,5 @@
 import type { AxiosProgressEvent, AxiosResponse } from "axios";
 import axios from "axios";
-import { app } from "electron";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -11,6 +10,7 @@ import {
   createBinaryDownloaderWindow,
   sendMessageToBinaryDownloader,
 } from "./binary-downloader-window";
+import { basePath } from "./context";
 import { spawn } from "./lib/spawn";
 
 type lib = "ffmpeg" | "ffprobe";
@@ -19,11 +19,11 @@ let target: lib[] = [];
 
 const ext = process.platform === "win32" ? ".exe" : "";
 
-const basePath = path.join(__dirname, app.isPackaged ? "../../../" : "", "bin"),
-  ffmpegPath = path.join(basePath, `ffmpeg${ext}`),
-  ffprobePath = path.join(basePath, `ffprobe${ext}`);
+const binPath = path.join(basePath, "bin"),
+  ffmpegPath = path.join(binPath, `ffmpeg${ext}`),
+  ffprobePath = path.join(binPath, `ffprobe${ext}`);
 
-const baseUrl = {
+const assetsBaseUrl = {
   ffmpeg:
     "https://github.com/descriptinc/ffmpeg-ffprobe-static/releases/download/b4.4.0-rc.11/",
 };
@@ -74,20 +74,20 @@ const onStartUp = async (): Promise<void> => {
 };
 
 const downloadBinary = async (target: lib[]): Promise<void> => {
-  if (!fs.existsSync(basePath)) {
-    await fs.promises.mkdir(basePath, { recursive: true });
+  if (!fs.existsSync(binPath)) {
+    await fs.promises.mkdir(binPath, { recursive: true });
   }
   if (target.includes("ffmpeg")) {
     await downloadFile(
       "ffmpeg",
-      `${baseUrl.ffmpeg}ffmpeg-${distro.ffmpeg}`,
+      `${assetsBaseUrl.ffmpeg}ffmpeg-${distro.ffmpeg}`,
       ffmpegPath,
     );
   }
   if (target.includes("ffprobe")) {
     await downloadFile(
       "ffprobe",
-      `${baseUrl.ffmpeg}ffprobe-${distro.ffmpeg}`,
+      `${assetsBaseUrl.ffmpeg}ffprobe-${distro.ffmpeg}`,
       ffprobePath,
     );
   }
