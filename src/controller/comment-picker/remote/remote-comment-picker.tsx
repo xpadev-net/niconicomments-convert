@@ -98,7 +98,7 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
       onChange({
         type: "remote",
         path: output,
-        format: "XMLDocument",
+        format: "xml2js",
         ref: {
           id: uuid(),
           type: "comment",

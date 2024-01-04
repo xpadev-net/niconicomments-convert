@@ -53,7 +53,7 @@ const registerListener = (): void => {
         sendProgress();
         return;
       } else if (typeGuard.renderer.load(value)) {
-        return processOnLoad();
+        return await processOnLoad();
       } else if (typeGuard.renderer.message(value)) {
         sendMessageToController(value);
       } else {
