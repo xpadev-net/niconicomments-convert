@@ -32,14 +32,12 @@
     "electron-log": "^5.0.2",
     "electron-store": "^8.1.0",
     "jotai": "^2.6.0",
-    "jsdom": "^23.0.1",
     "sqlite3": "^5.1.6",
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",
     "@types/follow-redirects": "^1.14.4",
-    "@types/jsdom": "^21.1.6",
     "@types/node": "^20.10.4",
     "@types/react-dom": "^18.2.17",
     "@types/sqlite3": "^3.1.11",
