@@ -28,12 +28,12 @@
     "@mui/icons-material": "^5.14.19",
     "@mui/material": "^5.14.20",
     "@xpadev-net/niconicomments": "^0.2.67",
-    "axios": "^1.6.2",
+    "axios": "^1.6.4",
     "electron-log": "^5.0.2",
     "electron-store": "^8.1.0",
     "jotai": "^2.6.0",
     "jsdom": "^23.0.1",
-    "sqlite3": "^5.1.6"
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",
