@@ -25,7 +25,10 @@ const registerListener = (): void => {
     try {
       if (typeGuard.renderer.blob(value)) {
         appendFrame(value.frameId, value.data);
-      } else if (typeGuard.renderer.end(value)) {
+        return;
+      }
+      logger.debug("ipc message received", "ipcMessage:", value);
+      if (typeGuard.renderer.end(value)) {
         markAsCompleted(value.frameId);
       } else if (typeGuard.controller.selectComment(value)) {
         return await selectComment();
