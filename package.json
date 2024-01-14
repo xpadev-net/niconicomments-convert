@@ -27,7 +27,7 @@
     "@fontsource/roboto": "^5.0.8",
     "@mui/icons-material": "^5.14.19",
     "@mui/material": "^5.14.20",
-    "@xpadev-net/niconicomments": "^0.2.69",
+    "@xpadev-net/niconicomments": "^0.2.70",
     "axios": "^1.6.2",
     "electron-log": "^5.0.2",
     "electron-store": "^8.1.0",
