@@ -149,7 +149,7 @@ const selectComment = async (): Promise<
   const filePath = pathResult.filePaths[0];
   const ext = path.extname(filePath);
   store.set("commentFileExt", ext);
-  const format = identifyCommentFormat(filePath);
+  const format = await identifyCommentFormat(filePath);
   if (!format) {
     console.error("failed to identify comment format", "filePath:", filePath);
     sendMessageToController({

@@ -4,7 +4,10 @@ import type { ApiResponseLoad } from "@/@types/response.renderer";
 import { transformComments } from "@/renderer/comment-utils";
 import { typeGuard } from "@/type-guard";
 import { encodeJson } from "@/util/json";
+import { getLogger } from "@/util/log";
 import { sleep } from "@/util/sleep";
+
+const logger = getLogger("[renderer]");
 
 const setupRenderer = async (): Promise<void> => {
   document.title = "renderer - niconicomments-convert";
@@ -40,6 +43,7 @@ const setupRenderer = async (): Promise<void> => {
   try {
     await startRenderer();
   } catch (e) {
+    logger.error(e);
     await window.api.request({
       type: "message",
       title: "未知のエラーが発生しました",
