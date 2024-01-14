@@ -83,6 +83,7 @@ const startRenderer = async (): Promise<void> => {
   const nico = new NiconiComments(canvas, data, {
     ...queue.option.options,
     format,
+    lazy: true,
   });
   const emptyBuffer: Blob | null = await new Promise((resolve) =>
     canvas.toBlob((blob) => resolve(blob)),
