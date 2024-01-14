@@ -31,7 +31,7 @@ export type TCommentItemLocal = {
 export type TCommentItemRemote = {
   type: "remote";
   path: string;
-  format: "XMLDocument";
+  format: "xml2js";
   ref: CommentQueue;
 };
 

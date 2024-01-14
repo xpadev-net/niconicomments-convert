@@ -1,18 +1,18 @@
 import NiconiComments from "@xpadev-net/niconicomments";
 import * as fs from "fs";
-import { JSDOM } from "jsdom";
+import { parseStringPromise } from "xml2js";
 
 import type { CommentFormat } from "@/@types/niconicomments";
 import type { V1Raw } from "@/@types/types";
 
-const identifyCommentFormat = (input: string): CommentFormat | undefined => {
+const identifyCommentFormat = async (
+  input: string,
+): Promise<CommentFormat | undefined> => {
   const fileData = fs.readFileSync(input, "utf8");
   if (input.match(/\.xml$/)) {
-    const jsdom = new JSDOM();
-    const parser = new jsdom.window.DOMParser();
-    const dom = parser.parseFromString(fileData, "application/xhtml+xml");
-    if (NiconiComments.typeGuard.xmlDocument(dom)) {
-      return "XMLDocument";
+    const json = (await parseStringPromise(fileData)) as unknown;
+    if (NiconiComments.typeGuard.xml2js.packet(json)) {
+      return "xml2js";
     } else {
       return;
     }

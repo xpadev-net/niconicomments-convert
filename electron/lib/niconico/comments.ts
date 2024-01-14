@@ -1,7 +1,7 @@
 import type { FormattedComment, V1Thread } from "@xpadev-net/niconicomments";
 import NiconiComments from "@xpadev-net/niconicomments";
 import * as fs from "fs";
-import { JSDOM } from "jsdom";
+import { Builder } from "xml2js";
 
 import type {
   TCommentOptionCustom,
@@ -45,26 +45,27 @@ const downloadComment = async (
 };
 
 const convertToXml = (comments: FormattedComment[]): string => {
-  const jsdom = new JSDOM();
-  const parser = new jsdom.window.DOMParser();
-  const document = parser.parseFromString(
-      `<?xml version="1.0" encoding="UTF-8"?><packet></packet>`,
-      "application/xhtml+xml",
-    ),
-    packet = document.getElementsByTagName("packet")[0];
-  for (const comment of comments) {
-    const chat = document.createElement("chat");
-    chat.setAttribute("no", `${comment.id}`);
-    chat.setAttribute("vpos", `${comment.vpos}`);
-    chat.innerText = chat.textContent = comment.content;
-    chat.setAttribute("date", `${comment.date}`);
-    chat.setAttribute("date_usec", `${comment.date_usec}`);
-    chat.setAttribute("owner", `${comment.owner ? 1 : 0}`);
-    chat.setAttribute("premium", `${comment.premium ? 1 : 0}`);
-    chat.setAttribute("mail", comment.mail.join(" "));
-    packet.append(chat);
-  }
-  return document.documentElement.outerHTML;
+  const builder = new Builder();
+  return builder.buildObject({
+    packet: {
+      $: {
+        version: "20061206",
+      },
+      chat: comments.map((comment) => ({
+        _: comment.content,
+        $: {
+          no: comment.id,
+          vpos: comment.vpos,
+          date: comment.date,
+          date_usec: comment.date_usec,
+          user_id: comment.user_id,
+          mail: comment.mail.join(" "),
+          premium: comment.premium ? 1 : 0,
+          anonymity: comment.owner ? 1 : 0,
+        },
+      })),
+    },
+  });
 };
 
 const downloadV3V1SimpleComment = async (
