@@ -203,9 +203,9 @@ const getChromiumCookies = async (
     db,
     `SELECT host_key, name, value, encrypted_value, path, expires_utc, ${secureColumn} FROM cookies`,
   )) as chromiumCookies[];
-  const decryptor = await (process.platform === "win32"
-    ? getWindowsDecryptor
-    : getMacDecryptor)(profile);
+  const decryptor = await (
+    process.platform === "win32" ? getWindowsDecryptor : getMacDecryptor
+  )(profile);
   const cookies: Cookies = {};
   for (const row of rows) {
     if (row.host_key.match(/\.nicovideo\.jp/)) {
