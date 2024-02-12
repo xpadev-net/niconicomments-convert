@@ -159,10 +159,10 @@ const downloadV3V1CustomComment = async (
         }),
       });
       const res = (await req.json()) as unknown;
-      const threads = (res as V1Raw)?.data?.threads;
-      if (!NiconiComments.typeGuard.v1.threads(threads))
+      const thread = (res as V1Raw)?.data?.threads[0];
+      if (!NiconiComments.typeGuard.v1.thread(thread))
         throw new Error("failed to get comments");
-      threadComments.push(...convertV3ToFormatted(threads, userList));
+      threadComments.push(...convertV3ToFormatted([thread], userList));
       if (option.end.type === "date") {
         updateProgress(total * threadTotal, total * threadId + start - when);
       } else {
@@ -172,7 +172,7 @@ const downloadV3V1CustomComment = async (
         );
       }
       if (
-        threads.length < 5 ||
+        thread.comments.length < 5 ||
         threadComments[threadComments.length - 1]?.id < 5
       )
         break;
