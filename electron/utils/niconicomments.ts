@@ -10,7 +10,9 @@ const identifyCommentFormat = async (
 ): Promise<CommentFormat | undefined> => {
   const fileData = fs.readFileSync(input, "utf8");
   if (input.match(/\.xml$/)) {
-    const json = (await parseStringPromise(fileData)) as unknown;
+    const json = (await parseStringPromise(fileData, {
+      includeWhiteChars: true,
+    })) as unknown;
     if (NiconiComments.typeGuard.xml2js.packet(json)) {
       return "xml2js";
     } else {

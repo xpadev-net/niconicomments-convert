@@ -1233,6 +1233,14 @@
   resolved "https://registry.yarnpkg.com/@xpadev-net/niconicomments/-/niconicomments-0.2.70.tgz#3c147eb21bfad1678bb8a273168d6a4fbb4b8450"
   integrity sha512-OfPXOm3XUZfTXOf4MLOA4u6vOxw6i5YbbpWxkW9Vz4w7+3LkC6LzgsL2wgaEOwb+kRau7+c/Ute9eQ4duZee3Q==
 
+"@xpadev-net/xml2js@^0.6.2-1":
+  version "0.6.2-1"
+  resolved "https://registry.yarnpkg.com/@xpadev-net/xml2js/-/xml2js-0.6.2-1.tgz#33255a2e839ff65470d357aac1ffe474f1290a83"
+  integrity sha512-Cw+sV+OpdtedkSNxz89PUW1CPmHufHC3xtYmplNPf1op9iWrwxHYHTO7aeuFSnQ4/Mg3hG5N0TFt2oE75uhg/g==
+  dependencies:
+    sax ">=0.6.0"
+    xmlbuilder "~11.0.0"
+
 abbrev@1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
@@ -5300,14 +5308,6 @@ wrappy@1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
   integrity sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==
-
-xml2js@^0.6.2:
-  version "0.6.2"
-  resolved "https://registry.yarnpkg.com/xml2js/-/xml2js-0.6.2.tgz#dd0b630083aa09c161e25a4d0901e2b2a929b499"
-  integrity sha512-T4rieHaC1EXcES0Kxxj4JWgaUQHDk+qwHcYOCFHfiwKz7tOVPLq7Hjq9dM1WCMhylqMEfP7hMcOIChvotiZegA==
-  dependencies:
-    sax ">=0.6.0"
-    xmlbuilder "~11.0.0"
 
 xmlbuilder@>=11.0.1, xmlbuilder@^15.1.1:
   version "15.1.1"
