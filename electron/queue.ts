@@ -218,7 +218,7 @@ const sendProgress = (): void => {
 const processOnLoad = async (): Promise<ApiResponseLoad> => {
   const queue = processingQueue;
   let commentData = fs.readFileSync(queue.comment.path, "utf-8");
-  if (queue.comment.format === "@xpadev-net/xml2js") {
+  if (queue.comment.format === "xml2js") {
     commentData = JSON.stringify(await parseStringPromise(commentData));
   }
   return {
