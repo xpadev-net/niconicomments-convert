@@ -1,6 +1,6 @@
 import NiconiComments from "@xpadev-net/niconicomments";
+import { parseStringPromise } from "@xpadev-net/xml2js";
 import * as fs from "fs";
-import { parseStringPromise } from "xml2js";
 
 import type { CommentFormat } from "@/@types/niconicomments";
 import type { V1Raw } from "@/@types/types";

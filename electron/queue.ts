@@ -1,6 +1,6 @@
+import { parseStringPromise } from "@xpadev-net/xml2js";
 import * as fs from "fs";
 import * as Stream from "stream";
-import { parseStringPromise } from "xml2js";
 
 import type { UUID } from "@/@types/brand";
 import type { ConvertQueue, Queue, QueueLists } from "@/@types/queue";
@@ -218,7 +218,7 @@ const sendProgress = (): void => {
 const processOnLoad = async (): Promise<ApiResponseLoad> => {
   const queue = processingQueue;
   let commentData = fs.readFileSync(queue.comment.path, "utf-8");
-  if (queue.comment.format === "xml2js") {
+  if (queue.comment.format === "@xpadev-net/xml2js") {
     commentData = JSON.stringify(await parseStringPromise(commentData));
   }
   return {
