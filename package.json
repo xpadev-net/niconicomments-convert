@@ -33,7 +33,7 @@
     "electron-store": "^8.1.0",
     "jotai": "^2.6.1",
     "sqlite3": "5.1.6",
-    "xml2js": "^0.6.2"
+    "@xpadev-net/xml2js": "^0.6.2-1"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",
