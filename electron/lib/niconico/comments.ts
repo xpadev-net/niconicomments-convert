@@ -1,7 +1,7 @@
 import type { FormattedComment, V1Thread } from "@xpadev-net/niconicomments";
 import NiconiComments from "@xpadev-net/niconicomments";
+import { Builder } from "@xpadev-net/xml2js";
 import * as fs from "fs";
-import { Builder } from "xml2js";
 
 import type {
   TCommentOptionCustom,
