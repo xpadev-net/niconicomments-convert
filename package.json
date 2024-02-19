@@ -28,7 +28,7 @@
     "@mui/icons-material": "^5.15.10",
     "@mui/material": "^5.15.10",
     "@xpadev-net/niconicomments": "^0.2.71",
-    "@xpadev-net/xml2js": "^0.6.2-1",
+    "@xpadev-net/xml2js": "^0.6.2-2",
     "axios": "^1.6.7",
     "electron-log": "^5.1.1",
     "electron-store": "^8.1.0",
