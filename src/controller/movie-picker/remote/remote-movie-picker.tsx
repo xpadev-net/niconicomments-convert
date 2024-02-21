@@ -60,7 +60,10 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
         });
         return;
       }
-      if (!targetMetadata.data.media.delivery) {
+      if (
+        !targetMetadata.data.media.delivery &&
+        !targetMetadata.data.media.domand
+      ) {
         setMessage({
           title: "動画情報の取得に失敗しました",
           content: "未購入の有料動画などの可能性があります",
