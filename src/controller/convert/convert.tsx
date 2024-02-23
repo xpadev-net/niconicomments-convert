@@ -103,7 +103,21 @@ const Convert: FC = () => {
         type: "selectOutput",
         host: "controller",
         options: {
-          filters: [{ name: "mp4", extensions: ["mp4"] }],
+          filters: [
+            {
+              name: "Movies",
+              extensions: [
+                "mp4",
+                "webm",
+                "avi",
+                "mkv",
+                "wmv",
+                "mov",
+                "ts",
+                "m2ts",
+              ],
+            },
+          ],
           properties: ["createDirectory"],
         },
       });
