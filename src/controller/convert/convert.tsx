@@ -336,7 +336,7 @@ const Convert: FC = () => {
                   <FormControl key={key} variant="standard">
                     <InputLabel>{item.name}</InputLabel>
                     <Select
-                      value={item.value}
+                      value={`${item.value}`}
                       onChange={(e) =>
                         setOptions({
                           ...options,
