@@ -63,13 +63,6 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
         });
         return;
       }
-      if (!targetMetadata.data.media.delivery) {
-        setMessage({
-          title: "動画情報の取得に失敗しました",
-          content: "未購入の有料動画などの可能性があります",
-        });
-        return;
-      }
       setMetadata(targetMetadata);
       setMode(targetMetadata.data.viewer === null ? "simple" : "custom");
       lastUrl.current = nicoId;
