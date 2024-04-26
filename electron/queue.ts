@@ -237,7 +237,12 @@ const processOnInterrupt = (queueId: UUID): void => {
   if (queue.type === "convert") {
     void convertQueue
       .then(() => inputStream.end())
-      .then(() => interruptConverter());
+      .then(() => {
+        interruptConverter();
+        sendMessageToRenderer({
+          type: "end",
+        });
+      });
   } else if (queue.type === "movie") {
     if (queue.format.type === "dmc") interruptDMC();
     if (queue.format.type === "dms") interruptDMS();
