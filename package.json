@@ -8,17 +8,18 @@
   "author": "xpadev(xpadev.net)",
   "homepage": "https://github.com/xpadev-net/niconicomments-convert",
   "scripts": {
-    "format": "prettier --write \"./{src,electron}/**/*\"",
     "build:win": "tsc -p electron&&npm run copy-files&&node build-script/win.js",
     "build:mac": "tsc -p electron&&npm run copy-files&&node build-script/mac.js",
     "build": "tsc -p electron&&npm run copy-files&&node build-script/win.js&&node build-script/mac.js",
     "copy-files": "npx rimraf build/electron/html&&vite build",
     "check-types": "npx tsc --noEmit",
     "electron:dev": "tsc -p electron&&concurrently \"vite\" \"electron --unhandled-rejections=strict .\"",
-    "eslint": "eslint ./{src,electron}/**/*.ts*",
-    "eslint:fix": "eslint ./{src,electron}/**/*.ts* --fix",
-    "lint": "npm run eslint&&npm run check-types",
-    "lint:fix": "npm run format&&npm run eslint:fix&&npm run check-types",
+    "eslint": "biome lint {src,electron}",
+    "eslint:fix": "biome lint --write {src,electron}",
+    "format": "biome format {src,electron}",
+    "format:fix": "biome format --write {src,electron}",
+    "lint": "biome check {src,electron}",
+    "lint:fix": "biome check --apply-unsafe {src,electron}",
     "prepare": "husky install"
   },
   "dependencies": {
