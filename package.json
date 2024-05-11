@@ -15,7 +15,7 @@
     "check-types": "npx tsc --noEmit",
     "electron:dev": "tsc -p electron&&concurrently \"vite\" \"electron --unhandled-rejections=strict .\"",
     "eslint": "biome lint {src,electron}",
-    "eslint:fix": "biome lint --write {src,electron}",
+    "eslint:fix": "biome lint --apply-unsafe {src,electron}",
     "format": "biome format {src,electron}",
     "format:fix": "biome format --write {src,electron}",
     "lint": "biome check {src,electron}",
