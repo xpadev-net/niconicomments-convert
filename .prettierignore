@@ -1,6 +1,0 @@
-/dist
-node_modules
-package.json
-package-lock.json
-tsconfig.json
-tsconfig.eslint.json
