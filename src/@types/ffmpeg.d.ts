@@ -9,5 +9,3 @@ export type FfprobeOutput = {
 export type FfmpegOptions = {
   [key: string]: string;
 };
-
-export {};

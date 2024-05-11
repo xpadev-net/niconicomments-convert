@@ -1,4 +1,4 @@
-import * as child_process from "child_process";
+import * as child_process from "node:child_process";
 
 import type { SpawnResult } from "@/@types/spawn";
 
@@ -9,8 +9,8 @@ function spawn(
   onData?: (data: string) => unknown,
   onError?: (data: string) => unknown,
 ): { promise: Promise<SpawnResult>; stop: () => void } {
-  let stdout = "",
-    stderr = "";
+  let stdout = "";
+  let stderr = "";
   const p = child_process.spawn(cmd, args, options);
   p.stdout.setEncoding("utf-8");
   p.stdout.on("data", (data: string) => {

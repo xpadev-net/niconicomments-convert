@@ -184,7 +184,7 @@ const Convert: FC = () => {
     return () => {
       window.api.remove(eventHandler);
     };
-  }, []);
+  }, [setMessage]);
   return (
     <div className={Styles.wrapper}>
       <div>
@@ -331,7 +331,8 @@ const Convert: FC = () => {
                     label={item.name}
                   />
                 );
-              } else if (item.type === "string") {
+              }
+              if (item.type === "string") {
                 return (
                   <FormControl key={key} variant="standard">
                     <InputLabel>{item.name}</InputLabel>

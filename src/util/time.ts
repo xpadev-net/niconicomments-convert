@@ -13,14 +13,13 @@ const str2time = (date: string): number | undefined => {
     if (match[1] !== undefined) time += Number(match[1]) * 60;
     if (match[2] !== undefined) time += Number(match[2]);
     if (match[3] !== undefined)
-      time += Number(match[3]) / Math.pow(10, match[3].length);
+      time += Number(match[3]) / 10 ** match[3].length;
     if (time < 0) {
       return undefined;
     }
     return time;
-  } else {
-    return undefined;
   }
+  return undefined;
 };
 /**
  * 秒数を文字列に

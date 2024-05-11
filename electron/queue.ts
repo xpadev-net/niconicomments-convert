@@ -1,6 +1,6 @@
+import * as fs from "node:fs";
+import * as Stream from "node:stream";
 import { parseStringPromise } from "@xpadev-net/xml2js";
-import * as fs from "fs";
-import * as Stream from "stream";
 
 import type { UUID } from "@/@types/brand";
 import type { ConvertQueue, Queue, QueueLists } from "@/@types/queue";

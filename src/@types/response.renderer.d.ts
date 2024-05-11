@@ -23,5 +23,3 @@ export type ApiResponsesToRenderer =
   | ApiResponseLoad
   | ApiResponseProgressRenderer
   | ApiResponseReportProgress;
-
-export {};

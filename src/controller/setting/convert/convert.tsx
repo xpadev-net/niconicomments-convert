@@ -13,9 +13,9 @@ type OptionsValue = [string, string][];
 
 const rebuild = (value: OptionsValue): FfmpegOptions => {
   const result: FfmpegOptions = {};
-  value.forEach((v) => {
+  for (const v of value) {
     result[v[0]] = v[1];
-  });
+  }
   return result;
 };
 
@@ -99,26 +99,26 @@ const ConvertSetting: FC = () => {
         </li>
       </ul>
       <div>
-        {option.map((value, index) => {
+        {Object.entries(option).map(([index, [key, value]]) => {
           return (
             <div key={index} className={Styles.block}>
               <TextField
                 label="key"
                 variant="standard"
-                value={value[0]}
-                onChange={(e) => update("key", value[0], e.target.value)}
+                value={key}
+                onChange={(e) => update("key", key, e.target.value)}
                 className={Styles.key}
               />
               <TextField
                 label="value"
                 variant="standard"
-                value={value[1]}
-                onChange={(e) => update("value", value[0], e.target.value)}
+                value={value}
+                onChange={(e) => update("value", value, e.target.value)}
                 className={Styles.value}
               />
               <IconButton
                 className={Styles.delete}
-                onClick={() => deleteItem(value[0])}
+                onClick={() => deleteItem(key)}
               >
                 <DeleteOutlined />
               </IconButton>

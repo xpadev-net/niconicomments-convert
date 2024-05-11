@@ -42,7 +42,7 @@ const LocalCommentPicker: FC<Props> = ({ onChange }) => {
       });
       setIsLoading(false);
     })();
-  }, []);
+  }, [setMessage, setIsLoading]);
 
   const onClick = (): void => {
     onChange(comment);

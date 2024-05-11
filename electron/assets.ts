@@ -1,9 +1,9 @@
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+import type * as Stream from "node:stream";
 import type { AxiosProgressEvent, AxiosResponse } from "axios";
 import axios from "axios";
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
-import type * as Stream from "stream";
 
 import {
   closeBinaryDownloaderWindow,
@@ -19,9 +19,9 @@ let target: lib[] = [];
 
 const ext = process.platform === "win32" ? ".exe" : "";
 
-const binPath = path.join(basePath, "bin"),
-  ffmpegPath = path.join(binPath, `ffmpeg${ext}`),
-  ffprobePath = path.join(binPath, `ffprobe${ext}`);
+const binPath = path.join(basePath, "bin");
+const ffmpegPath = path.join(binPath, `ffmpeg${ext}`);
+const ffprobePath = path.join(binPath, `ffprobe${ext}`);
 
 const assetsBaseUrl = {
   ffmpeg:
@@ -30,18 +30,20 @@ const assetsBaseUrl = {
 const version = {
   ffmpeg: "4.4",
 };
-const distro = (function () {
+const distro = (() => {
   const arch = os.arch();
   const dist = process.platform;
   if (dist === "win32" && arch === "x64") {
     return {
       ffmpeg: "win32-x64",
     };
-  } else if (dist === "darwin" && arch === "arm64") {
+  }
+  if (dist === "darwin" && arch === "arm64") {
     return {
       ffmpeg: "darwin-arm64",
     };
-  } else if (dist === "darwin" && arch === "x64") {
+  }
+  if (dist === "darwin" && arch === "x64") {
     return {
       ffmpeg: "darwin-x64",
     };

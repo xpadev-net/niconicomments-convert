@@ -48,7 +48,7 @@ const AuthSetting: FC = () => {
         }),
       );
     })();
-  }, [0]);
+  }, []);
 
   const onAuthTypeChange = (e: ChangeEvent<HTMLInputElement>): void => {
     if (authSetting?.type === e.target.value) return;

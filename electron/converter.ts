@@ -1,4 +1,4 @@
-import type * as Stream from "stream";
+import type * as Stream from "node:stream";
 
 import type { FfmpegOptions } from "@/@types/ffmpeg";
 import type { ConvertQueue } from "@/@types/queue";

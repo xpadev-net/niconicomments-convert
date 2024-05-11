@@ -14,7 +14,7 @@ const Movie: FC = () => {
   const download = (movie?: TMovieItemRemote): void => {
     void (async () => {
       if (!movie) return;
-      setKey((pv) => ++pv);
+      setKey((pv) => pv + 1);
       await window.api.request({
         type: "appendQueue",
         host: "controller",

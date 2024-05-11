@@ -51,5 +51,3 @@ export type ApiResponsesToController =
   | ApiResponseMessage
   | ApiResponseDownloadMovie
   | ApiResponseDownloadMovieProgress;
-
-export {};
