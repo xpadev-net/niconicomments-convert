@@ -7,11 +7,8 @@
     "rootDir": "../",
     "baseUrl": "../",
     "paths": {
-      "@/*": ["src/*"],
+      "@/*": ["src/*"]
     }
   },
-  "include": [
-    "*",
-    "../src/@types/*.d.ts"
-  ]
+  "include": ["*", "../src/@types/*.d.ts"]
 }

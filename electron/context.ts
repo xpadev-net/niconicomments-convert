@@ -1,5 +1,5 @@
+import * as path from "node:path";
 import { app } from "electron";
-import * as path from "path";
 
 const baseUrl = app.isPackaged
   ? `file://${__dirname}/html/index.html`

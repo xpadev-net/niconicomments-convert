@@ -74,5 +74,3 @@ export type ApiRequestsFromController =
   | ApiRequestGetNiconicoMovieMetadata
   | ApiRequestInterruptQueue
   | ApiRequestGetQueue;
-
-export {};

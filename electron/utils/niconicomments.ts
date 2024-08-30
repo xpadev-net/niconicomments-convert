@@ -1,6 +1,6 @@
+import * as fs from "node:fs";
 import NiconiComments from "@xpadev-net/niconicomments";
 import { parseStringPromise } from "@xpadev-net/xml2js";
-import * as fs from "fs";
 
 import type { CommentFormat } from "@/@types/niconicomments";
 import type { V1Raw } from "@/@types/types";
@@ -15,31 +15,35 @@ const identifyCommentFormat = async (
     })) as unknown;
     if (NiconiComments.typeGuard.xml2js.packet(json)) {
       return "xml2js";
-    } else {
-      return;
     }
-  } else if (input.match(/\.json$/) || input.match(/_commentJSON\.txt$/)) {
+    return;
+  }
+  if (input.match(/\.json$/) || input.match(/_commentJSON\.txt$/)) {
     const json = JSON.parse(fileData) as unknown;
     if (
       (json as V1Raw)?.meta?.status === 200 &&
       NiconiComments.typeGuard.v1.threads((json as V1Raw)?.data?.threads)
     ) {
       return "rawV1";
-    } else if (NiconiComments.typeGuard.v1.threads(json)) {
+    }
+    if (NiconiComments.typeGuard.v1.threads(json)) {
       return "v1";
-    } else if (NiconiComments.typeGuard.legacy.rawApiResponses(json)) {
+    }
+    if (NiconiComments.typeGuard.legacy.rawApiResponses(json)) {
       return "legacy";
-    } else if (NiconiComments.typeGuard.owner.comments(json)) {
+    }
+    if (NiconiComments.typeGuard.owner.comments(json)) {
       return "owner";
-    } else if (
+    }
+    if (
       NiconiComments.typeGuard.formatted.comments(json) ||
       NiconiComments.typeGuard.formatted.legacyComments(json)
     ) {
       return "formatted";
-    } else {
-      return;
     }
-  } else if (input.match(/\.txt$/)) {
+    return;
+  }
+  if (input.match(/\.txt$/)) {
     return "legacyOwner";
   }
 };

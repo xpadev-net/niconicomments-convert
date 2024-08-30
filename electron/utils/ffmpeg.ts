@@ -11,18 +11,20 @@ const DownloadM3U8 = (
   stop: () => void;
   promise: Promise<SpawnResult>;
 } => {
-  let total = 0,
-    downloaded = 0,
-    speed = -1;
+  let total = 0;
+  let downloaded = 0;
+  let speed = -1;
   const onData = (data: string): void => {
-    let match;
-    if ((match = data.match(/Duration: ([0-9:.]+),/))) {
+    let match: RegExpMatchArray | null = data.match(/Duration: ([0-9:.]+),/);
+    if (match) {
       total = time2num(match[1]);
     }
-    if ((match = data.match(/time=([0-9:.]+) /))) {
+    match = data.match(/time=([0-9:.]+) /);
+    if (match) {
       downloaded = time2num(match[1]);
     }
-    if ((match = data.match(/speed=([0-9.]+)x /))) {
+    match = data.match(/speed=([0-9.]+)x /);
+    if (match) {
       speed = Number(match[1]);
     }
     const eta = speed < 0 ? -1 : (total - downloaded) / speed;

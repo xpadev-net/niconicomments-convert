@@ -1,6 +1,6 @@
+import * as path from "node:path";
 import type { OpenDialogReturnValue, SaveDialogOptions } from "electron";
 import { dialog } from "electron";
-import * as path from "path";
 
 import type { FfprobeOutput } from "@/@types/ffmpeg";
 import type {
@@ -30,7 +30,7 @@ const selectFile = async (
 };
 
 const selectMovie = async (): Promise<
-  ApiResponseMessage | ApiResponseSelectMovie | void
+  ApiResponseMessage | ApiResponseSelectMovie | undefined
 > => {
   const path = await dialog.showOpenDialog({
     properties: ["openFile"],
@@ -98,9 +98,9 @@ const selectMovie = async (): Promise<
         "動画ソースが見つかりませんでした\ndialog / selectMovie / empty streams",
     };
   }
-  let width: number = 0,
-    height: number = 0,
-    duration: number = 0;
+  let width = 0;
+  let height = 0;
+  let duration = 0;
   for (const stream of metadata.streams) {
     if (stream.width) {
       width = stream.width;
@@ -155,7 +155,8 @@ const selectComment = async (): Promise<
     sendMessageToController({
       type: "message",
       title: "非対応のフォーマットです",
-      message: `入力されたデータの識別に失敗しました\n対応していないフォーマットの可能性があります\n対応しているフォーマットについては以下のリンクを御覧ください\nhttps://xpadev-net.github.io/niconicomments/#p_format\n※フォーマットの識別は拡張子をもとに行っています\ndialog / selectComment`,
+      message:
+        "入力されたデータの識別に失敗しました\n対応していないフォーマットの可能性があります\n対応しているフォーマットについては以下のリンクを御覧ください\nhttps://xpadev-net.github.io/niconicomments/#p_format\n※フォーマットの識別は拡張子をもとに行っています\ndialog / selectComment",
     });
     return;
   }

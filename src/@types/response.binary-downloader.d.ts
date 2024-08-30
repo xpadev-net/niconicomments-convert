@@ -8,5 +8,3 @@ export type ApiResponseDownloadProgress = {
 };
 
 export type ApiResponsesToBinaryDownloader = ApiResponseDownloadProgress;
-
-export {};

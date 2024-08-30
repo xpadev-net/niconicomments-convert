@@ -89,8 +89,8 @@ const startRenderer = async (): Promise<void> => {
     canvas.toBlob((blob) => resolve(blob)),
   );
   message.innerText = "";
-  let generatedFrames = 0,
-    offset = Math.ceil((queue.option.ss ?? 0) * 100);
+  let generatedFrames = 0;
+  let offset = Math.ceil((queue.option.ss ?? 0) * 100);
   const targetFrameRate = queue.option.fps || 30;
   const totalFrames =
     Math.ceil(
@@ -100,8 +100,8 @@ const startRenderer = async (): Promise<void> => {
     for (let i = 0; i < targetFrameRate; i++) {
       const vpos = Math.ceil(i * (100 / targetFrameRate)) + offset;
       const frame = generatedFrames;
-      // eslint-disable-next-line
-      if ((nico["timeline"][vpos]?.length || 0) === 0 && emptyBuffer) {
+      // @ts-ignore
+      if ((nico.timeline[vpos]?.length || 0) === 0 && emptyBuffer) {
         sendBlob(frame, emptyBuffer);
       } else {
         nico.drawCanvas(vpos);

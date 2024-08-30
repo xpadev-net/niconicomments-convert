@@ -8,7 +8,7 @@ type Props = {
 };
 
 const ProgressDisplay: FC<Props> = ({ progress }) => {
-  if (typeof progress === "undefined" || isNaN(progress)) {
+  if (typeof progress === "undefined" || Number.isNaN(progress)) {
     return <LinearProgress className={Styles.progress} />;
   }
   return (

@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 import type {
   Cookies,
@@ -112,7 +112,7 @@ const getUser = async (
   profile: FirefoxProfile,
 ): Promise<UserData | undefined> => {
   const cookies = await getFirefoxCookies(profile);
-  if (!(cookies["user_session"] && cookies["user_session_secure"])) return;
+  if (!(cookies.user_session && cookies.user_session_secure)) return;
   return await getUserInfo(convertToEncodedCookie(cookies));
 };
 
@@ -128,7 +128,7 @@ const getFirefoxCookies = async (profile: FirefoxProfile): Promise<Cookies> => {
     }
     return await fetchAll(
       db,
-      `SELECT host, name, value, path, expiry, isSecure FROM moz_cookies WHERE originAttributes LIKE ? OR originAttributes LIKE ?`,
+      "SELECT host, name, value, path, expiry, isSecure FROM moz_cookies WHERE originAttributes LIKE ? OR originAttributes LIKE ?",
       [
         `%userContextId=${profile.contextId}`,
         `%userContextId=${profile.contextId}&%`,

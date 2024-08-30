@@ -1,14 +1,14 @@
-import * as crypto from "crypto";
-import * as fs from "fs";
-import * as path from "path";
+import * as crypto from "node:crypto";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 import type {
   ChromiumBrowser,
+  ChromiumProfile,
+  Cookies,
   chromiumCookies,
   chromiumLocalState,
-  ChromiumProfile,
   columnInfo,
-  Cookies,
 } from "@/@types/cookies";
 import type { UserData } from "@/@types/niconico";
 import type { winProtect } from "@/@types/win-protect";
@@ -28,9 +28,9 @@ reference source:
   Released under The Unlicense
  */
 
-const salt = "saltysalt",
-  integrations = 1003,
-  keyLength = 16;
+const salt = "saltysalt";
+const integrations = 1003;
+const keyLength = 16;
 
 const getChromiumRootDir = (browser: ChromiumBrowser): string => {
   if (process.platform === "win32") {
@@ -171,7 +171,7 @@ const getUser = async (
 ): Promise<UserData | undefined> => {
   try {
     const cookies = await getChromiumCookies(profile);
-    if (!(cookies["user_session"] && cookies["user_session_secure"])) return;
+    if (!(cookies.user_session && cookies.user_session_secure)) return;
     return await getUserInfo(convertToEncodedCookie(cookies));
   } catch (_) {
     return;
@@ -203,9 +203,9 @@ const getChromiumCookies = async (
     db,
     `SELECT host_key, name, value, encrypted_value, path, expires_utc, ${secureColumn} FROM cookies`,
   )) as chromiumCookies[];
-  const decryptor = await (
-    process.platform === "win32" ? getWindowsDecryptor : getMacDecryptor
-  )(profile);
+  const decryptor = await (process.platform === "win32"
+    ? getWindowsDecryptor
+    : getMacDecryptor)(profile);
   const cookies: Cookies = {};
   for (const row of rows) {
     if (row.host_key.match(/\.nicovideo\.jp/)) {
@@ -258,8 +258,9 @@ const getWindowsDecryptor = (
   const encryptedKey = Buffer.from(base64_key, "base64");
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const wp = require("win-protect") as winProtect;
-  return (value: Buffer) => {
-    if (value[0] == 0x76 && value[1] == 0x31 && value[2] == 0x30) {
+  return (_value: Buffer) => {
+    let value = _value;
+    if (value[0] === 0x76 && value[1] === 0x31 && value[2] === 0x30) {
       const key: Buffer = wp.decrypt(
         encryptedKey.slice(5, encryptedKey.length),
       );
@@ -269,10 +270,10 @@ const getWindowsDecryptor = (
       return decryptAES256GCM(key, value, nonce, tag);
     }
     if (
-      value[0] == 0x01 &&
-      value[1] == 0x00 &&
-      value[2] == 0x00 &&
-      value[3] == 0x00
+      value[0] === 0x01 &&
+      value[1] === 0x00 &&
+      value[2] === 0x00 &&
+      value[3] === 0x00
     ) {
       return wp.decrypt(value).toString();
     }

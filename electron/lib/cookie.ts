@@ -88,7 +88,7 @@ const filterCookies = (
 
 const formatCookies = (
   cookies: ParsedCookie[],
-  addSuffix: boolean = false,
+  addSuffix = false,
 ): string[] => {
   return cookies.map((cookie) => {
     return `${cookie.key}=${cookie.value}${
