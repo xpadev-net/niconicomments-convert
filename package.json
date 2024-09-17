@@ -64,7 +64,7 @@
     "rimraf": "^5.0.5",
     "sass": "^1.75.0",
     "typescript": "^5.4.5",
-    "vite": "^5.2.10"
+    "vite": "^5.2.14"
   },
   "optionalDependencies": {
     "win-protect": "^1.0.0"
