@@ -4,14 +4,14 @@ ffmpeg-stream
 Released under the MIT License.
 source file: https://github.com/phaux/node-ffmpeg-stream/blob/master/src/index.ts
  */
-import type { ChildProcess } from "child_process";
-import { spawn } from "child_process";
-import { createReadStream, createWriteStream, unlink } from "fs";
-import { tmpdir } from "os";
-import { join } from "path";
-import type { Readable, Writable } from "stream";
-import { PassThrough } from "stream";
-import { promisify } from "util";
+import type { ChildProcess } from "node:child_process";
+import { spawn } from "node:child_process";
+import { createReadStream, createWriteStream, unlink } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import type { Readable, Writable } from "node:stream";
+import { PassThrough } from "node:stream";
+import { promisify } from "node:util";
 
 import { ffmpegPath } from "../assets";
 import { getLogger } from "../lib/log";
@@ -62,7 +62,7 @@ function getArgs(options: Options): string[] {
       }
     } else if (value != null && value !== false) {
       args.push(`-${option}`);
-      if (typeof value != "boolean") {
+      if (typeof value !== "boolean") {
         args.push(String(value));
       }
     }
@@ -95,14 +95,14 @@ export class Converter {
   input(file: string, options?: Options): void;
   input(arg0?: string | Options, arg1?: Options): Writable | undefined {
     const [file, opts = {}] =
-      typeof arg0 == "string" ? [arg0, arg1] : [undefined, arg0];
+      typeof arg0 === "string" ? [arg0, arg1] : [undefined, arg0];
 
     if (file != null) {
       this.createInputFromFile(file, opts);
       return;
     }
     if (opts.buffer) {
-      delete opts.buffer;
+      opts.buffer = undefined;
       return this.createBufferedInputStream(opts);
     }
     return this.createInputStream(opts);
@@ -113,14 +113,14 @@ export class Converter {
   output(file: string, options?: Options): void;
   output(arg0?: string | Options, arg1?: Options): Readable | undefined {
     const [file, opts = {}] =
-      typeof arg0 == "string" ? [arg0, arg1] : [undefined, arg0];
+      typeof arg0 === "string" ? [arg0, arg1] : [undefined, arg0];
 
     if (file != null) {
       this.createOutputToFile(file, opts);
       return;
     }
     if (opts.buffer) {
-      delete opts.buffer;
+      opts.buffer = undefined;
       return this.createBufferedOutputStream(opts);
     }
     return this.createOutputStream(opts);
@@ -194,7 +194,7 @@ export class Converter {
             resolve();
           });
           stream.on("error", (err) => {
-            logger.error(`input buffered stream error`, err);
+            logger.error("input buffered stream error", err);
             return reject(err);
           });
         });
@@ -222,7 +222,7 @@ export class Converter {
             resolve();
           });
           reader.on("error", (err: Error) => {
-            logger.error(`output buffered stream error`, err);
+            logger.error("output buffered stream error", err);
             reject(err);
           });
         });
@@ -315,7 +315,10 @@ export class Converter {
     await new Promise<void>((resolve, reject): void => {
       let logSectionNum = 0;
 
-      if (this.process == null) return reject(Error(`Converter not started`));
+      if (this.process == null) {
+        reject(Error("Converter not started"));
+        return;
+      }
 
       if (this.process.stderr != null) {
         this.process.stderr.setEncoding("utf8");
@@ -346,7 +349,7 @@ export class Converter {
         );
         if (code == null) return resolve();
         if (EXIT_CODES.includes(code)) return resolve();
-        reject(Error(`Converting failed`));
+        reject(Error("Converting failed"));
       });
     });
   }

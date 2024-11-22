@@ -32,7 +32,7 @@ const DMCMoviePicker: FC<Props> = ({ metadata, onChange }) => {
         audio: selectedAudio,
       },
     });
-  }, [selectedAudio, selectedVideo]);
+  }, [selectedAudio, selectedVideo, onChange]);
   return (
     <>
       <SelectField label={"動画"} className={Styles.input}>

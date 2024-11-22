@@ -16,9 +16,18 @@ type Props = {
 
 const Sidebar: FC<Props> = ({ pages, onChange, value }) => {
   const [extended, setExtended] = useState<boolean>(false);
+
+  const toggleExtended = () => {
+    setExtended((pv) => !pv);
+  };
+
   return (
     <div className={`${Styles.wrapper} ${extended && Styles.extend}`}>
-      <div className={Styles.item} onClick={() => setExtended((pv) => !pv)}>
+      <div
+        className={Styles.item}
+        onClick={toggleExtended}
+        onKeyDown={toggleExtended}
+      >
         <div className={Styles.icon}>
           <Menu />
         </div>
@@ -29,6 +38,7 @@ const Sidebar: FC<Props> = ({ pages, onChange, value }) => {
             key={page.id}
             className={`${Styles.item} ${value === page.id && Styles.active}`}
             onClick={() => onChange(page.id)}
+            onKeyDown={() => onChange(page.id)}
           >
             <div className={Styles.icon}>
               <page.icon />

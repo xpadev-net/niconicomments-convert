@@ -38,7 +38,7 @@ const LocalMoviePicker: FC<Props> = ({ onChange }) => {
       setMovie(data.data);
       setIsLoading(false);
     })();
-  }, []);
+  }, [setMessage, setIsLoading]);
   const onClick = (): void => {
     if (!movie) return;
     onChange({

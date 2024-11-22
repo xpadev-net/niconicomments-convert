@@ -24,7 +24,7 @@ const MovieItem: FC<Props> = ({ queue, className }) => {
         <StatusDisplay queue={queue} />
       </div>
     );
-  }, [queue]);
+  }, [queue, className]);
 };
 
 type FormatDisplayProps = {

@@ -1,7 +1,7 @@
+import * as fs from "node:fs";
 import type { FormattedComment, V1Thread } from "@xpadev-net/niconicomments";
 import NiconiComments from "@xpadev-net/niconicomments";
 import { Builder } from "@xpadev-net/xml2js";
-import * as fs from "fs";
 
 import type {
   TCommentOptionCustom,
@@ -122,7 +122,7 @@ const downloadV3V1CustomComment = async (
   for (const thread of option.threads) {
     if (!thread.enable) continue;
     const threadComments: FormattedComment[] = [];
-    const when = Math.floor(new Date(option.start).getTime() / 1000);
+    let when = Math.floor(new Date(option.start).getTime() / 1000);
     const baseData = {
       threadKey: metadata.nvComment.threadKey,
       params: {
@@ -162,6 +162,14 @@ const downloadV3V1CustomComment = async (
       const thread = (res as V1Raw)?.data?.threads[0];
       if (!NiconiComments.typeGuard.v1.thread(thread))
         throw new Error("failed to get comments");
+      const oldestCommentDate = new Date(
+        Math.min(
+          ...thread.comments.map((comment) => {
+            return new Date(comment.postedAt).getTime();
+          }),
+        ),
+      );
+      when = Math.floor(oldestCommentDate.getTime() / 1000);
       threadComments.push(...convertV3ToFormatted([thread], userList));
       if (option.end.type === "date") {
         updateProgress(total * threadTotal, total * threadId + start - when);

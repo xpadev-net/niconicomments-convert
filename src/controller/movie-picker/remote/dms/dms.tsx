@@ -26,7 +26,7 @@ const DMSMoviePicker: FC<Props> = ({ metadata, onChange }) => {
       type: "dms",
       format: [selectedVideo, selectedAudio],
     });
-  }, [selectedAudio, selectedVideo]);
+  }, [selectedAudio, selectedVideo, onChange]);
   return (
     <>
       <SelectField label={"動画"} className={Styles.input}>

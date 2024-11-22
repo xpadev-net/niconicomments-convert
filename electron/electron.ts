@@ -1,4 +1,4 @@
-import { app, BrowserWindow, globalShortcut } from "electron";
+import { BrowserWindow, app, globalShortcut } from "electron";
 
 import { onStartUp } from "./assets";
 import { createControllerWindow } from "./controller-window";
@@ -19,7 +19,7 @@ app
   })
   .catch((e) => console.warn(e));
 if (app.isPackaged) {
-  app.on("browser-window-focus", function () {
+  app.on("browser-window-focus", () => {
     globalShortcut.register("CommandOrControl+R", () => {
       console.log("CommandOrControl+R is pressed: Shortcut Disabled");
     });
@@ -28,7 +28,7 @@ if (app.isPackaged) {
     });
   });
 
-  app.on("browser-window-blur", function () {
+  app.on("browser-window-blur", () => {
     globalShortcut.unregister("CommandOrControl+R");
     globalShortcut.unregister("F5");
   });

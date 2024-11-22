@@ -23,6 +23,6 @@ const CommentItem: FC<Props> = ({ queue, className }) => {
         <StatusDisplay queue={queue} />
       </div>
     );
-  }, [queue]);
+  }, [queue, className]);
 };
 export { CommentItem };

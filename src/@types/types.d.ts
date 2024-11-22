@@ -5,12 +5,12 @@ import type {
   ApiRequestsFromRenderer,
 } from "@/@types/request.renderer";
 import type {
-  ApiResponsesToBinaryDownloader,
   ApiResponseToBinaryDownloader,
+  ApiResponsesToBinaryDownloader,
 } from "@/@types/response.binary-downloader";
 import type {
-  ApiResponsesToRenderer,
   ApiResponseToRenderer,
+  ApiResponsesToRenderer,
 } from "@/@types/response.renderer";
 
 import type {
@@ -18,8 +18,8 @@ import type {
   ApiRequestsFromController,
 } from "./request.controller";
 import type {
-  ApiResponsesToController,
   ApiResponseToController,
+  ApiResponsesToController,
 } from "./response.controller";
 
 declare global {

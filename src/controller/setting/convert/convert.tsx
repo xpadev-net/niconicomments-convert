@@ -9,8 +9,18 @@ import type { FfmpegOptions } from "@/@types/ffmpeg";
 import { defaultOptions } from "../../../../electron/const";
 import Styles from "./convert.module.scss";
 
+type OptionsValue = [string, string][];
+
+const rebuild = (value: OptionsValue): FfmpegOptions => {
+  const result: FfmpegOptions = {};
+  for (const v of value) {
+    result[v[0]] = v[1];
+  }
+  return result;
+};
+
 const ConvertSetting: FC = () => {
-  const [option, setOption] = useState<FfmpegOptions>();
+  const [option, setOption] = useState<OptionsValue>([]);
   useLayoutEffect(() => {
     void (async () => {
       const value = ((await window.api.request({
@@ -18,48 +28,41 @@ const ConvertSetting: FC = () => {
         key: "ffmpegOptions",
         host: "controller",
       })) ?? defaultOptions) as FfmpegOptions;
-      setOption(value);
+      setOption(Object.entries(value));
     })();
   }, []);
   const update = (type: "key" | "value", key: string, value: string): void => {
     setOption((pv) => {
+      const item = pv.find((v) => v[0] === key);
+      if (!item) return [...pv];
       if (type === "key") {
-        const result = { ...pv };
-        result[value] = result[key];
-        delete result[key];
-        void window.api.request({
-          type: "setSetting",
-          key: "ffmpegOptions",
-          data: result,
-          host: "controller",
-        });
-        return result;
+        item[0] = value;
+      } else {
+        item[1] = value;
       }
-      const result = { ...pv, [key]: value };
       void window.api.request({
         type: "setSetting",
         key: "ffmpegOptions",
-        data: result,
+        data: rebuild(pv),
         host: "controller",
       });
-      return result;
+      return [...pv];
     });
   };
   const deleteItem = (key: string): void => {
     setOption((pv) => {
-      const result = { ...pv };
-      delete result[key];
+      const result = pv.filter((v) => v[0] !== key);
       void window.api.request({
         type: "setSetting",
         key: "ffmpegOptions",
-        data: result,
+        data: rebuild(result),
         host: "controller",
       });
-      return result;
+      return [...result];
     });
   };
   const onReset = (): void => {
-    setOption(defaultOptions);
+    setOption(Object.entries(defaultOptions));
     void window.api.request({
       type: "setSetting",
       key: "ffmpegOptions",
@@ -96,33 +99,32 @@ const ConvertSetting: FC = () => {
         </li>
       </ul>
       <div>
-        {option &&
-          Object.keys(option).map((key, index) => {
-            return (
-              <div key={index} className={Styles.block}>
-                <TextField
-                  label="key"
-                  variant="standard"
-                  value={key}
-                  onChange={(e) => update("key", key, e.target.value)}
-                  className={Styles.key}
-                />
-                <TextField
-                  label="value"
-                  variant="standard"
-                  value={option[key]}
-                  onChange={(e) => update("value", key, e.target.value)}
-                  className={Styles.value}
-                />
-                <IconButton
-                  className={Styles.delete}
-                  onClick={() => deleteItem(key)}
-                >
-                  <DeleteOutlined />
-                </IconButton>
-              </div>
-            );
-          })}
+        {Object.entries(option).map(([index, [key, value]]) => {
+          return (
+            <div key={index} className={Styles.block}>
+              <TextField
+                label="key"
+                variant="standard"
+                value={key}
+                onChange={(e) => update("key", key, e.target.value)}
+                className={Styles.key}
+              />
+              <TextField
+                label="value"
+                variant="standard"
+                value={value}
+                onChange={(e) => update("value", value, e.target.value)}
+                className={Styles.value}
+              />
+              <IconButton
+                className={Styles.delete}
+                onClick={() => deleteItem(key)}
+              >
+                <DeleteOutlined />
+              </IconButton>
+            </div>
+          );
+        })}
         <IconButton onClick={addItem}>
           <AddOutlined />
         </IconButton>

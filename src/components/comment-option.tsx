@@ -67,7 +67,7 @@ const CommentOption: FC<Props> = ({ update, postedDate, metadata, mode }) => {
         threads,
       });
     }
-  }, [startPoint, endPoint, threads]);
+  }, [startPoint, endPoint, threads, mode, update]);
   const onEndPointChange = (e: ChangeEvent<HTMLInputElement>): void => {
     if (e.target.value === "count") {
       setEndPoint({

@@ -1,6 +1,6 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
 import log from "electron-log/main";
-import * as fs from "fs";
-import * as path from "path";
 
 import { basePath } from "../context";
 
@@ -14,8 +14,8 @@ export const initLogger = (): void => {
   const d = new Date();
   const prefix =
     d.getFullYear() +
-    ("00" + (d.getMonth() + 1)).slice(-2) +
-    ("00" + d.getDate()).slice(-2);
+    `00${d.getMonth() + 1}`.slice(-2) +
+    `00${d.getDate()}`.slice(-2);
   log.transports.file.level = "info";
   log.transports.file.resolvePathFn = () => path.join(logDir, `${prefix}.log`);
   process.on("uncaughtException", (err) => {

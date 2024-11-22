@@ -103,7 +103,21 @@ const Convert: FC = () => {
         type: "selectOutput",
         host: "controller",
         options: {
-          filters: [{ name: "mp4", extensions: ["mp4"] }],
+          filters: [
+            {
+              name: "Movies",
+              extensions: [
+                "mp4",
+                "webm",
+                "avi",
+                "mkv",
+                "wmv",
+                "mov",
+                "ts",
+                "m2ts",
+              ],
+            },
+          ],
           properties: ["createDirectory"],
         },
       });
@@ -170,7 +184,7 @@ const Convert: FC = () => {
     return () => {
       window.api.remove(eventHandler);
     };
-  }, []);
+  }, [setMessage]);
   return (
     <div className={Styles.wrapper}>
       <div>
@@ -317,12 +331,13 @@ const Convert: FC = () => {
                     label={item.name}
                   />
                 );
-              } else if (item.type === "string") {
+              }
+              if (item.type === "string") {
                 return (
                   <FormControl key={key} variant="standard">
                     <InputLabel>{item.name}</InputLabel>
                     <Select
-                      value={item.value}
+                      value={`${item.value}`}
                       onChange={(e) =>
                         setOptions({
                           ...options,
