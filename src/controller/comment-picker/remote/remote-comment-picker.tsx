@@ -8,6 +8,7 @@ import type {
   TCommentOption,
   TCommentPickerMode,
   TWatchV3Metadata,
+  V3MetadataBody,
 } from "@/@types/niconico";
 import type { TCommentItemRemote } from "@/@types/queue";
 import { CommentOption } from "@/components/comment-option";
@@ -24,7 +25,7 @@ type Props = {
 
 const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
   const [url, setUrl] = useState("");
-  const [metadata, setMetadata] = useState<TWatchV3Metadata | undefined>();
+  const [metadata, setMetadata] = useState<V3MetadataBody | undefined>();
   const [mode, setMode] = useState<TCommentPickerMode>("simple");
   const [commentOption, setCommentOption] = useState<
     TCommentOption | undefined
@@ -54,7 +55,7 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
         type: "getNiconicoMovieMetadata",
         nicoId: nicoId,
         host: "controller",
-      })) as TWatchV3Metadata;
+      })) as V3MetadataBody;
       setIsLoading(false);
       if (!targetMetadata) {
         setMessage({
@@ -64,7 +65,7 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
         return;
       }
       setMetadata(targetMetadata);
-      setMode(targetMetadata.data.viewer === null ? "simple" : "custom");
+      setMode(targetMetadata.viewer === null ? "simple" : "custom");
       lastUrl.current = nicoId;
     })();
   };
@@ -97,7 +98,7 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
           type: "comment",
           url: nicoId,
           option: commentOption,
-          metadata: metadata.data.comment,
+          metadata: metadata.comment,
           path: output,
           status: "queued",
           progress: 0,
@@ -134,7 +135,7 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
             value={"custom"}
             control={<Radio />}
             label={"カスタム"}
-            disabled={metadata.data.viewer === null}
+            disabled={metadata.viewer === null}
           />
         </RadioGroup>
       )}
@@ -142,8 +143,8 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
         <>
           <CommentOption
             update={setCommentOption}
-            metadata={metadata.data.comment}
-            postedDate={formatDate(new Date(metadata.data.video.registeredAt))}
+            metadata={metadata.comment}
+            postedDate={formatDate(new Date(metadata.video.registeredAt))}
             mode={mode}
           />
           <div>
