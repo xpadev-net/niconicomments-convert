@@ -4,7 +4,7 @@ import { useSetAtom } from "jotai";
 import type { ChangeEvent, FC, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
 
-import type { TWatchV3Metadata } from "@/@types/niconico";
+import type { TWatchV3Metadata, V3MetadataBody } from "@/@types/niconico";
 import type {
   TMovieItemRemote,
   TRemoteMovieItemFormat,
@@ -24,7 +24,7 @@ type Props = {
 
 const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
   const [url, setUrl] = useState("");
-  const [metadata, setMetadata] = useState<TWatchV3Metadata | undefined>();
+  const [metadata, setMetadata] = useState<V3MetadataBody | undefined>();
   const [mediaServer, setMediaServer] = useState<TRemoteServerType>("dmc");
   const [format, setFormat] = useState<TRemoteMovieItemFormat | undefined>();
   const setMessage = useSetAtom(messageAtom);
@@ -51,7 +51,7 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
         type: "getNiconicoMovieMetadata",
         nicoId: nicoId,
         host: "controller",
-      })) as TWatchV3Metadata;
+      })) as V3MetadataBody;
       setIsLoading(false);
       if (!targetMetadata) {
         setMessage({
@@ -60,17 +60,14 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
         });
         return;
       }
-      if (
-        !targetMetadata.data.media.delivery &&
-        !targetMetadata.data.media.domand
-      ) {
+      if (!targetMetadata.media.delivery && !targetMetadata.media.domand) {
         setMessage({
           title: "動画情報の取得に失敗しました",
           content: "未購入の有料動画などの可能性があります",
         });
         return;
       }
-      setMediaServer(targetMetadata.data.media.domand ? "dms" : "dmc");
+      setMediaServer(targetMetadata.media.domand ? "dms" : "dmc");
       setMetadata(targetMetadata);
       lastUrl.current = nicoId;
     })();
@@ -111,7 +108,7 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
       onChange({
         type: "remote",
         path: output,
-        duration: metadata.data.video.duration,
+        duration: metadata.video.duration,
         ref: {
           id: uuid(),
           status: "queued",
@@ -150,12 +147,12 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
               value={"dmc"}
               control={<Radio />}
               label={"DMC"}
-              disabled={!metadata.data.media.delivery}
+              disabled={!metadata.media.delivery}
             />
             <FormControlLabel
               value={"dms"}
               control={<Radio />}
-              disabled={!metadata.data.media.domand}
+              disabled={!metadata.media.domand}
               label={"DMS"}
             />
           </RadioGroup>

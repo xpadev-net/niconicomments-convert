@@ -1,5 +1,5 @@
 import type { Cookies } from "@/@types/cookies";
-import type { TWatchV3Metadata } from "@/@types/niconico";
+import type { TWatchV3Metadata, V3MetadataBody } from "@/@types/niconico";
 import type { TDMSFormat } from "@/@types/queue";
 import type { AuthType } from "@/@types/setting";
 import type { SpawnResult } from "@/@types/spawn";
@@ -18,7 +18,7 @@ import {
 let stop: (() => void) | undefined;
 
 const downloadDMS = async (
-  metadata: TWatchV3Metadata,
+  metadata: V3MetadataBody,
   format: TDMSFormat,
   targetPath: string,
   progress: (total: number, downloaded: number, eta: number) => void,
@@ -50,14 +50,14 @@ const downloadDMS = async (
     return undefined;
   })();
   const accessRightsReq = await fetch(
-    `https://nvapi.nicovideo.jp/v1/watch/${metadata.data.video.id}/access-rights/hls?actionTrackId=0_0`,
+    `https://nvapi.nicovideo.jp/v1/watch/${metadata.video.id}/access-rights/hls?actionTrackId=0_0`,
     {
       headers: {
         Host: "nvapi.nicovideo.jp",
         Cookie: cookie ? convertToEncodedCookie(cookie) : "",
         "Content-Type": "application/json",
         "X-Request-With": "https://www.nicovideo.jp",
-        "X-Access-Right-Key": metadata.data.media.domand.accessRightKey,
+        "X-Access-Right-Key": metadata.media.domand.accessRightKey,
         "X-Frontend-Id": "6",
         "X-Frontend-Version": "0",
       },
