@@ -6,15 +6,20 @@ import { useLayoutEffect, useState } from "react";
 
 import type { FfmpegOptions } from "@/@types/ffmpeg";
 
+import { uuid } from "@/util/uuid";
 import { defaultOptions } from "../../../../electron/const";
 import Styles from "./convert.module.scss";
 
-type OptionsValue = [string, string][];
+type OptionsValue = {
+  id: string;
+  key: string;
+  value: string;
+}[];
 
 const rebuild = (value: OptionsValue): FfmpegOptions => {
   const result: FfmpegOptions = {};
   for (const v of value) {
-    result[v[0]] = v[1];
+    result[v.key] = v.value;
   }
   return result;
 };
@@ -28,17 +33,23 @@ const ConvertSetting: FC = () => {
         key: "ffmpegOptions",
         host: "controller",
       })) ?? defaultOptions) as FfmpegOptions;
-      setOption(Object.entries(value));
+      setOption(
+        Object.entries(value).map((value) => ({
+          id: uuid(),
+          key: value[0],
+          value: value[1],
+        })),
+      );
     })();
   }, []);
-  const update = (type: "key" | "value", key: string, value: string): void => {
+  const update = (type: "key" | "value", id: string, value: string): void => {
     setOption((pv) => {
-      const item = pv.find((v) => v[0] === key);
-      if (!item) return [...pv];
+      const item = pv.find((v) => v.id === id);
+      if (!item) return pv;
       if (type === "key") {
-        item[0] = value;
+        item.key = value;
       } else {
-        item[1] = value;
+        item.value = value;
       }
       void window.api.request({
         type: "setSetting",
@@ -49,9 +60,9 @@ const ConvertSetting: FC = () => {
       return [...pv];
     });
   };
-  const deleteItem = (key: string): void => {
+  const deleteItem = (id: string): void => {
     setOption((pv) => {
-      const result = pv.filter((v) => v[0] !== key);
+      const result = pv.filter((v) => v.id !== id);
       void window.api.request({
         type: "setSetting",
         key: "ffmpegOptions",
@@ -62,7 +73,13 @@ const ConvertSetting: FC = () => {
     });
   };
   const onReset = (): void => {
-    setOption(Object.entries(defaultOptions));
+    setOption(
+      Object.entries(defaultOptions).map((v) => ({
+        id: uuid(),
+        key: v[0],
+        value: v[1],
+      })),
+    );
     void window.api.request({
       type: "setSetting",
       key: "ffmpegOptions",
@@ -99,26 +116,26 @@ const ConvertSetting: FC = () => {
         </li>
       </ul>
       <div>
-        {Object.entries(option).map(([index, [key, value]]) => {
+        {Object.entries(option).map(([index, { key, value, id }]) => {
           return (
-            <div key={index} className={Styles.block}>
+            <div key={id} className={Styles.block}>
               <TextField
                 label="key"
                 variant="standard"
                 value={key}
-                onChange={(e) => update("key", key, e.target.value)}
+                onChange={(e) => update("key", id, e.target.value)}
                 className={Styles.key}
               />
               <TextField
                 label="value"
                 variant="standard"
                 value={value}
-                onChange={(e) => update("value", value, e.target.value)}
+                onChange={(e) => update("value", id, e.target.value)}
                 className={Styles.value}
               />
               <IconButton
                 className={Styles.delete}
-                onClick={() => deleteItem(key)}
+                onClick={() => deleteItem(id)}
               >
                 <DeleteOutlined />
               </IconButton>
