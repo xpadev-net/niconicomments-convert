@@ -2,48 +2,57 @@ export type TWatchV3Metadata<T extends "dmc" | "dms" | "" = ""> = {
   meta: {
     status: 200;
   };
-  data: {
-    comment: V3MetadataComment;
-    media: {
-      delivery: T extends "dmc"
-        ? V3MetadataDMCMedia
-        : V3MetadataDMCMedia | null;
-      domand: T extends "dms" ? V3MetadataDMSMedia : V3MetadataDMSMedia | null;
-    };
-    video: {
-      id: string;
-      title: string;
-      description: string;
-      count: {
-        view: number;
-        comment: number;
-        mylist: number;
-        like: number;
-      };
-      duration: number;
-      thumbnail: {
-        url: string;
-        middleUrl: string;
-        largeUrl: string;
-        player: string;
-        ogp: string;
-      };
-      rating: {
-        isAdult: boolean;
-      };
-      registeredAt: string;
-      isPrivate: boolean;
-      isDeleted: boolean;
-      isNoBanner: boolean;
-      isAuthenticationRequired: boolean;
-      isEmbedPlayerAllowed: boolean;
-      viewer: unknown;
-      watchableUserTypeForPayment: string;
-      commentableUserTypeForPayment: string;
-      "9d091f87": boolean;
-    };
-    viewer: V3MetadataViewerItem | null;
+  data: V3MetadataBody<T>;
+};
+
+export type WatchPageMetadata<T extends "dmc" | "dms" | "" = ""> = {
+  meta: {
+    status: 200;
   };
+  data: {
+    response: V3MetadataBody;
+  };
+};
+
+export type V3MetadataBody<T extends "dmc" | "dms" | "" = ""> = {
+  comment: V3MetadataComment;
+  media: {
+    delivery: T extends "dmc" ? V3MetadataDMCMedia : V3MetadataDMCMedia | null;
+    domand: T extends "dms" ? V3MetadataDMSMedia : V3MetadataDMSMedia | null;
+  };
+  video: {
+    id: string;
+    title: string;
+    description: string;
+    count: {
+      view: number;
+      comment: number;
+      mylist: number;
+      like: number;
+    };
+    duration: number;
+    thumbnail: {
+      url: string;
+      middleUrl: string;
+      largeUrl: string;
+      player: string;
+      ogp: string;
+    };
+    rating: {
+      isAdult: boolean;
+    };
+    registeredAt: string;
+    isPrivate: boolean;
+    isDeleted: boolean;
+    isNoBanner: boolean;
+    isAuthenticationRequired: boolean;
+    isEmbedPlayerAllowed: boolean;
+    viewer: unknown;
+    watchableUserTypeForPayment: string;
+    commentableUserTypeForPayment: string;
+    "9d091f87": boolean;
+  };
+  viewer: V3MetadataViewerItem | null;
 };
 
 export type V3MetadataViewerItem = {

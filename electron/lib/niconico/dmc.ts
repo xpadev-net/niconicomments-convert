@@ -1,4 +1,8 @@
-import type { CreateSessionRequest, TWatchV3Metadata } from "@/@types/niconico";
+import type {
+  CreateSessionRequest,
+  TWatchV3Metadata,
+  V3MetadataBody,
+} from "@/@types/niconico";
 import type { TDMCFormat } from "@/@types/queue";
 import type { SpawnResult } from "@/@types/spawn";
 
@@ -9,7 +13,7 @@ import { DownloadM3U8 } from "../../utils/ffmpeg";
 let stop: (() => void) | undefined;
 
 const downloadDMC = async (
-  metadata: TWatchV3Metadata,
+  metadata: V3MetadataBody,
   format: TDMCFormat,
   path: string,
   progress: (total: number, downloaded: number, eta: number) => void,
@@ -32,10 +36,10 @@ const downloadDMC = async (
     });
     return;
   }
-  if (metadata.data.media.delivery.trackingId) {
+  if (metadata.media.delivery.trackingId) {
     const trackingReq = await fetch(
       `https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?${new URLSearchParams({
-        t: metadata.data.media.delivery.trackingId,
+        t: metadata.media.delivery.trackingId,
       }).toString()}`,
       {
         method: "GET",
@@ -137,22 +141,21 @@ const downloadDMC = async (
 };
 
 const createSessionCreateRequestBody = (
-  metadata: TWatchV3Metadata<"dmc">,
+  metadata: V3MetadataBody<"dmc">,
   format: TDMCFormat,
 ): CreateSessionRequest => {
   const sessionBody: CreateSessionRequest = {
     session: {
       client_info: {
-        player_id: metadata.data.media.delivery.movie.session.playerId,
+        player_id: metadata.media.delivery.movie.session.playerId,
       },
       content_auth: {
         auth_type: "ht2",
         content_key_timeout: 600000,
         service_id: "nicovideo",
-        service_user_id:
-          metadata.data.media.delivery.movie.session.serviceUserId,
+        service_user_id: metadata.media.delivery.movie.session.serviceUserId,
       },
-      content_id: metadata.data.media.delivery.movie.contentId,
+      content_id: metadata.media.delivery.movie.contentId,
       content_src_id_sets: [
         {
           content_src_ids: [
@@ -169,11 +172,10 @@ const createSessionCreateRequestBody = (
       content_uri: "",
       keep_method: {
         heartbeat: {
-          lifetime:
-            metadata.data.media.delivery.movie.session.heartbeatLifetime,
+          lifetime: metadata.media.delivery.movie.session.heartbeatLifetime,
         },
       },
-      priority: metadata.data.media.delivery.movie.session.priority,
+      priority: metadata.media.delivery.movie.session.priority,
       protocol: {
         name: "http",
         parameters: {
@@ -182,8 +184,8 @@ const createSessionCreateRequestBody = (
               hls_parameters: {
                 segment_duration: 6000,
                 transfer_preset:
-                  metadata.data.media.delivery.movie.session
-                    .transferPresets[0] || "",
+                  metadata.media.delivery.movie.session.transferPresets[0] ||
+                  "",
                 use_ssl: "yes",
                 use_well_known_port: "yes",
               },
@@ -191,22 +193,22 @@ const createSessionCreateRequestBody = (
           },
         },
       },
-      recipe_id: metadata.data.media.delivery.recipeId,
+      recipe_id: metadata.media.delivery.recipeId,
       session_operation_auth: {
         session_operation_auth_by_signature: {
-          signature: metadata.data.media.delivery.movie.session.signature,
-          token: metadata.data.media.delivery.movie.session.token,
+          signature: metadata.media.delivery.movie.session.signature,
+          token: metadata.media.delivery.movie.session.token,
         },
       },
       timing_constraint: "unlimited",
     },
   };
-  if (metadata.data.media.delivery.encryption) {
+  if (metadata.media.delivery.encryption) {
     sessionBody.session.protocol.parameters.http_parameters.parameters.hls_parameters.encryption =
       {
         hls_encryption_v1: {
-          encrypted_key: metadata.data.media.delivery.encryption.encryptedKey,
-          key_uri: metadata.data.media.delivery.encryption.keyUri,
+          encrypted_key: metadata.media.delivery.encryption.encryptedKey,
+          key_uri: metadata.media.delivery.encryption.keyUri,
         },
       };
   }
