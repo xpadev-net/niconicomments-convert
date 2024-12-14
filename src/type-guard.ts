@@ -28,9 +28,15 @@ const typeGuard = {
     message: (i: unknown): i is ApiResponseMessage =>
       typeof i === "object" && (i as ApiResponseMessage).type === "message",
     v3DMC: (i: unknown): i is V3MetadataBody<"dmc"> =>
-      typeof i === "object" && 'media' in (i as V3MetadataBody) && !!(i as V3MetadataBody).media.delivery,
+      typeof i === "object" &&
+      i !== null &&
+      "media" in (i as V3MetadataBody) &&
+      !!(i as V3MetadataBody).media.delivery,
     v3DMS: (i: unknown): i is V3MetadataBody<"dms"> =>
-      typeof i === "object" && 'media' in i && !!(i as V3MetadataBody).media.domand,
+      typeof i === "object" &&
+      i !== null &&
+      "media" in (i as V3MetadataBody) &&
+      !!(i as V3MetadataBody).media.domand,
   },
   renderer: {
     progress: (i: unknown): i is ApiResponseProgress =>
