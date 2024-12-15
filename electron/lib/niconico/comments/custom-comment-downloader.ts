@@ -1,8 +1,13 @@
-import NiconiComments, { type FormattedComment } from "@xpadev-net/niconicomments";
-import { sleep } from "../../../utils";
+import type {
+  TCommentOptionCustom,
+  V3MetadataComment,
+} from "@/@types/niconico";
 import type { V1Raw } from "@/@types/types";
+import NiconiComments, {
+  type FormattedComment,
+} from "@xpadev-net/niconicomments";
+import { sleep } from "../../../utils";
 import { convertV3ToFormatted } from "./utils";
-import type { TCommentOptionCustom, V3MetadataComment } from "@/@types/niconico";
 
 export type BaseData = {
   threadKey: string;
@@ -12,8 +17,8 @@ export type BaseData = {
       id: string;
       fork: string;
     }[];
-  }
-}
+  };
+};
 
 let baseData: BaseData;
 let when: number;
@@ -53,15 +58,16 @@ export const downloadCustomComment = async (
   threadTotal = _threadTotal;
   threadId = _threadId;
   start = _start;
-  
+
   return new Promise<FormattedComment[]>((_resolve) => {
     resolve = _resolve;
+    download();
   });
-}
+};
 
 export const stopDownloadCustomComment = () => {
   interrupt = true;
-}
+};
 
 const download = async () => {
   if (interrupt) {
@@ -114,7 +120,4 @@ const download = async () => {
     return;
   }
   setTimeout(download, 0);
-}
-
-
-
+};

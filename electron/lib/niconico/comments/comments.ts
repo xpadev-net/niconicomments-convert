@@ -12,7 +12,11 @@ import type { CommentQueue } from "@/@types/queue";
 import type { V1Raw } from "@/@types/types";
 
 import { sendMessageToController } from "../../../controller-window";
-import { type BaseData, downloadCustomComment, stopDownloadCustomComment } from "./custom-comment-downloader";
+import {
+  type BaseData,
+  downloadCustomComment,
+  stopDownloadCustomComment,
+} from "./custom-comment-downloader";
 import { convertV3ToFormatted } from "./utils";
 
 let interrupt = false;
@@ -154,11 +158,9 @@ const downloadV3V1CustomComment = async (
   return comments;
 };
 
-
 const interruptCommentDownload = (): void => {
   interrupt = true;
-  stopDownloadCustomComment()
+  stopDownloadCustomComment();
 };
-
 
 export { downloadComment, interruptCommentDownload };
