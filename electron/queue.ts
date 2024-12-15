@@ -67,7 +67,7 @@ const startMovieDownload = async (): Promise<void> => {
     return;
 
   targetQueue.status = "processing";
-  targetQueue.progress = 0;
+  targetQueue.progress.percent = 0;
   sendProgress();
   try {
     await download(
@@ -75,7 +75,7 @@ const startMovieDownload = async (): Promise<void> => {
       targetQueue.format,
       targetQueue.path,
       (total, downloaded) => {
-        targetQueue.progress = downloaded / total;
+        targetQueue.progress.percent = downloaded / total;
         sendProgress();
       },
     );
@@ -104,11 +104,11 @@ const startCommentDownload = async (): Promise<void> => {
   )
     return;
   targetQueue.status = "processing";
-  targetQueue.progress = 0;
+  targetQueue.progress.percent = 0;
   sendProgress();
   try {
     await downloadComment(targetQueue, (total, downloaded) => {
-      targetQueue.progress = downloaded / total;
+      targetQueue.progress.percent = downloaded / total;
       sendProgress();
     });
     targetQueue.status = "completed";
@@ -141,7 +141,7 @@ const startConvert = async (): Promise<void> => {
   try {
     processingQueue = queued[0];
     processingQueue.status = "processing";
-    processingQueue.progress = 0;
+    processingQueue.progress.percent = 0;
     lastFrame = 0;
     createRendererWindow();
     sendProgress();
@@ -188,7 +188,7 @@ const processFrame = (data: Uint8Array): void => {
         myStream.push(data);
         myStream.push(null);
       };
-      processingQueue.progress++;
+      processingQueue.progress.percent++;
       sendProgress();
       return myStream
         .on("end", () => fulfill())

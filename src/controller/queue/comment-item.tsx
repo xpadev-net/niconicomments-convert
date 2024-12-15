@@ -12,7 +12,6 @@ type Props = {
   className: string;
 };
 const CommentItem: FC<Props> = ({ queue, className }) => {
-  
   return useMemo(() => {
     return (
       <div className={`${Styles.queue} ${className}`}>
