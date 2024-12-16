@@ -107,8 +107,13 @@ const startCommentDownload = async (): Promise<void> => {
   targetQueue.progress.percent = 0;
   sendProgress();
   try {
-    await downloadComment(targetQueue, (total, downloaded) => {
-      targetQueue.progress.percent = downloaded / total;
+    await downloadComment(targetQueue, (total, downloaded, message) => {
+      targetQueue.progress = {
+        percent: downloaded / total,
+        total,
+        processed: downloaded,
+        message,
+      };
       sendProgress();
     });
     targetQueue.status = "completed";
@@ -141,7 +146,14 @@ const startConvert = async (): Promise<void> => {
   try {
     processingQueue = queued[0];
     processingQueue.status = "processing";
-    processingQueue.progress.percent = 0;
+    processingQueue.progress = {
+      percent: 0,
+      processed: 0,
+      total:
+        (queued[0].option.fps || 30) *
+        ((queued[0].option.to ?? queued[0].movie.duration) -
+          (queued[0].option.ss ?? 0)),
+    };
     lastFrame = 0;
     createRendererWindow();
     sendProgress();
@@ -188,7 +200,9 @@ const processFrame = (data: Uint8Array): void => {
         myStream.push(data);
         myStream.push(null);
       };
-      processingQueue.progress.percent++;
+      processingQueue.progress.processed++;
+      processingQueue.progress.percent =
+        processingQueue.progress.processed / processingQueue.progress.total;
       sendProgress();
       return myStream
         .on("end", () => fulfill())
@@ -207,11 +221,11 @@ const sendProgress = (): void => {
     type: "progress",
     data: queueList,
   });
-  typeof processingQueue?.progress === "number" &&
+  processingQueue?.type === "convert" &&
     processingQueue.status === "processing" &&
     sendMessageToRenderer({
       type: "reportProgress",
-      converted: processingQueue.progress,
+      progress: processingQueue.progress,
     });
 };
 

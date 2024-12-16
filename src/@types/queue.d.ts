@@ -22,6 +22,8 @@ type BaseQueue = {
 
 export type ProgressItem = {
   percent: number;
+  total: number;
+  processed: number;
   message?: string;
 };
 

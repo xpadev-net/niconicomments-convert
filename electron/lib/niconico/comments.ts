@@ -18,7 +18,7 @@ let interrupt = false;
 
 const downloadComment = async (
   queue: CommentQueue,
-  updateProgress: (total: number, progress: number) => void,
+  updateProgress: (total: number, progress: number, message?: string) => void,
 ): Promise<void> => {
   try {
     const formattedComments =
