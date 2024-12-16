@@ -123,7 +123,9 @@ const download = async () => {
   }
   if (
     thread.comments.length < 5 ||
-    threadComments[threadComments.length - 1]?.id < 5
+    threadComments[threadComments.length - 1]?.id < 5 ||
+    (option.end.type === "date" && when < start) ||
+    (option.end.type === "count" && threadComments.length >= option.end.count)
   ) {
     resolve(threadComments);
     return;
