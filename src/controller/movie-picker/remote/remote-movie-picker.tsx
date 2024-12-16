@@ -116,7 +116,7 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
           url: nicoId,
           format: format,
           path: output,
-          progress: 0,
+          progress: { percent: 0, total: 0, processed: 0 },
         },
       });
     })();

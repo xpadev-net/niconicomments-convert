@@ -101,7 +101,7 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
           metadata: metadata.comment,
           path: output,
           status: "queued",
-          progress: 0,
+          progress: { percent: 0, total: 0, processed: 0 },
         },
       });
     })();

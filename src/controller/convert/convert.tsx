@@ -161,7 +161,7 @@ const Convert: FC = () => {
             },
           },
           wait,
-          progress: 0,
+          progress: { percent: 0, total: 0, processed: 0 },
         },
       });
       setComment(undefined);
