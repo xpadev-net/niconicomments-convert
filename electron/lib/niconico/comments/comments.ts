@@ -38,7 +38,9 @@ const downloadComment = async (
             queue.metadata,
             updateProgress,
           );
+    console.log("comment downloaded");
     const xml = convertToXml(formattedComments);
+    console.log("comment converted");
     fs.writeFileSync(queue.path, xml, "utf-8");
   } catch (e) {
     sendMessageToController({
@@ -112,7 +114,7 @@ const downloadV3V1SimpleComment = async (
 const downloadV3V1CustomComment = async (
   option: TCommentOptionCustom,
   metadata: V3MetadataComment,
-  updateProgress: (total: number, progress: number) => void,
+  updateProgress: (total: number, progress: number, message?: string) => void,
 ): Promise<FormattedComment[]> => {
   interrupt = false;
   const userList: string[] = [];
@@ -151,7 +153,6 @@ const downloadV3V1CustomComment = async (
       threadId,
       start,
       userList,
-      thread,
     );
     comments.push(...threadComments);
     threadId++;

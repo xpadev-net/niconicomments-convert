@@ -30,13 +30,14 @@ let interrupt: boolean;
 let userList: string[];
 let threadComments: FormattedComment[];
 let resolve: (comments: FormattedComment[]) => void;
+let reject: (error: Error) => void;
 let total: number;
 let threadTotal: number;
 let threadId: number;
 let start: number;
-let thread: TCommentThread;
+let end: number;
 
-export const downloadCustomComment = async (
+export const downloadCustomComment = (
   _option: TCommentOptionCustom,
   _metadata: V3MetadataComment,
   _progress: (total: number, progress: number, message?: string) => void,
@@ -47,8 +48,7 @@ export const downloadCustomComment = async (
   _threadId: number,
   _start: number,
   _userList: string[],
-  _thread: TCommentThread,
-) => {
+): Promise<FormattedComment[]> => {
   interrupt = false;
   userList = _userList;
   threadComments = [];
@@ -61,11 +61,15 @@ export const downloadCustomComment = async (
   threadTotal = _threadTotal;
   threadId = _threadId;
   start = _start;
-  thread = _thread;
+  end =
+    _option.end.type === "date"
+      ? new Date(_option.end.date).getTime() / 1000
+      : 0;
 
-  return new Promise<FormattedComment[]>((_resolve) => {
+  return new Promise<FormattedComment[]>((_resolve, _reject) => {
     resolve = _resolve;
-    download();
+    reject = _reject;
+    void download().catch(reject);
   });
 };
 
@@ -78,7 +82,7 @@ const download = async () => {
     resolve(threadComments);
     return;
   }
-  await sleep(100);
+  console.log(new Error().stack);
   const req = await fetch(`${metadata.nvComment.server}/v1/threads`, {
     method: "POST",
     headers: {
@@ -111,8 +115,8 @@ const download = async () => {
   if (option.end.type === "date") {
     progress(
       total * threadTotal,
-      total * threadId + start - when,
-      `${thread.fork} を ${threadComments.length} まで取得しました (${oldestCommentDate} / ${new Date(start * 1000)})`,
+      total * threadId + ((start - when) / (start - end)) * total,
+      `${thread.fork} を ${threadComments.length} まで取得しました (${oldestCommentDate} / ${new Date(end * 1000)})`,
     );
   } else {
     progress(
@@ -124,11 +128,11 @@ const download = async () => {
   if (
     thread.comments.length < 5 ||
     threadComments[threadComments.length - 1]?.id < 5 ||
-    (option.end.type === "date" && when < start) ||
+    (option.end.type === "date" && when < end) ||
     (option.end.type === "count" && threadComments.length >= option.end.count)
   ) {
     resolve(threadComments);
     return;
   }
-  setTimeout(download, 0);
+  setTimeout(() => download().catch(reject), 1000);
 };
