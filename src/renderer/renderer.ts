@@ -125,6 +125,7 @@ const startRenderer = async (): Promise<void> => {
     }
     offset += 100;
     while (generatedFrames - convertedFrames > 200) {
+      console.log(`waiting... ${generatedFrames - convertedFrames}`);
       await sleep(100);
     }
     setTimeout(() => void process(), 0);
@@ -134,7 +135,8 @@ const startRenderer = async (): Promise<void> => {
   window.api.onResponse((_, data) => {
     if (data.target !== "renderer") return;
     if (typeGuard.renderer.reportProgress(data)) {
-      convertedFrames = data.converted;
+      console.log(`received progress: ${data.progress.processed}`);
+      convertedFrames = data.progress.processed;
     } else if (typeGuard.renderer.end(data)) {
       window.close();
     }

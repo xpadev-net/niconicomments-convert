@@ -13,6 +13,11 @@
     align-items: center;
     gap: 16px;
   }
+  .col{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
   .progressWrapper {
     display: flex;
     flex-direction: row;
