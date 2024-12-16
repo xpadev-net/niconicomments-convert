@@ -1,5 +1,6 @@
 import type {
   TCommentOptionCustom,
+  TCommentThread,
   V3MetadataComment,
 } from "@/@types/niconico";
 import type { V1Raw } from "@/@types/types";
@@ -24,7 +25,7 @@ let baseData: BaseData;
 let when: number;
 let option: TCommentOptionCustom;
 let metadata: V3MetadataComment;
-let progress: (total: number, progress: number) => void;
+let progress: (total: number, progress: number, message?: string) => void;
 let interrupt: boolean;
 let userList: string[];
 let threadComments: FormattedComment[];
@@ -33,11 +34,12 @@ let total: number;
 let threadTotal: number;
 let threadId: number;
 let start: number;
+let thread: TCommentThread;
 
 export const downloadCustomComment = async (
   _option: TCommentOptionCustom,
   _metadata: V3MetadataComment,
-  _progress: (total: number, progress: number) => void,
+  _progress: (total: number, progress: number, message?: string) => void,
   _baseData: BaseData,
   _when: number,
   _total: number,
@@ -45,6 +47,7 @@ export const downloadCustomComment = async (
   _threadId: number,
   _start: number,
   _userList: string[],
+  _thread: TCommentThread,
 ) => {
   interrupt = false;
   userList = _userList;
@@ -58,6 +61,7 @@ export const downloadCustomComment = async (
   threadTotal = _threadTotal;
   threadId = _threadId;
   start = _start;
+  thread = _thread;
 
   return new Promise<FormattedComment[]>((_resolve) => {
     resolve = _resolve;
@@ -105,11 +109,16 @@ const download = async () => {
   when = Math.floor(oldestCommentDate.getTime() / 1000);
   threadComments.push(...convertV3ToFormatted([thread], userList));
   if (option.end.type === "date") {
-    progress(total * threadTotal, total * threadId + start - when);
+    progress(
+      total * threadTotal,
+      total * threadId + start - when,
+      `${thread.fork} を ${threadComments.length} まで取得しました (${oldestCommentDate} / ${new Date(start * 1000)})`,
+    );
   } else {
     progress(
       option.end.count * threadTotal,
       option.end.count * threadId + threadComments.length,
+      `${thread.fork} を ${threadComments.length} まで取得しました (${threadComments.length} / ${option.end.count})`,
     );
   }
   if (

@@ -151,6 +151,7 @@ const downloadV3V1CustomComment = async (
       threadId,
       start,
       userList,
+      thread,
     );
     comments.push(...threadComments);
     threadId++;
