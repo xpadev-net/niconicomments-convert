@@ -24,12 +24,12 @@ export const convertV3ToFormatted = (
       if (tmpParam.content.startsWith("/") && tmpParam.owner) {
         tmpParam.mail.push("invisible");
       }
-      const isUserExist = userList.indexOf(comment.userId);
-      if (isUserExist === -1) {
+      const userIndex = userList.indexOf(comment.userId);
+      if (userIndex === -1) {
         tmpParam.user_id = userList.length;
         userList.push(comment.userId);
       } else {
-        tmpParam.user_id = isUserExist;
+        tmpParam.user_id = userIndex;
       }
       comments.push(tmpParam);
     }
