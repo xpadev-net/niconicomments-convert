@@ -12,6 +12,7 @@ import type { CommentQueue } from "@/@types/queue";
 import type { V1Raw } from "@/@types/types";
 
 import { sendMessageToController } from "../../../controller-window";
+import { sleep } from "../../../utils";
 import {
   type BaseData,
   downloadCustomComment,
@@ -43,6 +44,7 @@ const downloadComment = async (
     console.log("comment converted");
     fs.writeFileSync(queue.path, xml, "utf-8");
   } catch (e) {
+    console.error(e);
     sendMessageToController({
       type: "message",
       title: "コメントのダウンロードに失敗しました",
@@ -118,7 +120,7 @@ const downloadV3V1CustomComment = async (
 ): Promise<FormattedComment[]> => {
   interrupt = false;
   const userList: string[] = [];
-  const comments: FormattedComment[] = [];
+  const comments: FormattedComment[][] = [];
   const start = Math.floor(new Date(option.start).getTime() / 1000);
   const threadTotal = option.threads.filter((thread) => thread.enable).length;
   const total =
@@ -142,22 +144,24 @@ const downloadV3V1CustomComment = async (
         ],
       },
     };
-    const threadComments = await downloadCustomComment(
-      option,
-      metadata,
-      updateProgress,
-      baseData,
-      when,
-      total,
-      threadTotal,
-      threadId,
-      start,
-      userList,
+    comments.push(
+      await downloadCustomComment(
+        option,
+        metadata,
+        updateProgress,
+        baseData,
+        when,
+        total,
+        threadTotal,
+        threadId,
+        start,
+        userList,
+      ),
     );
-    comments.push(...threadComments);
     threadId++;
+    await sleep(1000);
   }
-  return comments;
+  return comments.flat(1);
 };
 
 const interruptCommentDownload = (): void => {

@@ -1,13 +1,11 @@
 import type {
   TCommentOptionCustom,
-  TCommentThread,
   V3MetadataComment,
 } from "@/@types/niconico";
 import type { V1Raw } from "@/@types/types";
 import NiconiComments, {
   type FormattedComment,
 } from "@xpadev-net/niconicomments";
-import { sleep } from "../../../utils";
 import { convertV3ToFormatted } from "./utils";
 
 export type BaseData = {
