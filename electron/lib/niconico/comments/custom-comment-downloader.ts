@@ -80,7 +80,7 @@ const download = async () => {
     resolve(threadComments);
     return;
   }
-  console.log(new Error().stack);
+
   const req = await fetch(`${metadata.nvComment.server}/v1/threads`, {
     method: "POST",
     headers: {
