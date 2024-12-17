@@ -2,14 +2,14 @@ import { MenuItem, Select } from "@mui/material";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 
-import type { TWatchV3Metadata } from "@/@types/niconico";
+import type { TWatchV3Metadata, V3MetadataBody } from "@/@types/niconico";
 import type { TDMCFormat } from "@/@types/queue";
 import { SelectField } from "@/components/select-field";
 import Styles from "@/controller/movie/movie.module.scss";
 import { getDMCBestSegment } from "@/util/niconico";
 
 type Props = {
-  metadata: TWatchV3Metadata<"dmc">;
+  metadata: V3MetadataBody<"dmc">;
   onChange: (val: TDMCFormat | undefined) => void;
 };
 
@@ -18,10 +18,10 @@ const DMCMoviePicker: FC<Props> = ({ metadata, onChange }) => {
   const [selectedAudio, setSelectedAudio] = useState<string>("");
   useEffect(() => {
     setSelectedAudio(
-      getDMCBestSegment(metadata.data.media.delivery.movie.audios).id,
+      getDMCBestSegment(metadata.media.delivery.movie.audios).id,
     );
     setSelectedVideo(
-      getDMCBestSegment(metadata.data.media.delivery.movie.videos).id,
+      getDMCBestSegment(metadata.media.delivery.movie.videos).id,
     );
   }, [metadata]);
   useEffect(() => {
@@ -41,12 +41,12 @@ const DMCMoviePicker: FC<Props> = ({ metadata, onChange }) => {
           variant={"standard"}
           value={selectedVideo}
           defaultValue={
-            getDMCBestSegment(metadata.data.media.delivery.movie.videos).id
+            getDMCBestSegment(metadata.media.delivery.movie.videos).id
           }
           className={Styles.input}
           onChange={(e) => setSelectedVideo(e.target.value)}
         >
-          {metadata.data.media.delivery.movie.videos.map((val) => {
+          {metadata.media.delivery.movie.videos.map((val) => {
             if (!val.isAvailable) return <></>;
             return (
               <MenuItem key={val.id} value={val.id}>
@@ -62,12 +62,12 @@ const DMCMoviePicker: FC<Props> = ({ metadata, onChange }) => {
           variant={"standard"}
           className={Styles.input}
           defaultValue={
-            getDMCBestSegment(metadata.data.media.delivery.movie.audios).id
+            getDMCBestSegment(metadata.media.delivery.movie.audios).id
           }
           value={selectedAudio}
           onChange={(e) => setSelectedAudio(e.target.value)}
         >
-          {metadata.data.media.delivery.movie.audios.map((val) => {
+          {metadata.media.delivery.movie.audios.map((val) => {
             if (!val.isAvailable) return <></>;
             return (
               <MenuItem key={val.id} value={val.id}>

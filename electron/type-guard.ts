@@ -9,6 +9,8 @@ import type {
   TWatchV3Metadata,
   UserData,
   V1AccessRightsHls,
+  V3MetadataBody,
+  WatchPageMetadata,
 } from "@/@types/niconico";
 import type {
   ApiRequestAppendQueue,
@@ -138,6 +140,11 @@ const typeGuard = {
       typeof i === "object" &&
       (i as TWatchV3Metadata).meta.status === 200 &&
       typeof (i as TWatchV3Metadata).data === "object",
+    WatchPageJson: (i: unknown): i is WatchPageMetadata =>
+      typeof i === "object" &&
+      (i as WatchPageMetadata).meta.status === 200 &&
+      typeof (i as WatchPageMetadata).data === "object" &&
+      typeof (i as WatchPageMetadata).data.response === "object",
     CreateSessionResponse: (i: unknown): i is CreateSessionResponse =>
       typeof i === "object" &&
       ((i as CreateSessionResponse).meta.status === 201 ||
@@ -145,10 +152,10 @@ const typeGuard = {
       ((i as CreateSessionResponse).meta.message === "created" ||
         (i as CreateSessionResponse).meta.message === "ok") &&
       typeof (i as CreateSessionResponse).data === "object",
-    v3DMC: (i: unknown): i is TWatchV3Metadata<"dmc"> =>
-      typeof i === "object" && !!(i as TWatchV3Metadata).data.media.delivery,
-    v3DMS: (i: unknown): i is TWatchV3Metadata<"dms"> =>
-      typeof i === "object" && !!(i as TWatchV3Metadata).data.media.domand,
+    v3DMC: (i: unknown): i is V3MetadataBody<"dmc"> =>
+      typeof i === "object" && !!(i as V3MetadataBody).media.delivery,
+    v3DMS: (i: unknown): i is V3MetadataBody<"dms"> =>
+      typeof i === "object" && !!(i as V3MetadataBody).media.domand,
     v1AccessRightsHls: (i: unknown): i is V1AccessRightsHls =>
       typeof i === "object" &&
       (i as V1AccessRightsHls).meta.status === 201 &&

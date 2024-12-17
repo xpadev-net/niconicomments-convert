@@ -1,4 +1,4 @@
-import type { TWatchV3Metadata, UserData } from "@/@types/niconico";
+import type { UserData, V3MetadataBody } from "@/@types/niconico";
 import type { AuthType } from "@/@types/setting";
 
 import { store } from "../../store";
@@ -29,14 +29,14 @@ const getUserInfo = async (cookies: string): Promise<UserData | undefined> => {
 
 const getMetadata = async (
   nicoId: string,
-): Promise<TWatchV3Metadata | undefined> => {
+): Promise<V3MetadataBody | undefined> => {
   const authSetting = store.get("auth") as AuthType | undefined;
   if (authSetting?.type === "browser" && authSetting.profile) {
     const cookies = convertToEncodedCookie(
       await getCookies(authSetting.profile),
     );
     const req = await fetch(
-      `https://www.nicovideo.jp/api/watch/v3/${nicoId}?_frontendId=6&_frontendVersion=0&actionTrackId=0_0`,
+      `https://www.nicovideo.jp/watch/${nicoId}?responseType=json`,
       {
         headers: {
           Cookie: cookies,
@@ -44,26 +44,24 @@ const getMetadata = async (
       },
     );
     const metadata = (await req.json()) as unknown;
-    if (!typeGuard.niconico.TWatchV3Metadata(metadata)) {
+    if (!typeGuard.niconico.WatchPageJson(metadata)) {
       return getV3GuestMetadata(nicoId);
     }
-    return metadata;
+    return metadata.data.response;
   }
   if (!authSetting || authSetting.type === "NoAuth") {
     return getV3GuestMetadata(nicoId);
   }
 };
 
-const getV3GuestMetadata = async (
-  nicoId: string,
-): Promise<TWatchV3Metadata> => {
+const getV3GuestMetadata = async (nicoId: string): Promise<V3MetadataBody> => {
   const req = await fetch(
-    `https://www.nicovideo.jp/api/watch/v3_guest/${nicoId}?_frontendId=6&_frontendVersion=0&actionTrackId=0_0`,
+    `https://www.nicovideo.jp/watch/${nicoId}?responseType=json`,
   );
   const metadata = (await req.json()) as unknown;
-  if (!typeGuard.niconico.TWatchV3Metadata(metadata)) {
+  if (!typeGuard.niconico.WatchPageJson(metadata)) {
     throw new Error(`failed to get metadata\n${encodeJson(metadata)}`);
   }
-  return metadata;
+  return metadata.data.response;
 };
 export { getMetadata, getUserInfo };

@@ -1,4 +1,4 @@
-import type { ConvertQueue, Queue } from "@/@types/queue";
+import type { ConvertQueue, ProgressItem, Queue } from "@/@types/queue";
 import type { ApiResponseEnd } from "@/@types/response.controller";
 
 export type ApiResponseToRenderer = {
@@ -15,7 +15,7 @@ export type ApiResponseLoad = {
 };
 export type ApiResponseReportProgress = {
   type: "reportProgress";
-  converted: number;
+  progress: ProgressItem;
 };
 
 export type ApiResponsesToRenderer =

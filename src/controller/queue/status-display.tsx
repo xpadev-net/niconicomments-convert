@@ -27,29 +27,32 @@ const StatusDisplay: FC<Props> = ({ queue }) => {
         Math.ceil(
           (queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0),
         ) * targetFrameRate;
-      return queue.progress ? queue.progress / totalFrames : undefined;
+      return queue.progress ? queue.progress.percent / totalFrames : undefined;
     }
-    return queue.progress;
+    return queue.progress.percent;
   })();
   if (queue.status === "processing") {
     return (
-      <div className={Styles.row}>
-        <div className={Styles.progressWrapper}>
-          <ProgressDisplay progress={progress} />
+      <div className={Styles.col}>
+        <div className={Styles.row}>
+          <div className={Styles.progressWrapper}>
+            <ProgressDisplay progress={progress} />
+          </div>
+          {queue.status === "processing" && (
+            <IconButton
+              onClick={() => {
+                void window.api.request({
+                  host: "controller",
+                  type: "interruptQueue",
+                  queueId: queue.id,
+                });
+              }}
+            >
+              <StopOutlined />
+            </IconButton>
+          )}
         </div>
-        {queue.status === "processing" && (
-          <IconButton
-            onClick={() => {
-              void window.api.request({
-                host: "controller",
-                type: "interruptQueue",
-                queueId: queue.id,
-              });
-            }}
-          >
-            <StopOutlined />
-          </IconButton>
-        )}
+        {queue.progress.message && <div>{queue.progress.message}</div>}
       </div>
     );
   }

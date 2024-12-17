@@ -17,7 +17,14 @@ type BaseQueue = {
   id: UUID;
   status: Status;
   message?: string;
-  progress: number;
+  progress: ProgressItem;
+};
+
+export type ProgressItem = {
+  percent: number;
+  total: number;
+  processed: number;
+  message?: string;
 };
 
 export type TCommentItem = TCommentItemLocal | TCommentItemRemote;
