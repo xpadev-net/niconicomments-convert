@@ -24,7 +24,7 @@ const QueueDisplay: FC = () => {
     });
     return () => window.api.remove(callback);
   }, []);
-  console.log(queue);
+
   return (
     <div className={Styles.wrapper}>
       {queue.length < 1 && <p>タスクはまだありません</p>}
