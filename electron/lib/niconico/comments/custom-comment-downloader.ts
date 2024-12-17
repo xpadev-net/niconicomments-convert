@@ -111,10 +111,11 @@ const download = async () => {
   when = Math.floor(oldestCommentDate.getTime() / 1000);
   threadComments.push(...convertV3ToFormatted([thread], userList));
   if (option.end.type === "date") {
+    const endDate = new Date(end * 1000);
     progress(
       total * threadTotal,
       total * threadId + ((start - when) / (start - end)) * total,
-      `${thread.fork} を ${threadComments.length} まで取得しました (${oldestCommentDate} / ${new Date(end * 1000)})`,
+      `${thread.fork} を ${threadComments.length} まで取得しました (${oldestCommentDate.getFullYear()}/${oldestCommentDate.getMonth() + 1}/${oldestCommentDate.getDate()} ${oldestCommentDate.getHours()}:${oldestCommentDate.getMinutes()}:${oldestCommentDate.getSeconds()} / ${endDate.getFullYear()}/${endDate.getMonth() + 1}/${endDate.getDate()} ${endDate.getHours()}:${endDate.getMinutes()}:${endDate.getSeconds()})`,
     );
   } else {
     progress(
