@@ -1,5 +1,5 @@
 import * as fs from "node:fs";
-import type { FormattedComment, V1Thread } from "@xpadev-net/niconicomments";
+import type { FormattedComment } from "@xpadev-net/niconicomments";
 import NiconiComments from "@xpadev-net/niconicomments";
 import { Builder } from "@xpadev-net/xml2js";
 
@@ -11,8 +11,14 @@ import type {
 import type { CommentQueue } from "@/@types/queue";
 import type { V1Raw } from "@/@types/types";
 
-import { sendMessageToController } from "../../controller-window";
-import { sleep } from "../../utils";
+import { sendMessageToController } from "../../../controller-window";
+import { sleep } from "../../../utils";
+import {
+  type BaseData,
+  downloadCustomComment,
+  stopDownloadCustomComment,
+} from "./custom-comment-downloader";
+import { convertV3ToFormatted } from "./utils";
 
 let interrupt = false;
 
@@ -33,9 +39,12 @@ const downloadComment = async (
             queue.metadata,
             updateProgress,
           );
+    console.log("comment downloaded");
     const xml = convertToXml(formattedComments);
+    console.log("comment converted");
     fs.writeFileSync(queue.path, xml, "utf-8");
   } catch (e) {
+    console.error(e);
     sendMessageToController({
       type: "message",
       title: "コメントのダウンロードに失敗しました",
@@ -107,11 +116,11 @@ const downloadV3V1SimpleComment = async (
 const downloadV3V1CustomComment = async (
   option: TCommentOptionCustom,
   metadata: V3MetadataComment,
-  updateProgress: (total: number, progress: number) => void,
+  updateProgress: (total: number, progress: number, message?: string) => void,
 ): Promise<FormattedComment[]> => {
   interrupt = false;
   const userList: string[] = [];
-  const comments: FormattedComment[] = [];
+  const comments: FormattedComment[][] = [];
   const start = Math.floor(new Date(option.start).getTime() / 1000);
   const threadTotal = option.threads.filter((thread) => thread.enable).length;
   const total =
@@ -121,9 +130,9 @@ const downloadV3V1CustomComment = async (
   let threadId = 0;
   for (const thread of option.threads) {
     if (!thread.enable) continue;
-    const threadComments: FormattedComment[] = [];
-    let when = Math.floor(new Date(option.start).getTime() / 1000);
-    const baseData = {
+    if (interrupt) break;
+    const when = Math.floor(new Date(option.start).getTime() / 1000);
+    const baseData: BaseData = {
       threadKey: metadata.nvComment.threadKey,
       params: {
         language: metadata.nvComment.params.language,
@@ -135,109 +144,29 @@ const downloadV3V1CustomComment = async (
         ],
       },
     };
-    while (
-      (option.end.type === "date" &&
-        when > Math.floor(new Date(option.end.date).getTime() / 1000)) ||
-      (option.end.type === "count" && threadComments.length < option.end.count)
-    ) {
-      if (interrupt) return comments;
-      await sleep(1000);
-      const req = await fetch(`${metadata.nvComment.server}/v1/threads`, {
-        method: "POST",
-        headers: {
-          "content-type": "text/plain;charset=UTF-8",
-          "x-client-os-type": "others",
-          "x-frontend-id": "6",
-          "x-frontend-version": "0",
-        },
-        body: JSON.stringify({
-          ...baseData,
-          additionals: {
-            res_from: -1000,
-            when: when,
-          },
-        }),
-      });
-      const res = (await req.json()) as unknown;
-      const thread = (res as V1Raw)?.data?.threads[0];
-      if (!NiconiComments.typeGuard.v1.thread(thread))
-        throw new Error("failed to get comments");
-      const oldestCommentDate = new Date(
-        Math.min(
-          ...thread.comments.map((comment) => {
-            return new Date(comment.postedAt).getTime();
-          }),
-        ),
-      );
-      when = Math.floor(oldestCommentDate.getTime() / 1000);
-      threadComments.push(...convertV3ToFormatted([thread], userList));
-      if (option.end.type === "date") {
-        updateProgress(total * threadTotal, total * threadId + start - when);
-      } else {
-        updateProgress(
-          option.end.count * threadTotal,
-          option.end.count * threadId + threadComments.length,
-        );
-      }
-      if (
-        thread.comments.length < 5 ||
-        threadComments[threadComments.length - 1]?.id < 5
-      )
-        break;
-    }
-    comments.push(...threadComments);
+    comments.push(
+      await downloadCustomComment(
+        option,
+        metadata,
+        updateProgress,
+        baseData,
+        when,
+        total,
+        threadTotal,
+        threadId,
+        start,
+        userList,
+      ),
+    );
     threadId++;
+    await sleep(1000);
   }
-  return comments;
-};
-
-const convertV3ToFormatted = (
-  input: V1Thread[],
-  userList: string[],
-): FormattedComment[] => {
-  const comments = [];
-  for (const thread of input) {
-    const forkName = thread.fork;
-    for (const comment of thread.comments) {
-      const tmpParam: FormattedComment = {
-        id: comment.no,
-        vpos: Math.floor(comment.vposMs / 10),
-        content: comment.body,
-        date: date2time(comment.postedAt),
-        date_usec: 0,
-        owner: forkName === "owner",
-        premium: comment.isPremium,
-        mail: comment.commands,
-        user_id: -1,
-        layer: -1,
-        is_my_post: false,
-      };
-      if (tmpParam.content.startsWith("/") && tmpParam.owner) {
-        tmpParam.mail.push("invisible");
-      }
-      const isUserExist = userList.indexOf(comment.userId);
-      if (isUserExist === -1) {
-        tmpParam.user_id = userList.length;
-        userList.push(comment.userId);
-      } else {
-        tmpParam.user_id = isUserExist;
-      }
-      comments.push(tmpParam);
-    }
-  }
-  return comments;
+  return comments.flat(1);
 };
 
 const interruptCommentDownload = (): void => {
   interrupt = true;
+  stopDownloadCustomComment();
 };
-
-/**
- * v1 apiのpostedAtはISO 8601のtimestampなのでDate関数を使ってunix timestampに変換
- * @param date {string} ISO 8601 timestamp
- * @return {number} unix timestamp
- */
-const date2time = (date: string): number =>
-  Math.floor(new Date(date).getTime() / 1000);
 
 export { downloadComment, interruptCommentDownload };
