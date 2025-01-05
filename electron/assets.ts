@@ -25,10 +25,10 @@ const ffprobePath = path.join(binPath, `ffprobe${ext}`);
 
 const assetsBaseUrl = {
   ffmpeg:
-    "https://github.com/descriptinc/ffmpeg-ffprobe-static/releases/download/b4.4.0-rc.11/",
+    "https://github.com/descriptinc/ffmpeg-ffprobe-static/releases/download/b6.1.2-rc.1/",
 };
 const version = {
-  ffmpeg: "4.4",
+  ffmpeg: "6.1.1",
 };
 const distro = (() => {
   const arch = os.arch();
