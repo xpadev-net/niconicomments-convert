@@ -12,7 +12,7 @@
     "build:mac": "tsc -p electron&&npm run copy-files&&node build-script/mac.js",
     "build": "tsc -p electron&&npm run copy-files&&node build-script/win.js&&node build-script/mac.js",
     "copy-files": "npx rimraf build/electron/html&&vite build",
-    "check-types": "npx tsc --noEmit",
+    "check-types": "npx tsc --noEmit -p ./ && npx tsc --noEmit -p ./electron",
     "electron:dev": "tsc -p electron&&concurrently \"vite\" \"electron --unhandled-rejections=strict .\"",
     "eslint": "biome lint ./src ./electron",
     "eslint:fix": "biome lint --apply-unsafe ./src ./electron",
