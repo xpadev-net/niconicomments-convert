@@ -21,14 +21,6 @@ type Props = {
 const StatusDisplay: FC<Props> = ({ queue }) => {
   const progress = (() => {
     if (queue.status !== "processing") return undefined;
-    if (queue.type === "convert") {
-      const targetFrameRate = queue.option.fps || 30;
-      const totalFrames =
-        Math.ceil(
-          (queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0),
-        ) * targetFrameRate;
-      return queue.progress ? queue.progress.percent / totalFrames : undefined;
-    }
     return queue.progress.percent;
   })();
   if (queue.status === "processing") {

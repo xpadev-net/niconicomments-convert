@@ -13,6 +13,7 @@ type Props = {
 };
 const ConvertItem: FC<Props> = ({ queue, className }) => {
   return useMemo(() => {
+    console.log("ConvertItem", queue);
     return (
       <div className={`${Styles.queue} ${className}`}>
         <p className={Styles.id}>#{queue.id}</p>
