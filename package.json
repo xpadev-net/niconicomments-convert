@@ -77,5 +77,8 @@
     "directories": {
       "output": "dist"
     }
+  },
+  "resolutions": {
+    "@babel/runtime": "7.27.1"
   }
 }
