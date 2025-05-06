@@ -28,7 +28,7 @@ const assetsBaseUrl = {
     "https://github.com/descriptinc/ffmpeg-ffprobe-static/releases/download/b6.1.2-rc.1/",
 };
 const version = {
-  ffmpeg: "6.1.1",
+  ffmpeg: "6.1.2",
 };
 const distro = (() => {
   const arch = os.arch();
