@@ -20,7 +20,7 @@
     "format:fix": "biome format --write ./src ./electron",
     "lint": "biome check ./src ./electron",
     "lint:fix": "biome check --apply-unsafe ./src ./electron",
-    "prepare": "husky install"
+    "prepare": "lefthook install"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -53,8 +53,7 @@
     "cross-env": "^7.0.3",
     "electron": "^33.2.1",
     "electron-builder": "^25.1.8",
-    "husky": "^9.1.7",
-    "lint-staged": "^15.2.11",
+    "lefthook": "^1.11.12",
     "prettier": "^3.4.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
