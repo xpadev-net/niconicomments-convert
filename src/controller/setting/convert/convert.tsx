@@ -50,8 +50,8 @@ const ConvertSetting: FC = () => {
   }, []);
   const update = (type: "key" | "value", id: string, value: string): void => {
     setOption((pv) => {
-      const item = pv[id];
-      if (!item) return pv;
+      const data = { ...pv };
+      const item = data[id];
       if (type === "key") {
         item.key = value;
       } else {
@@ -60,22 +60,23 @@ const ConvertSetting: FC = () => {
       void window.api.request({
         type: "setSetting",
         key: "ffmpegOptions",
-        data: rebuild(pv),
+        data: rebuild(data),
         host: "controller",
       });
-      return { ...pv };
+      return data;
     });
   };
   const deleteItem = (id: string): void => {
     setOption((pv) => {
-      delete pv[id];
+      const data = { ...pv };
+      delete data[id];
       void window.api.request({
         type: "setSetting",
         key: "ffmpegOptions",
-        data: rebuild(pv),
+        data: rebuild(data),
         host: "controller",
       });
-      return { ...pv };
+      return data;
     });
   };
   const onReset = (): void => {
@@ -89,17 +90,20 @@ const ConvertSetting: FC = () => {
   };
   const addItem = (): void => {
     setOption((pv) => {
-      pv[uuid()] = {
-        key: "",
-        value: "",
+      const data = {
+        ...pv,
+        [uuid()]: {
+          key: "",
+          value: "",
+        },
       };
       void window.api.request({
         type: "setSetting",
         key: "ffmpegOptions",
-        data: rebuild(pv),
+        data: rebuild(data),
         host: "controller",
       });
-      return { ...pv };
+      return data;
     });
   };
   return (
