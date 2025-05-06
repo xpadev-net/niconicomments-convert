@@ -10,22 +10,34 @@ import { uuid } from "@/util/uuid";
 import { defaultOptions } from "../../../../electron/const";
 import Styles from "./convert.module.scss";
 
-type OptionsValue = {
-  id: string;
-  key: string;
-  value: string;
-}[];
+type OptionsValue = Record<
+  string,
+  {
+    key: string;
+    value: string;
+  }
+>;
 
 const rebuild = (value: OptionsValue): FfmpegOptions => {
   const result: FfmpegOptions = {};
-  for (const v of value) {
-    result[v.key] = v.value;
+  for (const [, item] of Object.entries(value)) {
+    result[item.key] = item.value;
   }
   return result;
 };
 
+const transform = (value: FfmpegOptions): OptionsValue => {
+  return Object.entries(value).reduce((pv, value) => {
+    pv[uuid()] = {
+      key: value[0],
+      value: value[1],
+    };
+    return pv;
+  }, {} as OptionsValue);
+};
+
 const ConvertSetting: FC = () => {
-  const [option, setOption] = useState<OptionsValue>([]);
+  const [option, setOption] = useState<OptionsValue>({});
   useLayoutEffect(() => {
     void (async () => {
       const value = ((await window.api.request({
@@ -33,18 +45,12 @@ const ConvertSetting: FC = () => {
         key: "ffmpegOptions",
         host: "controller",
       })) ?? defaultOptions) as FfmpegOptions;
-      setOption(
-        Object.entries(value).map((value) => ({
-          id: uuid(),
-          key: value[0],
-          value: value[1],
-        })),
-      );
+      setOption(transform(value));
     })();
   }, []);
   const update = (type: "key" | "value", id: string, value: string): void => {
     setOption((pv) => {
-      const item = pv.find((v) => v.id === id);
+      const item = pv[id];
       if (!item) return pv;
       if (type === "key") {
         item.key = value;
@@ -57,29 +63,23 @@ const ConvertSetting: FC = () => {
         data: rebuild(pv),
         host: "controller",
       });
-      return [...pv];
+      return { ...pv };
     });
   };
   const deleteItem = (id: string): void => {
     setOption((pv) => {
-      const result = pv.filter((v) => v.id !== id);
+      delete pv[id];
       void window.api.request({
         type: "setSetting",
         key: "ffmpegOptions",
-        data: rebuild(result),
+        data: rebuild(pv),
         host: "controller",
       });
-      return [...result];
+      return { ...pv };
     });
   };
   const onReset = (): void => {
-    setOption(
-      Object.entries(defaultOptions).map((v) => ({
-        id: uuid(),
-        key: v[0],
-        value: v[1],
-      })),
-    );
+    setOption(transform(defaultOptions));
     void window.api.request({
       type: "setSetting",
       key: "ffmpegOptions",
@@ -89,14 +89,17 @@ const ConvertSetting: FC = () => {
   };
   const addItem = (): void => {
     setOption((pv) => {
-      const result = { ...pv, "": "" };
+      pv[uuid()] = {
+        key: "",
+        value: "",
+      };
       void window.api.request({
         type: "setSetting",
         key: "ffmpegOptions",
-        data: result,
+        data: rebuild(pv),
         host: "controller",
       });
-      return result;
+      return { ...pv };
     });
   };
   return (
@@ -116,7 +119,7 @@ const ConvertSetting: FC = () => {
         </li>
       </ul>
       <div>
-        {Object.entries(option).map(([index, { key, value, id }]) => {
+        {Object.entries(option).map(([id, { key, value }]) => {
           return (
             <div key={id} className={Styles.block}>
               <TextField
