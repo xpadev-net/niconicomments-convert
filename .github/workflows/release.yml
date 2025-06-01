@@ -63,7 +63,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          ref: develop
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'develop' || github.ref }}
       - name: Setup node.js
         uses: actions/setup-node@v3
         with:
