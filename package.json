@@ -1,7 +1,7 @@
 {
   "name": "niconicomments-convert",
   "private": false,
-  "version": "0.0.29",
+  "version": "0.0.30",
   "type": "commonjs",
   "license": "MIT",
   "main": "build/electron/electron.js",
@@ -66,14 +66,20 @@
     "win-protect": "^1.0.0"
   },
   "browserslist": {
-    "production": ["last 1 electron version"],
-    "development": ["last 1 electron version"]
+    "production": [
+      "last 1 electron version"
+    ],
+    "development": [
+      "last 1 electron version"
+    ]
   },
   "build": {
     "extraMetadata": {
       "main": "./build/electron/electron.js"
     },
-    "files": ["build/**/*"],
+    "files": [
+      "build/**/*"
+    ],
     "directories": {
       "output": "dist"
     }
