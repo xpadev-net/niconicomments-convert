@@ -72,7 +72,8 @@ jobs:
       - name: Get current version
         id: version
         run: |
-          current_version=$(node -p "require('./package.json').version")
+          set -e
+          current_version=$(node -p "require('./package.json').version" || { echo "Error: Failed to retrieve current version from package.json"; exit 1; })
           echo "Current version: $current_version"
           
           # Calculate new version based on tag
