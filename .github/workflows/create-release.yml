@@ -108,6 +108,6 @@ jobs:
           
       - name: Trigger build workflow
         run: |
-          gh workflow run release-publish-package.yml --ref v${{ steps.version.outputs.new_version }}
+          gh workflow run release.yml --ref v${{ steps.version.outputs.new_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
