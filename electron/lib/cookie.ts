@@ -75,7 +75,7 @@ const readCookieTxt = async (path: string): Promise<Cookies | undefined> => {
         };
       })
       .filter((cookie) => !!cookie)
-      .filter((cookie) => cookie?.domain.match(/\.nicovideo\.jp/))
+      .filter((cookie) => cookie?.domain.match(/\.nicovideo\.jp$/i))
       .reduce((pv, current) => {
         if (pv[current.name]) {
           console.warn(`Duplicate cookie found: ${current.name}`);
