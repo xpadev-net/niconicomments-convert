@@ -28,7 +28,7 @@ const assetsBaseUrl = {
     "https://github.com/descriptinc/ffmpeg-ffprobe-static/releases/download/b6.1.2-rc.1/",
 };
 const version = {
-  ffmpeg: "6.1.2",
+  ffmpeg: "6.1",
 };
 const distro = (() => {
   const arch = os.arch();
@@ -51,22 +51,28 @@ const distro = (() => {
   throw new Error("unknown os or architecture");
 })();
 
+const isValidBinary = async (
+  path: string,
+  version: string,
+): Promise<boolean> => {
+  try {
+    if (!fs.existsSync(path)) {
+      return false;
+    }
+    const result = await spawn(path, ["-version"]).promise;
+    return result.stdout.includes(version);
+  } catch (e) {
+    console.warn(e);
+    return false;
+  }
+};
+
 const onStartUp = async (): Promise<void> => {
   target = [];
-  if (
-    !fs.existsSync(ffmpegPath) ||
-    !(await spawn(ffmpegPath, ["-version"]).promise).stdout.includes(
-      version.ffmpeg,
-    )
-  ) {
+  if (!(await isValidBinary(ffmpegPath, version.ffmpeg))) {
     target.push("ffmpeg");
   }
-  if (
-    !fs.existsSync(ffprobePath) ||
-    !(await spawn(ffprobePath, ["-version"]).promise).stdout.includes(
-      version.ffmpeg,
-    )
-  ) {
+  if (!(await isValidBinary(ffprobePath, version.ffmpeg))) {
     target.push("ffprobe");
   }
   if (target.length === 0) return;

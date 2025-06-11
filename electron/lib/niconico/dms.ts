@@ -42,13 +42,7 @@ const downloadDMS = async (
     return;
   }
 
-  const cookie = await (async (): Promise<Cookies | undefined> => {
-    const authSetting = store.get("auth") as AuthType | undefined;
-    if (authSetting?.type === "browser" && authSetting.profile) {
-      return await getCookies(authSetting.profile);
-    }
-    return undefined;
-  })();
+  const cookie = await getCookies();
   const accessRightsReq = await fetch(
     `https://nvapi.nicovideo.jp/v1/watch/${metadata.video.id}/access-rights/hls?actionTrackId=0_0`,
     {

@@ -30,28 +30,23 @@ const getUserInfo = async (cookies: string): Promise<UserData | undefined> => {
 const getMetadata = async (
   nicoId: string,
 ): Promise<V3MetadataBody | undefined> => {
-  const authSetting = store.get("auth") as AuthType | undefined;
-  if (authSetting?.type === "browser" && authSetting.profile) {
-    const cookies = convertToEncodedCookie(
-      await getCookies(authSetting.profile),
-    );
-    const req = await fetch(
-      `https://www.nicovideo.jp/watch/${nicoId}?responseType=json`,
-      {
-        headers: {
-          Cookie: cookies,
-        },
-      },
-    );
-    const metadata = (await req.json()) as unknown;
-    if (!typeGuard.niconico.WatchPageJson(metadata)) {
-      return getV3GuestMetadata(nicoId);
-    }
-    return metadata.data.response;
-  }
-  if (!authSetting || authSetting.type === "NoAuth") {
+  const cookies = await getCookies();
+  if (!cookies) {
     return getV3GuestMetadata(nicoId);
   }
+  const req = await fetch(
+    `https://www.nicovideo.jp/watch/${nicoId}?responseType=json`,
+    {
+      headers: {
+        Cookie: convertToEncodedCookie(cookies),
+      },
+    },
+  );
+  const metadata = (await req.json()) as unknown;
+  if (!typeGuard.niconico.WatchPageJson(metadata)) {
+    return getV3GuestMetadata(nicoId);
+  }
+  return metadata.data.response;
 };
 
 const getV3GuestMetadata = async (nicoId: string): Promise<V3MetadataBody> => {
