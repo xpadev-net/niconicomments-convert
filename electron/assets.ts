@@ -55,11 +55,16 @@ const isValidBinary = async (
   path: string,
   version: string,
 ): Promise<boolean> => {
-  if (!fs.existsSync(path)) {
+  try {
+    if (!fs.existsSync(path)) {
+      return false;
+    }
+    const result = await spawn(path, ["-version"]).promise;
+    return result.stdout.includes(version);
+  } catch (e) {
+    console.warn(e);
     return false;
   }
-  const result = await spawn(path, ["-version"]).promise;
-  return result.stdout.includes(version);
 };
 
 const onStartUp = async (): Promise<void> => {
