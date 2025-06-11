@@ -137,7 +137,6 @@ const AuthSetting: FC = () => {
           value={"cookie"}
           control={<Radio />}
           label={"Cookieファイル"}
-          disabled={true}
         />
         <FormControlLabel
           value={"browser"}
