@@ -114,25 +114,6 @@ const parseCookie = (...cookies: string[]): ParsedCookie[] => {
   return result;
 };
 
-const filterCookies = (
-  cookies: ParsedCookie[],
-  url: string,
-): ParsedCookie[] => {
-  const urlObj = new URL(url);
-  const domain = urlObj.hostname;
-  const path = urlObj.pathname;
-  const result: ParsedCookie[] = [];
-  for (const cookie of cookies) {
-    if (
-      domain.endsWith(cookie.domain ?? "") &&
-      path.startsWith(cookie.path ?? "")
-    ) {
-      result.push(cookie);
-    }
-  }
-  return result;
-};
-
 const formatCookies = (
   cookies: ParsedCookie[],
   addSuffix = false,
@@ -146,7 +127,6 @@ const formatCookies = (
 
 export {
   convertToEncodedCookie,
-  filterCookies,
   formatCookies,
   getAvailableProfiles,
   getCookies,
