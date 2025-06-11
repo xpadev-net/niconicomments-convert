@@ -53,6 +53,8 @@ const getCookies = async (): Promise<Cookies | undefined> => {
     case "cookie": {
       return await readCookieTxt(authSetting.path);
     }
+    default:
+      return;
   }
 };
 
