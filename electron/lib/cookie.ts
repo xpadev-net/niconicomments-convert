@@ -64,6 +64,9 @@ const readCookieTxt = async (path: string): Promise<Cookies | undefined> => {
       .filter((line) => line && !line.startsWith("#"))
       .map((line) => {
         const parts = line.split("\t").map((part) => part.trim());
+        if (parts.length !== 7) {
+          return undefined;
+        }
         return {
           domain: parts[0],
           path: parts[2],
@@ -71,7 +74,8 @@ const readCookieTxt = async (path: string): Promise<Cookies | undefined> => {
           value: parts[6],
         };
       })
-      .filter((cookie) => cookie.domain.match(/\.nicovideo\.jp/))
+      .filter((cookie) => !!cookie)
+      .filter((cookie) => cookie?.domain.match(/\.nicovideo\.jp/))
       .reduce((pv, current) => {
         if (pv[current.name]) {
           console.warn(`Duplicate cookie found: ${current.name}`);
