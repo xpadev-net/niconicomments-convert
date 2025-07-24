@@ -2181,9 +2181,9 @@ electron-builder@^26.0.12:
     yargs "^17.6.2"
 
 electron-log@^5.4.0:
-  version "5.4.0"
-  resolved "https://registry.yarnpkg.com/electron-log/-/electron-log-5.4.0.tgz#3180bf5194b2e2efacb62ec1392f8150faf4de6b"
-  integrity sha512-AXI5OVppskrWxEAmCxuv8ovX+s2Br39CpCAgkGMNHQtjYT3IiVbSQTncEjFVGPgoH35ZygRm/mvUMBDWwhRxgg==
+  version "5.4.1"
+  resolved "https://registry.yarnpkg.com/electron-log/-/electron-log-5.4.1.tgz#700ddc6ef4b06c13a983468580ba7a7e579129d4"
+  integrity sha512-QvisA18Z++8E3Th0zmhUelys9dEv7aIeXJlbFw3UrxCc8H9qSRW0j8/ooTef/EtHui8tVmbKSL+EIQzP9GoRLg==
 
 electron-publish@26.0.11:
   version "26.0.11"
