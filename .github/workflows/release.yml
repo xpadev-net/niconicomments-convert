@@ -23,7 +23,7 @@ jobs:
           yarn remove win-protect
 
       - run: yarn build:mac
-      - uses: softprops/action-gh-release@v1
+      - uses: softprops/action-gh-release@v2
         with:
           draft: true
           files: |
@@ -47,7 +47,7 @@ jobs:
           yarn remove win-protect
 
       - run: yarn build:win
-      - uses: softprops/action-gh-release@v1
+      - uses: softprops/action-gh-release@v2
         with:
           draft: true
           files: |
@@ -87,7 +87,7 @@ jobs:
           echo "New version: $new_version"
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.new_version }}
           name: Release v${{ steps.version.outputs.new_version }}
