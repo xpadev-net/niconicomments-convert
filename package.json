@@ -37,7 +37,7 @@
     "sqlite3": "5.1.6"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
+    "@biomejs/biome": "2.1.2",
     "@types/body-parser": "^1.19.5",
     "@types/follow-redirects": "^1.14.4",
     "@types/node": "^22.15.12",
