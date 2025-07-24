@@ -257,7 +257,7 @@ const getWindowsDecryptor = async (
   const base64_key = localState.os_crypt.encrypted_key;
   const encryptedKey = Buffer.from(base64_key, "base64");
   //@ts-expect-error
-  const wp = (await import("win-protect")) as winProtect;
+const wp = (await import("win-protect")).default as winProtect;
   return (_value: Buffer) => {
     let value = _value;
     if (value[0] === 0x76 && value[1] === 0x31 && value[2] === 0x30) {
