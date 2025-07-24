@@ -1,15 +1,12 @@
 import type { UserData, V3MetadataBody } from "@/@types/niconico";
-import type { AuthType } from "@/@types/setting";
 
-import { store } from "../../store";
 import { typeGuard } from "../../type-guard";
 import { convertToEncodedCookie, getCookies } from "../cookie";
 import { encodeJson } from "../json";
 
 const userInfoCache: { [key: string]: UserData | undefined } = {};
 const getUserInfo = async (cookies: string): Promise<UserData | undefined> => {
-  if (Object.prototype.hasOwnProperty.call(userInfoCache, cookies))
-    return userInfoCache[cookies];
+  if (Object.hasOwn(userInfoCache, cookies)) return userInfoCache[cookies];
   const req = await fetch(
     "https://account.nicovideo.jp/api/public/v2/user.json",
     {

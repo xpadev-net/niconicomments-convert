@@ -42,7 +42,7 @@ type ApiResponseType =
   | (ApiResponsesToRenderer & ApiResponseToRenderer)
   | (ApiResponsesToBinaryDownloader & ApiResponseToBinaryDownloader);
 
-type Movie = {
+export type Movie = {
   path: Electron.OpenDialogReturnValue;
   width: number;
   height: number;
@@ -55,7 +55,7 @@ type Progress = {
   total: number;
 };
 
-type Message = {
+export type Message = {
   title: string;
   content: string;
 };

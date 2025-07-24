@@ -5,7 +5,7 @@ export type TWatchV3Metadata<T extends "dmc" | "dms" | "" = ""> = {
   data: V3MetadataBody<T>;
 };
 
-export type WatchPageMetadata<T extends "dmc" | "dms" | "" = ""> = {
+export type WatchPageMetadata<_T extends "dmc" | "dms" | "" = ""> = {
   meta: {
     status: 200;
   };

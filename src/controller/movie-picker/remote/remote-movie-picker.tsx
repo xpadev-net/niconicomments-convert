@@ -4,16 +4,16 @@ import { useSetAtom } from "jotai";
 import type { ChangeEvent, FC, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
 
-import type { TWatchV3Metadata, V3MetadataBody } from "@/@types/niconico";
+import type { V3MetadataBody } from "@/@types/niconico";
 import type {
   TMovieItemRemote,
   TRemoteMovieItemFormat,
   TRemoteServerType,
 } from "@/@types/queue";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
+import Styles from "@/controller/movie/movie.module.scss";
 import { DMCMoviePicker } from "@/controller/movie-picker/remote/dmc";
 import { DMSMoviePicker } from "@/controller/movie-picker/remote/dms";
-import Styles from "@/controller/movie/movie.module.scss";
 import { typeGuard } from "@/type-guard";
 import { getNicoId, isNicovideoUrl } from "@/util/niconico";
 import { uuid } from "@/util/uuid";

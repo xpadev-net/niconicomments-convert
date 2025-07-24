@@ -7,7 +7,6 @@ import { useRef, useState } from "react";
 import type {
   TCommentOption,
   TCommentPickerMode,
-  TWatchV3Metadata,
   V3MetadataBody,
 } from "@/@types/niconico";
 import type { TCommentItemRemote } from "@/@types/queue";
