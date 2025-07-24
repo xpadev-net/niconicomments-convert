@@ -1308,9 +1308,9 @@
   integrity sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw==
 
 "@xpadev-net/niconicomments@^0.2.75":
-  version "0.2.75"
-  resolved "https://registry.yarnpkg.com/@xpadev-net/niconicomments/-/niconicomments-0.2.75.tgz#9155abe0e70b7936aea616cd17d588da27bf10b2"
-  integrity sha512-pLIW9NvbYOj5zSfYkHHyPLS5tHNj6ZsJRsSUkznLU1hX4dTm0G7pN4e71OqRhyEqjHeitwEPA5fyYyYxtl9ltg==
+  version "0.2.76"
+  resolved "https://registry.yarnpkg.com/@xpadev-net/niconicomments/-/niconicomments-0.2.76.tgz#a26bd0f79c9e31bfcec1bb0f5cbf590b6e6410a1"
+  integrity sha512-9UhCqWLoDLMuaZxdO1Q4VgdhCwTpWFf7Hvo9mpF8ickHRD5CwOQZyF/9IfNJ0Smub8ZfQD2mAqXjT4nJC4vE/w==
 
 "@xpadev-net/xml2js@^0.6.2-2":
   version "0.6.2-2"
