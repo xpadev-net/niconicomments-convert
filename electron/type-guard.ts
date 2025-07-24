@@ -1,8 +1,8 @@
 import type {
   ChromiumProfilesJson,
-  ParsedCookie,
   firefoxContainerDefault,
   firefoxContainersJson,
+  ParsedCookie,
 } from "@/@types/cookies";
 import type {
   CreateSessionResponse,

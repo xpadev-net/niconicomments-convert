@@ -1,4 +1,4 @@
-import type { TWatchV3Metadata, V3MetadataBody } from "@/@types/niconico";
+import type { V3MetadataBody } from "@/@types/niconico";
 import type { ApiResponseDownloadProgress } from "@/@types/response.binary-downloader";
 import type {
   ApiResponseEnd,

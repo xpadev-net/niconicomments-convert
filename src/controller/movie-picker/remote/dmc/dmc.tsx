@@ -2,7 +2,7 @@ import { MenuItem, Select } from "@mui/material";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 
-import type { TWatchV3Metadata, V3MetadataBody } from "@/@types/niconico";
+import type { V3MetadataBody } from "@/@types/niconico";
 import type { TDMCFormat } from "@/@types/queue";
 import { SelectField } from "@/components/select-field";
 import Styles from "@/controller/movie/movie.module.scss";
@@ -47,7 +47,7 @@ const DMCMoviePicker: FC<Props> = ({ metadata, onChange }) => {
           onChange={(e) => setSelectedVideo(e.target.value)}
         >
           {metadata.media.delivery.movie.videos.map((val) => {
-            if (!val.isAvailable) return <></>;
+            if (!val.isAvailable) return null;
             return (
               <MenuItem key={val.id} value={val.id}>
                 {val.id}
@@ -68,7 +68,7 @@ const DMCMoviePicker: FC<Props> = ({ metadata, onChange }) => {
           onChange={(e) => setSelectedAudio(e.target.value)}
         >
           {metadata.media.delivery.movie.audios.map((val) => {
-            if (!val.isAvailable) return <></>;
+            if (!val.isAvailable) return null;
             return (
               <MenuItem key={val.id} value={val.id}>
                 {val.id}

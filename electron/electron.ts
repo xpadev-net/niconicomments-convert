@@ -1,4 +1,4 @@
-import { BrowserWindow, app, globalShortcut } from "electron";
+import { app, BrowserWindow, globalShortcut } from "electron";
 
 import { onStartUp } from "./assets";
 import { createControllerWindow } from "./controller-window";

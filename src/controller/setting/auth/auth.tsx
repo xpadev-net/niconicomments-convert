@@ -123,7 +123,7 @@ const AuthSetting: FC = () => {
     })();
   };
 
-  if (!authSetting) return <></>;
+  if (!authSetting) return null;
   return (
     <div className={Styles.wrapper}>
       <div className={Styles.reset}>
