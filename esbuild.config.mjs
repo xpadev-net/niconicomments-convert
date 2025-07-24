@@ -1,6 +1,6 @@
+import { readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { build } from "esbuild";
-import { readdirSync, statSync } from "fs";
-import { join } from "path";
 
 // electronディレクトリ内のTypeScriptファイルを再帰的に取得
 function getEntryPoints(dir) {
