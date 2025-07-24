@@ -49,7 +49,7 @@ export type Movie = {
   duration: number;
 };
 
-type Progress = {
+export type Progress = {
   generated: number;
   converted: number;
   total: number;

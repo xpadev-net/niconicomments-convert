@@ -1,17 +1,15 @@
 import react from "@vitejs/plugin-react";
 export default {
-  plugins: [
-    react(),
-  ],
-  root: 'src',
+  plugins: [react()],
+  root: "src",
   build: {
     emptyOutDir: true,
-    outDir: '../build/electron/html/'
+    outDir: "../build/electron/html/",
   },
-  resolve:{
+  resolve: {
     alias: {
       "@/": `${__dirname}/src/`,
     },
   },
-  base:""
-}
+  base: "",
+};
