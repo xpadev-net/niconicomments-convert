@@ -1,18 +1,18 @@
-import builder from "electron-builder";
+const builder = require('electron-builder');
 
-await builder.build({
-  config: {
-    appId: "net.xpadev.niconicomments-convert",
-    icon: "assets/niconicomments_icon.png",
-    win: {
-      target: {
-        target: "zip",
-        arch: [
-          "x64",
-          //'ia32',
-        ],
-      },
+builder.build({
+    config: {
+        'appId': 'net.xpadev.niconicomments-convert',
+        'icon': 'assets/niconicomments_icon.png',
+        'win': {
+            'target': {
+                'target': 'zip',
+                'arch': [
+                    'x64',
+                    //'ia32',
+                ]
+            }
+        }
     },
-  },
-  publish: "never",
+    publish: "never"
 });

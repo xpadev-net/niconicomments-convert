@@ -1,16 +1,18 @@
-import builder from "electron-builder";
+const builder = require('electron-builder');
 
-await builder.build({
-  config: {
-    appId: "net.xpadev.niconicomments-convert",
-    icon: "assets/niconicomments_icon.png",
-    mac: {
-      target: {
-        target: "dmg",
-        arch: ["x64"],
-      },
-      singleArchFiles: "*",
+builder.build({
+    config: {
+        'appId': 'net.xpadev.niconicomments-convert',
+        'icon': 'assets/niconicomments_icon.png',
+        'mac': {
+            'target': {
+                'target': 'dmg',
+                'arch': [
+                    'x64'
+                ]
+            },
+            singleArchFiles: "*"
+        }
     },
-  },
-  publish: "never",
+    publish: "never"
 });

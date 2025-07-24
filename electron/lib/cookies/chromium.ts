@@ -248,16 +248,16 @@ const decryptAES256GCM = (
   return str;
 };
 
-const getWindowsDecryptor = async (
+const getWindowsDecryptor = (
   profile: ChromiumProfile,
-): Promise<(value: Buffer) => string> => {
+): ((value: Buffer) => string) => {
   const localState = JSON.parse(
     fs.readFileSync(path.join(profile.path, "../", "Local State"), "utf-8"),
   ) as chromiumLocalState;
   const base64_key = localState.os_crypt.encrypted_key;
   const encryptedKey = Buffer.from(base64_key, "base64");
-  //@ts-expect-error
-const wp = (await import("win-protect")).default as winProtect;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const wp = require("win-protect") as winProtect;
   return (_value: Buffer) => {
     let value = _value;
     if (value[0] === 0x76 && value[1] === 0x31 && value[2] === 0x30) {
