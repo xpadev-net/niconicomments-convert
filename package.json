@@ -48,7 +48,7 @@
     "body-parser": "^2.2.0",
     "concurrently": "^9.1.2",
     "copyfiles": "^2.4.1",
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.0.0",
     "electron": "^37.0.0",
     "electron-builder": "^26.0.12",
     "lefthook": "^1.11.12",
