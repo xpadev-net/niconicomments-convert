@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, master]
+  push:
+    branches: [develop, master]
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+          
+      - name: Install dependencies
+        run: |
+          yarn cache clean
+          yarn config delete proxy
+          yarn config delete https-proxy
+          yarn config delete registry
+          yarn install --network-timeout 1000000
+          
+      - name: Run lint
+        run: yarn lint
+        
+      - name: Run type check
+        run: yarn check-types
+        
+  build-test:
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+          
+      - name: Install dependencies
+        run: |
+          yarn cache clean
+          yarn config delete proxy
+          yarn config delete https-proxy
+          yarn config delete registry
+          yarn install --network-timeout 1000000
+          yarn remove win-protect
+          
+      - name: Build TypeScript (Electron)
+        run: tsc -p electron
+        
+      - name: Build Frontend
+        run: yarn copy-files
