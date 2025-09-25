@@ -32,7 +32,7 @@
     "@xpadev-net/xml2js": "^0.6.2-2",
     "axios": "^1.9.0",
     "electron-log": "^5.4.0",
-    "electron-store": "^8.2.0",
+    "electron-store": "^10.0.0",
     "jotai": "^2.12.3",
     "sqlite3": "5.1.6"
   },
