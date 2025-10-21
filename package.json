@@ -51,7 +51,7 @@
     "cross-env": "^10.0.0",
     "electron": "^38.0.0",
     "electron-builder": "^26.0.12",
-    "lefthook": "^1.11.12",
+    "lefthook": "^2.0.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "rimraf": "^6.0.1",
