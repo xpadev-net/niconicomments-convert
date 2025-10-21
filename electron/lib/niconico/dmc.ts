@@ -1,8 +1,4 @@
-import type {
-  CreateSessionRequest,
-  TWatchV3Metadata,
-  V3MetadataBody,
-} from "@/@types/niconico";
+import type { CreateSessionRequest, V3MetadataBody } from "@/@types/niconico";
 import type { TDMCFormat } from "@/@types/queue";
 import type { SpawnResult } from "@/@types/spawn";
 
@@ -128,7 +124,7 @@ const downloadDMC = async (
     );
     await delReq.json();
     return result;
-  } catch (e) {
+  } catch (_e) {
     if (!cancelled) {
       sendMessageToController({
         title: "動画のダウンロードに失敗しました",

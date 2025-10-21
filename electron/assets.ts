@@ -1,10 +1,9 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type * as Stream from "node:stream";
+import type { Stream } from "node:stream";
 import type { AxiosProgressEvent, AxiosResponse } from "axios";
 import axios from "axios";
-
 import {
   closeBinaryDownloaderWindow,
   createBinaryDownloaderWindow,

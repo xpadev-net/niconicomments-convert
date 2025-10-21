@@ -1,5 +1,5 @@
 import * as path from "node:path";
-import { BrowserWindow, app } from "electron";
+import { app, BrowserWindow } from "electron";
 
 import type { ApiResponsesToController } from "@/@types/response.controller";
 

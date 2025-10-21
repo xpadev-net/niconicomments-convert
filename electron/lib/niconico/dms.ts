@@ -1,11 +1,8 @@
-import type { Cookies } from "@/@types/cookies";
-import type { TWatchV3Metadata, V3MetadataBody } from "@/@types/niconico";
+import type { V3MetadataBody } from "@/@types/niconico";
 import type { TDMSFormat } from "@/@types/queue";
-import type { AuthType } from "@/@types/setting";
 import type { SpawnResult } from "@/@types/spawn";
 
 import { sendMessageToController } from "../../controller-window";
-import { store } from "../../store";
 import { typeGuard } from "../../type-guard";
 import { DownloadM3U8 } from "../../utils/ffmpeg";
 import {

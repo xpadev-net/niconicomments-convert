@@ -1,3 +1,4 @@
+import * as fs from "node:fs/promises";
 import type {
   ChromiumProfile,
   Cookies,
@@ -5,8 +6,6 @@ import type {
   ParsedCookie,
 } from "@/@types/cookies";
 import type { UserData } from "@/@types/niconico";
-
-import * as fs from "node:fs/promises";
 import type { AuthType } from "@/@types/setting";
 import { store } from "../store";
 import { typeGuard } from "../type-guard";
