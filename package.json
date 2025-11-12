@@ -34,7 +34,8 @@
     "electron-log": "^5.4.0",
     "electron-store": "^8.2.0",
     "jotai": "^2.12.3",
-    "sqlite3": "5.1.6"
+    "sqlite3": "5.1.6",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.1.2",

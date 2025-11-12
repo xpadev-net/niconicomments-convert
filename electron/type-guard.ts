@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import type {
   ChromiumProfilesJson,
   firefoxContainerDefault,
@@ -16,7 +18,6 @@ import type {
   ApiRequestAppendQueue,
   ApiRequestDownloadMovie,
   ApiRequestDropFiles,
-  ApiRequestFromController,
   ApiRequestGetAvailableProfiles,
   ApiRequestGetNiconicoMovieMetadata,
   ApiRequestGetQueue,
@@ -32,147 +33,330 @@ import type {
   ApiRequestBlob,
   ApiRequestBuffer,
   ApiRequestEnd,
-  ApiRequestFromRenderer,
   ApiRequestLoad,
   ApiRequestMessage,
 } from "@/@types/request.renderer";
+
+// Controller schemas
+const controllerSelectMovieSchema = z.object({
+  host: z.literal("controller"),
+  type: z.literal("selectMovie"),
+});
+
+const controllerSelectCommentSchema = z.object({
+  host: z.literal("controller"),
+  type: z.literal("selectComment"),
+});
+
+const controllerSelectOutputSchema = z.object({
+  host: z.literal("controller"),
+  type: z.literal("selectOutput"),
+  options: z.any(), // SaveDialogOptions型
+});
+
+const controllerSelectFileSchema = z.object({
+  host: z.literal("controller"),
+  type: z.literal("selectFile"),
+  pattern: z.any(), // FileFilter[]型
+});
+
+const controllerDropFilesSchema = z.object({
+  host: z.literal("controller"),
+  type: z.literal("dropFiles"),
+  paths: z.array(z.string()),
+});
+
+const controllerAppendQueueSchema = z.object({
+  host: z.literal("controller"),
+  type: z.literal("appendQueue"),
+  data: z.any(), // Queue型
+});
+
+const controllerLoadSchema = z.object({
+  host: z.literal("controller"),
+  type: z.literal("load"),
+});
+
+const controllerGetSettingSchema = z.object({
+  host: z.literal("controller"),
+  type: z.literal("getSetting"),
+  key: z.string(),
+});
+
+const controllerSetSettingSchema = z.object({
+  host: z.literal("controller"),
+  type: z.literal("setSetting"),
+  key: z.string(),
+  data: z.unknown(),
+});
+
+const controllerDownloadMovieSchema = z.object({
+  host: z.literal("controller"),
+  type: z.literal("downloadMovie"),
+  url: z.string(),
+  format: z.string(),
+  path: z.string(),
+});
+
+const controllerGetAvailableProfilesSchema = z.object({
+  host: z.literal("controller"),
+  type: z.literal("getAvailableProfiles"),
+});
+
+const controllerGetNiconicoMovieMetadataSchema = z.object({
+  host: z.literal("controller"),
+  type: z.literal("getNiconicoMovieMetadata"),
+  nicoId: z.string(),
+});
+
+const controllerInterruptQueueSchema = z.object({
+  host: z.literal("controller"),
+  type: z.literal("interruptQueue"),
+  queueId: z.string(), // UUID型
+});
+
+const controllerGetQueueSchema = z.object({
+  host: z.literal("controller"),
+  type: z.literal("getQueue"),
+});
+
+// Renderer schemas
+const rendererBufferSchema = z.object({
+  host: z.literal("renderer"),
+  type: z.literal("buffer"),
+  data: z.array(z.string()),
+});
+
+const rendererBlobSchema = z.object({
+  host: z.literal("renderer"),
+  type: z.literal("blob"),
+  frameId: z.number(),
+  data: z.instanceof(Uint8Array),
+});
+
+const rendererEndSchema = z.object({
+  host: z.literal("renderer"),
+  type: z.literal("end"),
+  frameId: z.number(),
+});
+
+const rendererLoadSchema = z.object({
+  host: z.literal("renderer"),
+  type: z.literal("load"),
+});
+
+const rendererMessageSchema = z.object({
+  host: z.literal("renderer"),
+  type: z.literal("message"),
+  title: z.string().optional(),
+  message: z.string(),
+});
+
+// Firefox schemas
+const firefoxContainersSchema = z.object({
+  version: z.literal(4),
+  identities: z.array(z.any()),
+});
+
+const firefoxDefaultContainerSchema = z.object({
+  l10nID: z.string(),
+});
+
+// Chromium schemas
+const chromiumProfilesSchema = z.object({
+  profile: z.object({
+    info_cache: z.any(),
+  }),
+});
+
+// Niconico schemas
+const niconicoUserDataSchema = z.object({
+  meta: z.object({
+    status: z.literal(200),
+  }),
+  data: z.object({
+    userId: z.string(),
+  }),
+});
+
+const niconicoTWatchV3MetadataSchema = z.object({
+  meta: z.object({
+    status: z.literal(200),
+  }),
+  data: z.any(),
+});
+
+const niconicoWatchPageJsonSchema = z.object({
+  meta: z.object({
+    status: z.literal(200),
+  }),
+  data: z.object({
+    response: z.any(),
+  }),
+});
+
+const niconicoCreateSessionResponseSchema = z.object({
+  meta: z.object({
+    status: z.union([z.literal(201), z.literal(200)]),
+    message: z.union([z.literal("created"), z.literal("ok")]),
+  }),
+  data: z.any(),
+});
+
+const niconicoV3DMCSchema = z.object({
+  media: z.object({
+    delivery: z.any(),
+  }),
+});
+
+const niconicoV3DMSSchema = z.object({
+  media: z.object({
+    domand: z.any(),
+  }),
+});
+
+const niconicoV1AccessRightsHlsSchema = z.object({
+  meta: z.object({
+    status: z.literal(201),
+  }),
+  data: z.any(),
+});
+
+// Cookie schemas
+const parsedCookieKeySchema = z.string().regex(/expires|Max-Age|path|domain/);
 
 const typeGuard = {
   controller: {
     selectMovie: (i: unknown): i is ApiRequestSelectMovie =>
       typeof i === "object" &&
-      (i as ApiRequestFromController).host === "controller" &&
-      (i as ApiRequestSelectMovie).type === "selectMovie",
+      i !== null &&
+      controllerSelectMovieSchema.safeParse(i).success,
     selectComment: (i: unknown): i is ApiRequestSelectComment =>
       typeof i === "object" &&
-      (i as ApiRequestFromController).host === "controller" &&
-      (i as ApiRequestSelectComment).type === "selectComment",
+      i !== null &&
+      controllerSelectCommentSchema.safeParse(i).success,
     selectOutput: (i: unknown): i is ApiRequestSelectOutput =>
       typeof i === "object" &&
-      (i as ApiRequestFromController).host === "controller" &&
-      (i as ApiRequestSelectOutput).type === "selectOutput",
+      i !== null &&
+      controllerSelectOutputSchema.safeParse(i).success,
     selectFile: (i: unknown): i is ApiRequestSelectFile =>
       typeof i === "object" &&
-      (i as ApiRequestFromController).host === "controller" &&
-      (i as ApiRequestSelectFile).type === "selectFile",
+      i !== null &&
+      controllerSelectFileSchema.safeParse(i).success,
     dropFiles: (i: unknown): i is ApiRequestDropFiles =>
       typeof i === "object" &&
-      (i as ApiRequestFromController).host === "controller" &&
-      (i as ApiRequestDropFiles).type === "dropFiles" &&
-      Array.isArray((i as ApiRequestDropFiles).paths) &&
-      (i as ApiRequestDropFiles).paths.every(
-        (value) => typeof value === "string",
-      ),
+      i !== null &&
+      controllerDropFilesSchema.safeParse(i).success,
     appendQueue: (i: unknown): i is ApiRequestAppendQueue =>
       typeof i === "object" &&
-      (i as ApiRequestFromController).host === "controller" &&
-      (i as ApiRequestAppendQueue).type === "appendQueue",
+      i !== null &&
+      controllerAppendQueueSchema.safeParse(i).success,
     load: (i: unknown): i is ApiRequestLoad =>
       typeof i === "object" &&
-      (i as ApiRequestFromController).host === "controller" &&
-      (i as ApiRequestLoad).type === "load",
+      i !== null &&
+      controllerLoadSchema.safeParse(i).success,
     getSetting: (i: unknown): i is ApiRequestGetSetting =>
       typeof i === "object" &&
-      (i as ApiRequestFromController).host === "controller" &&
-      (i as ApiRequestGetSetting).type === "getSetting",
+      i !== null &&
+      controllerGetSettingSchema.safeParse(i).success,
     setSetting: (i: unknown): i is ApiRequestSetSetting =>
       typeof i === "object" &&
-      (i as ApiRequestFromController).host === "controller" &&
-      (i as ApiRequestSetSetting).type === "setSetting",
+      i !== null &&
+      controllerSetSettingSchema.safeParse(i).success,
     downloadMovie: (i: unknown): i is ApiRequestDownloadMovie =>
       typeof i === "object" &&
-      (i as ApiRequestFromController).host === "controller" &&
-      (i as ApiRequestDownloadMovie).type === "downloadMovie",
+      i !== null &&
+      controllerDownloadMovieSchema.safeParse(i).success,
     getAvailableProfiles: (i: unknown): i is ApiRequestGetAvailableProfiles =>
       typeof i === "object" &&
-      (i as ApiRequestFromController).host === "controller" &&
-      (i as ApiRequestGetAvailableProfiles).type === "getAvailableProfiles",
+      i !== null &&
+      controllerGetAvailableProfilesSchema.safeParse(i).success,
     getNiconicoMovieMetadata: (
       i: unknown,
     ): i is ApiRequestGetNiconicoMovieMetadata =>
       typeof i === "object" &&
-      (i as ApiRequestFromController).host === "controller" &&
-      (i as ApiRequestGetNiconicoMovieMetadata).type ===
-        "getNiconicoMovieMetadata",
+      i !== null &&
+      controllerGetNiconicoMovieMetadataSchema.safeParse(i).success,
     interruptQueue: (i: unknown): i is ApiRequestInterruptQueue =>
       typeof i === "object" &&
-      (i as ApiRequestFromController).host === "controller" &&
-      (i as ApiRequestInterruptQueue).type === "interruptQueue",
+      i !== null &&
+      controllerInterruptQueueSchema.safeParse(i).success,
     getQueue: (i: unknown): i is ApiRequestGetQueue =>
       typeof i === "object" &&
-      (i as ApiRequestFromController).host === "controller" &&
-      (i as ApiRequestGetQueue).type === "getQueue",
+      i !== null &&
+      controllerGetQueueSchema.safeParse(i).success,
   },
   renderer: {
     buffer: (i: unknown): i is ApiRequestBuffer =>
       typeof i === "object" &&
-      (i as ApiRequestFromRenderer).host === "renderer" &&
-      (i as ApiRequestBuffer).type === "buffer",
+      i !== null &&
+      rendererBufferSchema.safeParse(i).success,
     blob: (i: unknown): i is ApiRequestBlob =>
       typeof i === "object" &&
-      (i as ApiRequestFromRenderer).host === "renderer" &&
-      (i as ApiRequestBlob).type === "blob",
+      i !== null &&
+      rendererBlobSchema.safeParse(i).success,
     end: (i: unknown): i is ApiRequestEnd =>
       typeof i === "object" &&
-      (i as ApiRequestFromRenderer).host === "renderer" &&
-      (i as ApiRequestEnd).type === "end",
+      i !== null &&
+      rendererEndSchema.safeParse(i).success,
     load: (i: unknown): i is ApiRequestLoad =>
       typeof i === "object" &&
-      (i as ApiRequestFromRenderer).host === "renderer" &&
-      (i as ApiRequestLoad).type === "load",
+      i !== null &&
+      rendererLoadSchema.safeParse(i).success,
     message: (i: unknown): i is ApiRequestMessage =>
       typeof i === "object" &&
-      (i as ApiRequestFromRenderer).host === "renderer" &&
-      (i as ApiRequestMessage).type === "message",
+      i !== null &&
+      rendererMessageSchema.safeParse(i).success,
   },
   firefox: {
     containers: (i: unknown): i is firefoxContainersJson =>
       typeof i === "object" &&
-      (i as firefoxContainersJson).version === 4 &&
-      Array.isArray((i as firefoxContainersJson).identities),
+      i !== null &&
+      firefoxContainersSchema.safeParse(i).success,
     defaultContainer: (i: unknown): i is firefoxContainerDefault =>
       typeof i === "object" &&
-      typeof (i as firefoxContainerDefault).l10nID === "string",
+      i !== null &&
+      firefoxDefaultContainerSchema.safeParse(i).success,
   },
   chromium: {
     profiles: (i: unknown): i is ChromiumProfilesJson =>
       typeof i === "object" &&
-      typeof (i as ChromiumProfilesJson).profile === "object" &&
-      typeof (i as ChromiumProfilesJson).profile.info_cache === "object",
+      i !== null &&
+      chromiumProfilesSchema.safeParse(i).success,
   },
   niconico: {
     userData: (i: unknown): i is UserData =>
       typeof i === "object" &&
-      (i as UserData).meta.status === 200 &&
-      typeof (i as UserData).data.userId === "string",
+      i !== null &&
+      niconicoUserDataSchema.safeParse(i).success,
     TWatchV3Metadata: (i: unknown): i is TWatchV3Metadata =>
       typeof i === "object" &&
-      (i as TWatchV3Metadata).meta.status === 200 &&
-      typeof (i as TWatchV3Metadata).data === "object",
+      i !== null &&
+      niconicoTWatchV3MetadataSchema.safeParse(i).success,
     WatchPageJson: (i: unknown): i is WatchPageMetadata =>
       typeof i === "object" &&
-      (i as WatchPageMetadata).meta.status === 200 &&
-      typeof (i as WatchPageMetadata).data === "object" &&
-      typeof (i as WatchPageMetadata).data.response === "object",
+      i !== null &&
+      niconicoWatchPageJsonSchema.safeParse(i).success,
     CreateSessionResponse: (i: unknown): i is CreateSessionResponse =>
       typeof i === "object" &&
-      ((i as CreateSessionResponse).meta.status === 201 ||
-        (i as CreateSessionResponse).meta.status === 200) &&
-      ((i as CreateSessionResponse).meta.message === "created" ||
-        (i as CreateSessionResponse).meta.message === "ok") &&
-      typeof (i as CreateSessionResponse).data === "object",
+      i !== null &&
+      niconicoCreateSessionResponseSchema.safeParse(i).success,
     v3DMC: (i: unknown): i is V3MetadataBody<"dmc"> =>
-      typeof i === "object" && !!(i as V3MetadataBody).media.delivery,
+      typeof i === "object" &&
+      i !== null &&
+      niconicoV3DMCSchema.safeParse(i).success,
     v3DMS: (i: unknown): i is V3MetadataBody<"dms"> =>
-      typeof i === "object" && !!(i as V3MetadataBody).media.domand,
+      typeof i === "object" &&
+      i !== null &&
+      niconicoV3DMSSchema.safeParse(i).success,
     v1AccessRightsHls: (i: unknown): i is V1AccessRightsHls =>
       typeof i === "object" &&
-      (i as V1AccessRightsHls).meta.status === 201 &&
-      typeof (i as V1AccessRightsHls).data === "object",
+      i !== null &&
+      niconicoV1AccessRightsHlsSchema.safeParse(i).success,
   },
   cookie: {
     parsedCookieKey: (i: unknown): i is keyof ParsedCookie =>
-      typeof i === "string" && !!i.match(/expires|Max-Age|path|domain/),
+      typeof i === "string" && parsedCookieKeySchema.safeParse(i).success,
   },
 };
 export { typeGuard };
