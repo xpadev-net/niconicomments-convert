@@ -12,7 +12,7 @@ import {
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { useSetAtom } from "jotai";
-import type { DragEvent, FC } from "react";
+import type { FC, DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { UUID } from "@/@types/brand";
@@ -136,52 +136,39 @@ const Convert: FC = () => {
   );
 
   const isFileDragEvent = useCallback(
-    (event: DragEvent<HTMLElement>): boolean => {
+    (event: DragEvent | ReactDragEvent<HTMLElement>): boolean => {
       const types = event.dataTransfer?.types;
       return types ? Array.from(types).includes("Files") : false;
     },
     [],
   );
 
-  const onDragEnter = useCallback(
-    (event: DragEvent<HTMLDivElement>) => {
+  useEffect(() => {
+    const onWindowDragEnter = (event: DragEvent) => {
       if (!isFileDragEvent(event)) return;
       event.preventDefault();
-      event.stopPropagation();
       dragCounter.current += 1;
       setIsDragging(true);
-    },
-    [isFileDragEvent],
-  );
-
-  const onDragOver = useCallback(
-    (event: DragEvent<HTMLDivElement>) => {
+    };
+    const onWindowDragOver = (event: DragEvent) => {
       if (!isFileDragEvent(event)) return;
       event.preventDefault();
-      event.stopPropagation();
+      if (!event.dataTransfer) return;
       event.dataTransfer.dropEffect = "copy";
-    },
-    [isFileDragEvent],
-  );
-
-  const onDragLeave = useCallback(
-    (event: DragEvent<HTMLDivElement>) => {
+    };
+    const onWindowDragLeave = (event: DragEvent) => {
       if (!isFileDragEvent(event)) return;
       event.preventDefault();
-      event.stopPropagation();
       dragCounter.current = Math.max(0, dragCounter.current - 1);
       if (dragCounter.current === 0) {
         setIsDragging(false);
       }
-    },
-    [isFileDragEvent],
-  );
-
-  const onDrop = useCallback(
-    (event: DragEvent<HTMLDivElement>) => {
+    };
+    const onWindowDrop = (event: DragEvent) => {
       if (!isFileDragEvent(event)) return;
       event.preventDefault();
-      event.stopPropagation();
+      dragCounter.current = 0;
+      setIsDragging(false);
       const files = Array.from(event.dataTransfer?.files ?? []);
       const paths = Array.from(
         new Set(
@@ -190,12 +177,21 @@ const Convert: FC = () => {
             .filter((filePath): filePath is string => !!filePath),
         ),
       );
-      dragCounter.current = 0;
-      setIsDragging(false);
       void handleDropRequest(paths);
-    },
-    [handleDropRequest, isFileDragEvent],
-  );
+    };
+
+    window.addEventListener("dragenter", onWindowDragEnter as never);
+    window.addEventListener("dragover", onWindowDragOver as never);
+    window.addEventListener("dragleave", onWindowDragLeave as never);
+    window.addEventListener("drop", onWindowDrop as never);
+
+    return () => {
+      window.removeEventListener("dragenter", onWindowDragEnter as never);
+      window.removeEventListener("dragover", onWindowDragOver as never);
+      window.removeEventListener("dragleave", onWindowDragLeave as never);
+      window.removeEventListener("drop", onWindowDrop as never);
+    };
+  }, [handleDropRequest, isFileDragEvent]);
 
   const wrapperClassName = [
     Styles.wrapper,
@@ -295,13 +291,7 @@ const Convert: FC = () => {
     };
   }, [setMessage]);
   return (
-    <div
-      className={wrapperClassName}
-      onDragEnter={onDragEnter}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
-    >
+    <div className={wrapperClassName}>
       {isDragging && (
         <div className={Styles.dropOverlay}>
           <p>動画とコメントをここにドロップ</p>

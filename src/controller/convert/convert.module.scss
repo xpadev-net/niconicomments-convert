@@ -26,13 +26,8 @@
   }
 }
 
-.dragging {
-  border-color: var(--mui-palette-primary-main, #1976d2);
-  background-color: rgba(25, 118, 210, 0.08);
-}
-
 .dropOverlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   display: flex;
   flex-direction: column;
@@ -42,7 +37,7 @@
   text-align: center;
   font-weight: 600;
   color: var(--mui-palette-primary-main, #1976d2);
-  background-color: rgba(255, 255, 255, 0.65);
+  background-color: rgba(255, 255, 255, 0.7);
   pointer-events: none;
-  border-radius: inherit;
+  z-index: 1200;
 }
