@@ -9,6 +9,14 @@ export type ApiResponseSelectMovie = {
   type: "selectMovie";
   data: Movie;
 };
+export type ApiResponseDropFiles = {
+  type: "dropFiles";
+  movie?: Movie;
+  comment?: {
+    path: string;
+    format: CommentFormat;
+  };
+};
 
 export type ApiResponseSelectComment = {
   type: "selectComment";
@@ -45,6 +53,7 @@ export type ApiResponseDownloadMovieProgress = {
 export type ApiResponsesToController =
   | ApiResponseSelectComment
   | ApiResponseSelectMovie
+  | ApiResponseDropFiles
   | ApiResponseProgress
   | ApiResponseStartController
   | ApiResponseEnd

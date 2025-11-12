@@ -30,6 +30,7 @@ declare global {
         callback: (_: unknown, data: ApiResponseType) => void,
       ) => void;
       remove: (callback: (_: unknown, data: ApiResponseType) => void) => void;
+      getPathForFile: (file: File) => string;
     };
   }
 }
@@ -47,12 +48,6 @@ export type Movie = {
   width: number;
   height: number;
   duration: number;
-};
-
-type Progress = {
-  generated: number;
-  converted: number;
-  total: number;
 };
 
 export type Message = {

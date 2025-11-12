@@ -1,6 +1,7 @@
 import type { V3MetadataBody } from "@/@types/niconico";
 import type { ApiResponseDownloadProgress } from "@/@types/response.binary-downloader";
 import type {
+  ApiResponseDropFiles,
   ApiResponseEnd,
   ApiResponseMessage,
   ApiResponseProgress,
@@ -18,6 +19,8 @@ const typeGuard = {
     selectComment: (i: unknown): i is ApiResponseSelectComment =>
       typeof i === "object" &&
       (i as ApiResponseSelectComment).type === "selectComment",
+    dropFiles: (i: unknown): i is ApiResponseDropFiles =>
+      typeof i === "object" && (i as ApiResponseDropFiles).type === "dropFiles",
     progress: (i: unknown): i is ApiResponseProgress =>
       typeof i === "object" && (i as ApiResponseProgress).type === "progress",
     start: (i: unknown): i is ApiResponseStartController =>

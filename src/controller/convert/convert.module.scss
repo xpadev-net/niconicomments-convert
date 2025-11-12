@@ -1,6 +1,11 @@
 .wrapper {
+  position: relative;
   margin: 5px;
   user-select: none;
+  border: 2px dashed transparent;
+  border-radius: 12px;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  min-height: 100%;
   .item {
     display: flex;
     flex-direction: row;
@@ -19,4 +24,20 @@
       padding-bottom: 5px;
     }
   }
+}
+
+.dropOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--mui-palette-primary-main, #1976d2);
+  background-color: rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+  z-index: 1200;
 }

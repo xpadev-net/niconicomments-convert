@@ -1,7 +1,13 @@
 import { ipcMain } from "electron";
 
 import { sendMessageToController } from "./controller-window";
-import { selectComment, selectFile, selectMovie, selectOutput } from "./dialog";
+import {
+  handleDropFiles,
+  selectComment,
+  selectFile,
+  selectMovie,
+  selectOutput,
+} from "./dialog";
 import { getAvailableProfiles } from "./lib/cookie";
 import { encodeError, encodeJson } from "./lib/json";
 import { getLogger } from "./lib/log";
@@ -38,6 +44,8 @@ const registerListener = (): void => {
         return await selectOutput(value.options);
       } else if (typeGuard.controller.selectFile(value)) {
         return await selectFile(value.pattern);
+      } else if (typeGuard.controller.dropFiles(value)) {
+        return await handleDropFiles(value.paths);
       } else if (typeGuard.controller.appendQueue(value)) {
         appendQueue(value.data);
         return;
