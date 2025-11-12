@@ -253,7 +253,7 @@ const handleDropFiles = async (
 
   for (const filePath of filePaths) {
     const ext = path.extname(filePath).toLowerCase();
-    if (!response.comment) {
+    if (!response.comment && COMMENT_EXTENSIONS.has(ext)) {
       const comment = await createCommentResponse(filePath);
       if (comment) {
         response.comment = {
@@ -262,10 +262,8 @@ const handleDropFiles = async (
         };
         continue;
       }
-      if (COMMENT_EXTENSIONS.has(ext)) {
-        messages.push(createUnsupportedCommentMessage(filePath));
-        continue;
-      }
+      messages.push(createUnsupportedCommentMessage(filePath));
+      continue;
     }
 
     if (!response.movie && MOVIE_EXTENSIONS.has(ext)) {
