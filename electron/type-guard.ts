@@ -51,7 +51,7 @@ const controllerSelectCommentSchema = z.object({
 const controllerSelectOutputSchema = z.object({
   host: z.literal("controller"),
   type: z.literal("selectOutput"),
-  options: z.any(), // SaveDialogOptions型
+  options: z.object({}).passthrough(), // SaveDialogOptions型。より具体的なスキーマを推奨します
 });
 
 const controllerSelectFileSchema = z.object({
@@ -112,7 +112,7 @@ const controllerGetNiconicoMovieMetadataSchema = z.object({
 const controllerInterruptQueueSchema = z.object({
   host: z.literal("controller"),
   type: z.literal("interruptQueue"),
-  queueId: z.string(), // UUID型
+  queueId: z.string().uuid(), // UUID型
 });
 
 const controllerGetQueueSchema = z.object({

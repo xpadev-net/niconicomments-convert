@@ -57,7 +57,7 @@ const messageSchema = z.object({
 
 const v3DMCSchema = z.object({
   media: z.object({
-    delivery: z.any(),
+    delivery: z.object({}).passthrough(),
   }),
 });
 
