@@ -10,6 +10,10 @@ export type ApiRequestFromController = {
 export type ApiRequestSelectMovie = {
   type: "selectMovie";
 };
+export type ApiRequestDropFiles = {
+  type: "dropFiles";
+  paths: string[];
+};
 export type ApiRequestSelectComment = {
   type: "selectComment";
 };
@@ -64,6 +68,7 @@ export type ApiRequestsFromController =
   | ApiRequestAppendQueue
   | ApiRequestSelectComment
   | ApiRequestSelectMovie
+  | ApiRequestDropFiles
   | ApiRequestSelectOutput
   | ApiRequestLoad
   | ApiRequestSelectFile

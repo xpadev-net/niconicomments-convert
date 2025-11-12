@@ -12,8 +12,8 @@ import {
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { useSetAtom } from "jotai";
-import type { FC } from "react";
-import { useEffect, useState } from "react";
+import type { DragEvent, FC } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { UUID } from "@/@types/brand";
 import type { NiconicommentsOptions, Options } from "@/@types/options";
@@ -81,6 +81,8 @@ const Convert: FC = () => {
   });
   const [options, setOptions] = useState<Options>(initialConfig);
   const [modal, setModal] = useState<"movie" | "comment" | undefined>();
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounter = useRef(0);
   const setIsLoading = useSetAtom(isLoadingAtom);
   const setMessage = useSetAtom(messageAtom);
   const onMovieClick = (): void => setModal("movie");
@@ -94,6 +96,113 @@ const Convert: FC = () => {
     setComment(val);
     setModal(undefined);
   };
+
+  const handleDropRequest = useCallback(
+    async (paths: string[]) => {
+      if (!paths.length) return;
+      setIsLoading(true);
+      try {
+        const data = await window.api.request({
+          host: "controller",
+          type: "dropFiles",
+          paths,
+        });
+        if (typeGuard.controller.dropFiles(data)) {
+          if (data.movie) {
+            setMovie({
+              type: "local",
+              duration: data.movie.duration,
+              path: data.movie.path.filePaths[0],
+            });
+          }
+          if (data.comment) {
+            setComment({
+              type: "local",
+              path: data.comment.path,
+              format: data.comment.format,
+            });
+          }
+        } else if (typeGuard.controller.message(data)) {
+          setMessage({
+            title: data.title ?? "未知のエラーが発生しました",
+            content: data.message,
+          });
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [setIsLoading, setMessage],
+  );
+
+  const isFileDragEvent = useCallback(
+    (event: DragEvent<HTMLElement>): boolean => {
+      const types = event.dataTransfer?.types;
+      return types ? Array.from(types).includes("Files") : false;
+    },
+    [],
+  );
+
+  const onDragEnter = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (!isFileDragEvent(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      dragCounter.current += 1;
+      setIsDragging(true);
+    },
+    [isFileDragEvent],
+  );
+
+  const onDragOver = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (!isFileDragEvent(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.dataTransfer.dropEffect = "copy";
+    },
+    [isFileDragEvent],
+  );
+
+  const onDragLeave = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (!isFileDragEvent(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      dragCounter.current = Math.max(0, dragCounter.current - 1);
+      if (dragCounter.current === 0) {
+        setIsDragging(false);
+      }
+    },
+    [isFileDragEvent],
+  );
+
+  const onDrop = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (!isFileDragEvent(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const files = Array.from(event.dataTransfer?.files ?? []);
+      const paths = Array.from(
+        new Set(
+          files
+            .map((file) => window.api.getPathForFile(file))
+            .filter((filePath): filePath is string => !!filePath),
+        ),
+      );
+      dragCounter.current = 0;
+      setIsDragging(false);
+      void handleDropRequest(paths);
+    },
+    [handleDropRequest, isFileDragEvent],
+  );
+
+  const wrapperClassName = [
+    Styles.wrapper,
+    isDragging ? Styles.dragging : undefined,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   const convert = (): void => {
     if (!comment || !movie) return;
@@ -186,7 +295,19 @@ const Convert: FC = () => {
     };
   }, [setMessage]);
   return (
-    <div className={Styles.wrapper}>
+    <div
+      className={wrapperClassName}
+      onDragEnter={onDragEnter}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+    >
+      {isDragging && (
+        <div className={Styles.dropOverlay}>
+          <p>動画とコメントをここにドロップ</p>
+          <p>個別ドロップにも対応しています</p>
+        </div>
+      )}
       <div>
         <h3>動画</h3>
         {movie ? (

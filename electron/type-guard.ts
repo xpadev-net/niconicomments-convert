@@ -15,6 +15,7 @@ import type {
 import type {
   ApiRequestAppendQueue,
   ApiRequestDownloadMovie,
+  ApiRequestDropFiles,
   ApiRequestFromController,
   ApiRequestGetAvailableProfiles,
   ApiRequestGetNiconicoMovieMetadata,
@@ -54,6 +55,14 @@ const typeGuard = {
       typeof i === "object" &&
       (i as ApiRequestFromController).host === "controller" &&
       (i as ApiRequestSelectFile).type === "selectFile",
+    dropFiles: (i: unknown): i is ApiRequestDropFiles =>
+      typeof i === "object" &&
+      (i as ApiRequestFromController).host === "controller" &&
+      (i as ApiRequestDropFiles).type === "dropFiles" &&
+      Array.isArray((i as ApiRequestDropFiles).paths) &&
+      (i as ApiRequestDropFiles).paths.every(
+        (value) => typeof value === "string",
+      ),
     appendQueue: (i: unknown): i is ApiRequestAppendQueue =>
       typeof i === "object" &&
       (i as ApiRequestFromController).host === "controller" &&
