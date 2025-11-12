@@ -180,25 +180,18 @@ const Convert: FC = () => {
       void handleDropRequest(paths);
     };
 
-    window.addEventListener("dragenter", onWindowDragEnter as never);
-    window.addEventListener("dragover", onWindowDragOver as never);
-    window.addEventListener("dragleave", onWindowDragLeave as never);
-    window.addEventListener("drop", onWindowDrop as never);
+    window.addEventListener("dragenter", onWindowDragEnter);
+    window.addEventListener("dragover", onWindowDragOver);
+    window.addEventListener("dragleave", onWindowDragLeave);
+    window.addEventListener("drop", onWindowDrop);
 
     return () => {
-      window.removeEventListener("dragenter", onWindowDragEnter as never);
-      window.removeEventListener("dragover", onWindowDragOver as never);
-      window.removeEventListener("dragleave", onWindowDragLeave as never);
-      window.removeEventListener("drop", onWindowDrop as never);
+      window.removeEventListener("dragenter", onWindowDragEnter);
+      window.removeEventListener("dragover", onWindowDragOver);
+      window.removeEventListener("dragleave", onWindowDragLeave);
+      window.removeEventListener("drop", onWindowDrop);
     };
   }, [handleDropRequest, isFileDragEvent]);
-
-  const wrapperClassName = [
-    Styles.wrapper,
-    isDragging ? Styles.dragging : undefined,
-  ]
-    .filter(Boolean)
-    .join(" ");
 
   const convert = (): void => {
     if (!comment || !movie) return;
@@ -291,7 +284,7 @@ const Convert: FC = () => {
     };
   }, [setMessage]);
   return (
-    <div className={wrapperClassName}>
+    <div className={Styles.wrapper}>
       {isDragging && (
         <div className={Styles.dropOverlay}>
           <p>動画とコメントをここにドロップ</p>
