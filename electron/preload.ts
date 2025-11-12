@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer, webUtils } from "electron";
 
 contextBridge.exposeInMainWorld("api", {
   request: (...data: unknown[]) =>
@@ -10,5 +10,8 @@ contextBridge.exposeInMainWorld("api", {
   },
   remove: (fn: (...args: unknown[]) => void) => {
     ipcRenderer.removeListener("response", fn);
+  },
+  getPathForFile: (file: File): string => {
+    return webUtils.getPathForFile(file);
   },
 });

@@ -100,7 +100,7 @@ const startRenderer = async (): Promise<void> => {
     for (let i = 0; i < targetFrameRate; i++) {
       const vpos = Math.ceil(i * (100 / targetFrameRate)) + offset;
       const frame = generatedFrames;
-      // @ts-ignore
+      // @ts-expect-error
       if ((nico.timeline[vpos]?.length || 0) === 0 && emptyBuffer) {
         sendBlob(frame, emptyBuffer);
       } else {

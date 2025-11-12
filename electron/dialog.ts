@@ -4,6 +4,7 @@ import { dialog } from "electron";
 
 import type { FfprobeOutput } from "@/@types/ffmpeg";
 import type {
+  ApiResponseDropFiles,
   ApiResponseMessage,
   ApiResponseSelectComment,
   ApiResponseSelectMovie,
@@ -29,30 +30,42 @@ const selectFile = async (
   });
 };
 
-const selectMovie = async (): Promise<
-  ApiResponseMessage | ApiResponseSelectMovie | undefined
-> => {
-  const path = await dialog.showOpenDialog({
-    properties: ["openFile"],
-    filters: [
-      {
-        name: "Movies",
-        extensions: ["mp4", "webm", "avi", "mkv", "wmv", "mov", "ts", "m2ts"],
-      },
-      {
-        name: "All Files",
-        extensions: ["*"],
-      },
-    ],
-  });
-  if (path.canceled) {
-    return;
-  }
+const MOVIE_EXTENSIONS = new Set([
+  ".mp4",
+  ".webm",
+  ".avi",
+  ".mkv",
+  ".wmv",
+  ".mov",
+  ".ts",
+  ".m2ts",
+]);
+
+const COMMENT_EXTENSIONS = new Set([".json", ".xml", ".txt"]);
+
+type AnalyzeMovieResult =
+  | { movie: ApiResponseSelectMovie["data"] }
+  | { message: ApiResponseMessage };
+
+const createDialogLikeResult = (
+  filePath: string,
+): OpenDialogReturnValue & { filePaths: [string] } => {
+  return {
+    canceled: false,
+    filePaths: [filePath],
+    bookmarks: [],
+  };
+};
+
+const analyzeMovieFile = async (
+  filePath: string,
+  dialogResult?: OpenDialogReturnValue,
+): Promise<AnalyzeMovieResult> => {
   let ffprobe: SpawnResult;
   let metadata: FfprobeOutput;
   try {
     ffprobe = await spawn(ffprobePath, [
-      path.filePaths[0],
+      filePath,
       "-hide_banner",
       "-v",
       "quiet",
@@ -64,9 +77,11 @@ const selectMovie = async (): Promise<
     const error = e as SpawnResult;
     logger.error("failed to execute ffprobe", "error:", error);
     return {
-      type: "message",
-      title: "動画ファイルの解析に失敗しました",
-      message: `ffprobeの実行に失敗しました\n終了コード:\n${error.code}\n標準出力:\n${error.stdout}\n標準エラー出力:\n${error.stderr}\ndialog / selectMovie / failed to execute ffprobe`,
+      message: {
+        type: "message",
+        title: "動画ファイルの解析に失敗しました",
+        message: `ffprobeの実行に失敗しました\n終了コード:\n${error.code}\n標準出力:\n${error.stdout}\n標準エラー出力:\n${error.stderr}\ndialog / selectMovie / failed to execute ffprobe`,
+      },
     };
   }
   try {
@@ -80,22 +95,26 @@ const selectMovie = async (): Promise<
       ffprobe.stdout,
     );
     return {
-      type: "message",
-      title: "動画ファイルの解析に失敗しました",
-      message: `ffprobeの出力のパースに失敗しました\nffprobeの出力:\n${
-        ffprobe.stdout
-      }\nエラー内容:\n${encodeError(
-        e,
-      )}\ndialog / selectMovie / failed to parse ffprobe output`,
+      message: {
+        type: "message",
+        title: "動画ファイルの解析に失敗しました",
+        message: `ffprobeの出力のパースに失敗しました\nffprobeの出力:\n${
+          ffprobe.stdout
+        }\nエラー内容:\n${encodeError(
+          e,
+        )}\ndialog / selectMovie / failed to parse ffprobe output`,
+      },
     };
   }
   if (!metadata.streams || !Array.isArray(metadata.streams)) {
     logger.error("movie source not found", "metadata:", metadata);
     return {
-      type: "message",
-      title: "動画ファイルの解析に失敗しました",
-      message:
-        "動画ソースが見つかりませんでした\ndialog / selectMovie / empty streams",
+      message: {
+        type: "message",
+        title: "動画ファイルの解析に失敗しました",
+        message:
+          "動画ソースが見つかりませんでした\ndialog / selectMovie / empty streams",
+      },
     };
   }
   let width = 0;
@@ -115,15 +134,76 @@ const selectMovie = async (): Promise<
   if (!(height && width && duration)) {
     logger.error("failed to get resolution or duration", "metadata:", metadata);
     return {
-      type: "message",
-      title: "動画ファイルの解析に失敗しました",
-      message:
-        "解像度または動画の長さを取得できませんでした\n動画ファイルが破損していないか確認してください\ndialog / selectMovie / incorrect input file",
+      message: {
+        type: "message",
+        title: "動画ファイルの解析に失敗しました",
+        message:
+          "解像度または動画の長さを取得できませんでした\n動画ファイルが破損していないか確認してください\ndialog / selectMovie / incorrect input file",
+      },
     };
+  }
+  const openDialogValue = dialogResult ?? createDialogLikeResult(filePath);
+  return {
+    movie: {
+      path: openDialogValue,
+      width,
+      height,
+      duration,
+    },
+  };
+};
+
+const createCommentResponse = async (
+  filePath: string,
+): Promise<ApiResponseSelectComment | undefined> => {
+  const format = await identifyCommentFormat(filePath);
+  if (!format) {
+    return undefined;
+  }
+  store.set("commentFileExt", path.extname(filePath));
+  return {
+    type: "selectComment",
+    path: filePath,
+    format,
+  };
+};
+
+const createUnsupportedCommentMessage = (
+  filePath: string,
+): ApiResponseMessage => {
+  return {
+    type: "message",
+    title: "非対応のフォーマットです",
+    message: `入力されたデータの識別に失敗しました\n対応していないフォーマットの可能性があります\n対応しているフォーマットについては以下のリンクを御覧ください\nhttps://xpadev-net.github.io/niconicomments/#p_format\n※フォーマットの識別は拡張子をもとに行っています\ndialog / selectComment\npath: ${filePath}`,
+  };
+};
+
+const selectMovie = async (): Promise<
+  ApiResponseMessage | ApiResponseSelectMovie | undefined
+> => {
+  const path = await dialog.showOpenDialog({
+    properties: ["openFile"],
+    filters: [
+      {
+        name: "Movies",
+        extensions: ["mp4", "webm", "avi", "mkv", "wmv", "mov", "ts", "m2ts"],
+      },
+      {
+        name: "All Files",
+        extensions: ["*"],
+      },
+    ],
+  });
+  if (path.canceled) {
+    return;
+  }
+  const result = await analyzeMovieFile(path.filePaths[0], path);
+  if ("message" in result) {
+    return result.message;
   }
   return {
     type: "selectMovie",
-    data: { path, width, height, duration },
+    data: result.movie,
   };
 };
 const selectComment = async (): Promise<
@@ -147,24 +227,13 @@ const selectComment = async (): Promise<
   });
   if (pathResult.canceled) return;
   const filePath = pathResult.filePaths[0];
-  const ext = path.extname(filePath);
-  store.set("commentFileExt", ext);
-  const format = await identifyCommentFormat(filePath);
-  if (!format) {
+  const comment = await createCommentResponse(filePath);
+  if (!comment) {
     console.error("failed to identify comment format", "filePath:", filePath);
-    sendMessageToController({
-      type: "message",
-      title: "非対応のフォーマットです",
-      message:
-        "入力されたデータの識別に失敗しました\n対応していないフォーマットの可能性があります\n対応しているフォーマットについては以下のリンクを御覧ください\nhttps://xpadev-net.github.io/niconicomments/#p_format\n※フォーマットの識別は拡張子をもとに行っています\ndialog / selectComment",
-    });
+    sendMessageToController(createUnsupportedCommentMessage(filePath));
     return;
   }
-  return {
-    type: "selectComment",
-    path: pathResult.filePaths[0],
-    format: format,
-  };
+  return comment;
 };
 
 const selectOutput = async (
@@ -174,4 +243,50 @@ const selectOutput = async (
   return outputPath.canceled ? undefined : outputPath.filePath;
 };
 
-export { selectComment, selectFile, selectMovie, selectOutput };
+const handleDropFiles = async (
+  filePaths: string[],
+): Promise<ApiResponseDropFiles> => {
+  const response: ApiResponseDropFiles = {
+    type: "dropFiles",
+  };
+  const messages: ApiResponseMessage[] = [];
+
+  for (const filePath of filePaths) {
+    const ext = path.extname(filePath).toLowerCase();
+    if (!response.comment && COMMENT_EXTENSIONS.has(ext)) {
+      const comment = await createCommentResponse(filePath);
+      if (comment) {
+        response.comment = {
+          path: comment.path,
+          format: comment.format,
+        };
+        continue;
+      }
+      messages.push(createUnsupportedCommentMessage(filePath));
+      continue;
+    }
+
+    if (!response.movie && MOVIE_EXTENSIONS.has(ext)) {
+      const result = await analyzeMovieFile(filePath);
+      if ("movie" in result) {
+        response.movie = result.movie;
+      } else {
+        messages.push(result.message);
+      }
+    }
+  }
+
+  for (const message of messages) {
+    sendMessageToController(message);
+  }
+
+  return response;
+};
+
+export {
+  handleDropFiles,
+  selectComment,
+  selectFile,
+  selectMovie,
+  selectOutput,
+};
