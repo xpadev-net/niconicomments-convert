@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "commonjs",
+    "module": "Node16",
     "sourceMap": true,
     "strict": true,
     "outDir": "../build",
     "rootDir": "../",
-    "baseUrl": "../",
+    "moduleResolution": "node16",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["../src/*"]
     }
   },
   "include": ["*", "../src/@types/*.d.ts"]
