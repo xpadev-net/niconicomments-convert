@@ -1870,10 +1870,10 @@ electron-store@^8.2.0:
     conf "^10.2.0"
     type-fest "^2.17.0"
 
-electron@^40.0.0:
-  version "40.4.1"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-40.4.1.tgz#1332fe3fb4d89ab4cb749176e7f42caab1c2b412"
-  integrity sha512-N1ZXybQZL8kYemO8vAeh9nrk4mSvqlAO8xs0QCHkXIvRnuB/7VGwEehjvQbsU5/f4bmTKpG+2GQERe/zmKpudQ==
+electron@^41.0.0:
+  version "41.1.0"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-41.1.0.tgz#21eff66ca8b86ae4c1c06512cf00bfae02e5edb4"
+  integrity sha512-0XRFyxRqetmqtkkBvV++wGbHYJ7bD++f6EgJW8y9kX4pPRagwlmKDtzqXZhKiu0DIQppm3sXxzHWK9GYP91OKQ==
   dependencies:
     "@electron/get" "^2.0.0"
     "@types/node" "^24.9.0"
