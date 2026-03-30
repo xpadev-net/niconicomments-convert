@@ -82,6 +82,6 @@
     }
   },
   "resolutions": {
-    "@babel/runtime": "7.28.4"
+    "@babel/runtime": "7.29.2"
   }
 }
