@@ -25,5 +25,3 @@ dist-ssr
 *.sw?
 
 tsconfig.tsbuildinfo
-
-.husky

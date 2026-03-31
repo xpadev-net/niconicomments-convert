@@ -20,7 +20,7 @@
     "format:fix": "biome format --write ./src ./electron",
     "lint": "biome check ./src ./electron",
     "lint:fix": "biome check --write --unsafe ./src ./electron",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install --force"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
