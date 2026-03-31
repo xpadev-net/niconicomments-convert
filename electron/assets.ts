@@ -23,6 +23,8 @@ const binPath = path.join(basePath, "bin");
 const ffmpegPath = path.join(binPath, `ffmpeg${ext}`);
 const ffprobePath = path.join(binPath, `ffprobe${ext}`);
 let proxyDispatcher: Dispatcher | undefined;
+// proxyDispatcher is intentionally cached for the process lifetime.
+// Proxy env-var changes after first use are not reflected.
 const getFetchInit = (): RequestInit => {
   if (
     !process.env.HTTP_PROXY &&
@@ -156,7 +158,7 @@ const downloadFile = async (
     sendMessageToBinaryDownloader({
       type: "downloadProgress",
       name: name,
-      progress: loaded / total,
+      progress: Math.min(loaded / total, 1),
     });
   });
   return new Promise<void>((resolve, reject) => {
