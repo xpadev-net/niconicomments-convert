@@ -106,9 +106,18 @@ const downloadFile = async (
   url: string,
   path: string,
 ): Promise<void> => {
-  const response = await fetch(url);
+  let response: Response;
+  try {
+    response = await fetch(url);
+  } catch (error) {
+    throw new Error(`failed to download ${name}: network error`, {
+      cause: error,
+    });
+  }
   if (!response.ok || !response.body) {
-    throw new Error(`failed to download ${name}: ${response.status}`);
+    throw new Error(
+      `failed to download ${name}: ${response.status} ${response.statusText}`,
+    );
   }
   const file = fs.createWriteStream(path);
   const total = Number(response.headers.get("content-length") ?? 1);
@@ -126,21 +135,19 @@ const downloadFile = async (
   });
   return new Promise<void>((resolve, reject) => {
     stream.pipe(file);
-    let error: Error;
-    stream.on("error", (err) => {
-      error = err;
+    let settled = false;
+    const rejectOnce = (err: Error): void => {
+      if (settled) return;
+      settled = true;
       file.close();
       reject(err);
-    });
-    file.on("error", (err) => {
-      error = err;
-      file.close();
-      reject(err);
-    });
+    };
+    stream.on("error", rejectOnce);
+    file.on("error", rejectOnce);
     file.on("close", () => {
-      if (!error) {
-        resolve();
-      }
+      if (settled) return;
+      settled = true;
+      resolve();
     });
   });
 };
