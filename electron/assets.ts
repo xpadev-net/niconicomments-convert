@@ -2,6 +2,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { Readable } from "node:stream";
+import type { ReadableStream } from "node:stream/web";
 import {
   closeBinaryDownloaderWindow,
   createBinaryDownloaderWindow,
@@ -111,22 +112,22 @@ const downloadFile = async (
     response = await fetch(url);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`failed to download ${name}: ${message}`, { cause: error });
+    throw new Error(`Failed to download ${name}: ${message}`, { cause: error });
   }
   if (!response.ok || !response.body) {
     throw new Error(
-      `failed to download ${name}: ${response.status} ${response.statusText}`,
+      `Failed to download ${name}: ${response.status} ${response.statusText}`,
     );
   }
   const file = fs.createWriteStream(path);
-  const totalHeader = response.headers.get("content-length");
-  const total = totalHeader ? Number(totalHeader) : undefined;
-  const canReportProgress =
-    total !== undefined && Number.isFinite(total) && total > 0;
+  const totalRaw = Number(response.headers.get("content-length"));
+  const total =
+    Number.isFinite(totalRaw) && Number.isInteger(totalRaw) && totalRaw > 0
+      ? totalRaw
+      : undefined;
+  const canReportProgress = total !== undefined;
   let loaded = 0;
-  const stream = Readable.fromWeb(
-    response.body as import("node:stream/web").ReadableStream<Uint8Array>,
-  );
+  const stream = Readable.fromWeb(response.body as ReadableStream<Uint8Array>);
   stream.on("data", (chunk: Buffer) => {
     loaded += chunk.byteLength;
     if (!canReportProgress) return;
@@ -143,7 +144,16 @@ const downloadFile = async (
       if (settled) return;
       settled = true;
       file.destroy();
-      void fs.promises.unlink(path).catch(() => undefined);
+      void fs.promises
+        .unlink(path)
+        .catch((unlinkError: NodeJS.ErrnoException) => {
+          if (unlinkError.code !== "ENOENT" && unlinkError.code !== "EBUSY") {
+            console.warn(
+              `Failed to clean up partial download file at ${path}:`,
+              unlinkError,
+            );
+          }
+        });
       reject(err);
     };
     stream.on("error", rejectOnce);
