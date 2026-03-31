@@ -24,11 +24,7 @@ const ffmpegPath = path.join(binPath, `ffmpeg${ext}`);
 const ffprobePath = path.join(binPath, `ffprobe${ext}`);
 let proxyDispatcher: Dispatcher | undefined;
 const getFetchInit = (): RequestInit => {
-  if (
-    !process.env.HTTP_PROXY &&
-    !process.env.HTTPS_PROXY &&
-    !process.env.NO_PROXY
-  ) {
+  if (!process.env.HTTP_PROXY && !process.env.HTTPS_PROXY) {
     return {};
   }
   if (!proxyDispatcher) {
