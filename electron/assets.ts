@@ -1,9 +1,7 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { Stream } from "node:stream";
-import type { AxiosProgressEvent, AxiosResponse } from "axios";
-import axios from "axios";
+import { Readable } from "node:stream";
 import {
   closeBinaryDownloaderWindow,
   createBinaryDownloaderWindow,
@@ -108,34 +106,41 @@ const downloadFile = async (
   url: string,
   path: string,
 ): Promise<void> => {
+  const response = await fetch(url);
+  if (!response.ok || !response.body) {
+    throw new Error(`failed to download ${name}: ${response.status}`);
+  }
   const file = fs.createWriteStream(path);
-  const onDownloadProgress = (status: AxiosProgressEvent): void => {
-    const progress = status.loaded / (status.total ?? 1);
+  const total = Number(response.headers.get("content-length") ?? 1);
+  let loaded = 0;
+  const stream = Readable.fromWeb(
+    response.body as unknown as import("node:stream/web").ReadableStream,
+  );
+  stream.on("data", (chunk: Buffer) => {
+    loaded += chunk.byteLength;
     sendMessageToBinaryDownloader({
       type: "downloadProgress",
       name: name,
-      progress: progress,
+      progress: loaded / total,
     });
-  };
-  return axios({
-    method: "get",
-    url,
-    responseType: "stream",
-    onDownloadProgress,
-  }).then((res: AxiosResponse<Stream>) => {
-    return new Promise<void>((resolve, reject) => {
-      res.data.pipe(file);
-      let error: Error;
-      file.on("error", (err) => {
-        error = err;
-        file.close();
-        reject(err);
-      });
-      file.on("close", () => {
-        if (!error) {
-          resolve();
-        }
-      });
+  });
+  return new Promise<void>((resolve, reject) => {
+    stream.pipe(file);
+    let error: Error;
+    stream.on("error", (err) => {
+      error = err;
+      file.close();
+      reject(err);
+    });
+    file.on("error", (err) => {
+      error = err;
+      file.close();
+      reject(err);
+    });
+    file.on("close", () => {
+      if (!error) {
+        resolve();
+      }
     });
   });
 };
