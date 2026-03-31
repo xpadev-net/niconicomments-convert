@@ -3,6 +3,8 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { Readable } from "node:stream";
 import type { ReadableStream } from "node:stream/web";
+import type { Dispatcher } from "undici";
+import { EnvHttpProxyAgent } from "undici";
 import {
   closeBinaryDownloaderWindow,
   createBinaryDownloaderWindow,
@@ -20,6 +22,10 @@ const ext = process.platform === "win32" ? ".exe" : "";
 const binPath = path.join(basePath, "bin");
 const ffmpegPath = path.join(binPath, `ffmpeg${ext}`);
 const ffprobePath = path.join(binPath, `ffprobe${ext}`);
+const fetchWithProxyInit: { dispatcher?: Dispatcher } =
+  process.env.HTTP_PROXY || process.env.HTTPS_PROXY || process.env.NO_PROXY
+    ? { dispatcher: new EnvHttpProxyAgent() }
+    : {};
 
 const assetsBaseUrl = {
   ffmpeg:
@@ -109,7 +115,7 @@ const downloadFile = async (
 ): Promise<void> => {
   let response: Response;
   try {
-    response = await fetch(url);
+    response = await fetch(url, fetchWithProxyInit as RequestInit);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to download ${name}: ${message}`, { cause: error });
@@ -143,6 +149,7 @@ const downloadFile = async (
     const rejectOnce = (err: Error): void => {
       if (settled) return;
       settled = true;
+      stream.destroy();
       file.destroy();
       void fs.promises
         .unlink(path)
