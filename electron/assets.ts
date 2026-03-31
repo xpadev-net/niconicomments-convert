@@ -110,9 +110,8 @@ const downloadFile = async (
   try {
     response = await fetch(url);
   } catch (error) {
-    throw new Error(`failed to download ${name}: network error`, {
-      cause: error,
-    });
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`failed to download ${name}: ${message}`, { cause: error });
   }
   if (!response.ok || !response.body) {
     throw new Error(
@@ -120,13 +119,17 @@ const downloadFile = async (
     );
   }
   const file = fs.createWriteStream(path);
-  const total = Number(response.headers.get("content-length") ?? 1);
+  const totalHeader = response.headers.get("content-length");
+  const total = totalHeader ? Number(totalHeader) : undefined;
+  const canReportProgress =
+    total !== undefined && Number.isFinite(total) && total > 0;
   let loaded = 0;
   const stream = Readable.fromWeb(
-    response.body as unknown as import("node:stream/web").ReadableStream,
+    response.body as import("node:stream/web").ReadableStream<Uint8Array>,
   );
   stream.on("data", (chunk: Buffer) => {
     loaded += chunk.byteLength;
+    if (!canReportProgress) return;
     sendMessageToBinaryDownloader({
       type: "downloadProgress",
       name: name,
@@ -139,7 +142,8 @@ const downloadFile = async (
     const rejectOnce = (err: Error): void => {
       if (settled) return;
       settled = true;
-      file.close();
+      file.destroy();
+      void fs.promises.unlink(path).catch(() => undefined);
       reject(err);
     };
     stream.on("error", rejectOnce);
@@ -147,6 +151,13 @@ const downloadFile = async (
     file.on("close", () => {
       if (settled) return;
       settled = true;
+      if (canReportProgress) {
+        sendMessageToBinaryDownloader({
+          type: "downloadProgress",
+          name: name,
+          progress: 1,
+        });
+      }
       resolve();
     });
   });
