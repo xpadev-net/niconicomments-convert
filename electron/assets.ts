@@ -22,10 +22,25 @@ const ext = process.platform === "win32" ? ".exe" : "";
 const binPath = path.join(basePath, "bin");
 const ffmpegPath = path.join(binPath, `ffmpeg${ext}`);
 const ffprobePath = path.join(binPath, `ffprobe${ext}`);
-const fetchWithProxyInit: { dispatcher?: Dispatcher } =
-  process.env.HTTP_PROXY || process.env.HTTPS_PROXY || process.env.NO_PROXY
-    ? { dispatcher: new EnvHttpProxyAgent() }
-    : {};
+let proxyDispatcher: Dispatcher | undefined;
+const getFetchInit = (): RequestInit => {
+  if (
+    !process.env.HTTP_PROXY &&
+    !process.env.HTTPS_PROXY &&
+    !process.env.NO_PROXY
+  ) {
+    return {};
+  }
+  if (!proxyDispatcher) {
+    try {
+      proxyDispatcher = new EnvHttpProxyAgent();
+    } catch (error) {
+      console.warn("Failed to initialize proxy agent:", error);
+      return {};
+    }
+  }
+  return { dispatcher: proxyDispatcher } as RequestInit;
+};
 
 const assetsBaseUrl = {
   ffmpeg:
@@ -115,7 +130,7 @@ const downloadFile = async (
 ): Promise<void> => {
   let response: Response;
   try {
-    response = await fetch(url, fetchWithProxyInit as RequestInit);
+    response = await fetch(url, getFetchInit());
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to download ${name}: ${message}`, { cause: error });

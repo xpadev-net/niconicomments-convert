@@ -33,7 +33,6 @@
     "electron-log": "^5.4.0",
     "electron-store": "^8.2.0",
     "jotai": "^2.12.3",
-    "proxy-from-env": "1.1.0",
     "sqlite3": "5.1.6",
     "undici": "7.24.6"
   },
