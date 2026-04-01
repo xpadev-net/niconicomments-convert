@@ -1,9 +1,10 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { Stream } from "node:stream";
-import type { AxiosProgressEvent, AxiosResponse } from "axios";
-import axios from "axios";
+import { Readable } from "node:stream";
+import type { ReadableStream } from "node:stream/web";
+import type { Dispatcher } from "undici";
+import { EnvHttpProxyAgent } from "undici";
 import {
   closeBinaryDownloaderWindow,
   createBinaryDownloaderWindow,
@@ -21,6 +22,31 @@ const ext = process.platform === "win32" ? ".exe" : "";
 const binPath = path.join(basePath, "bin");
 const ffmpegPath = path.join(binPath, `ffmpeg${ext}`);
 const ffprobePath = path.join(binPath, `ffprobe${ext}`);
+let proxyDispatcher: Dispatcher | undefined;
+type UndiciRequestInit = RequestInit & { dispatcher?: Dispatcher };
+// proxyDispatcher is intentionally cached for the process lifetime.
+// Proxy env-var changes after first use are not reflected.
+const getFetchInit = (): UndiciRequestInit => {
+  if (
+    !process.env.HTTP_PROXY &&
+    !process.env.HTTPS_PROXY &&
+    !process.env.http_proxy &&
+    !process.env.https_proxy &&
+    !process.env.ALL_PROXY &&
+    !process.env.all_proxy
+  ) {
+    return {};
+  }
+  if (!proxyDispatcher) {
+    try {
+      proxyDispatcher = new EnvHttpProxyAgent();
+    } catch (error) {
+      console.warn("Failed to initialize proxy agent:", error);
+      return {};
+    }
+  }
+  return { dispatcher: proxyDispatcher };
+};
 
 const assetsBaseUrl = {
   ffmpeg:
@@ -108,34 +134,69 @@ const downloadFile = async (
   url: string,
   path: string,
 ): Promise<void> => {
+  let response: Response;
+  try {
+    response = await fetch(url, getFetchInit());
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to download ${name}: ${message}`, { cause: error });
+  }
+  if (!response.ok || !response.body) {
+    throw new Error(
+      `Failed to download ${name}: ${response.status} ${response.statusText}`,
+    );
+  }
   const file = fs.createWriteStream(path);
-  const onDownloadProgress = (status: AxiosProgressEvent): void => {
-    const progress = status.loaded / (status.total ?? 1);
+  const totalRaw = Number(response.headers.get("content-length"));
+  const total =
+    Number.isFinite(totalRaw) && Number.isInteger(totalRaw) && totalRaw > 0
+      ? totalRaw
+      : undefined;
+  const canReportProgress = total !== undefined;
+  let loaded = 0;
+  const stream = Readable.fromWeb(response.body as ReadableStream<Uint8Array>);
+  stream.on("data", (chunk: Buffer) => {
+    loaded += chunk.byteLength;
+    if (!canReportProgress) return;
     sendMessageToBinaryDownloader({
       type: "downloadProgress",
       name: name,
-      progress: progress,
+      progress: Math.min(loaded / total, 1),
     });
-  };
-  return axios({
-    method: "get",
-    url,
-    responseType: "stream",
-    onDownloadProgress,
-  }).then((res: AxiosResponse<Stream>) => {
-    return new Promise<void>((resolve, reject) => {
-      res.data.pipe(file);
-      let error: Error;
-      file.on("error", (err) => {
-        error = err;
-        file.close();
-        reject(err);
-      });
-      file.on("close", () => {
-        if (!error) {
-          resolve();
-        }
-      });
+  });
+  return new Promise<void>((resolve, reject) => {
+    stream.pipe(file);
+    let settled = false;
+    const rejectOnce = (err: Error): void => {
+      if (settled) return;
+      settled = true;
+      stream.destroy();
+      file.destroy();
+      void fs.promises
+        .unlink(path)
+        .catch((unlinkError: NodeJS.ErrnoException) => {
+          if (unlinkError.code !== "ENOENT" && unlinkError.code !== "EBUSY") {
+            console.warn(
+              `Failed to clean up partial download file at ${path}:`,
+              unlinkError,
+            );
+          }
+        });
+      reject(err);
+    };
+    stream.on("error", rejectOnce);
+    file.on("error", rejectOnce);
+    file.on("close", () => {
+      if (settled) return;
+      settled = true;
+      if (canReportProgress) {
+        sendMessageToBinaryDownloader({
+          type: "downloadProgress",
+          name: name,
+          progress: 1,
+        });
+      }
+      resolve();
     });
   });
 };
