@@ -23,9 +23,10 @@ const binPath = path.join(basePath, "bin");
 const ffmpegPath = path.join(binPath, `ffmpeg${ext}`);
 const ffprobePath = path.join(binPath, `ffprobe${ext}`);
 let proxyDispatcher: Dispatcher | undefined;
+type UndiciRequestInit = RequestInit & { dispatcher?: Dispatcher };
 // proxyDispatcher is intentionally cached for the process lifetime.
 // Proxy env-var changes after first use are not reflected.
-const getFetchInit = (): RequestInit => {
+const getFetchInit = (): UndiciRequestInit => {
   if (
     !process.env.HTTP_PROXY &&
     !process.env.HTTPS_PROXY &&
@@ -44,7 +45,7 @@ const getFetchInit = (): RequestInit => {
       return {};
     }
   }
-  return { dispatcher: proxyDispatcher } as RequestInit;
+  return { dispatcher: proxyDispatcher };
 };
 
 const assetsBaseUrl = {
