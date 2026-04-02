@@ -11,13 +11,12 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-
       - uses: pnpm/action-setup@v4
         with:
           version: 10.26.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
       - run: |
           pnpm config delete proxy
           pnpm config delete https-proxy
@@ -37,13 +36,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-
       - uses: pnpm/action-setup@v4
         with:
           version: 10.26.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
       - run: |
           pnpm config delete proxy
           pnpm config delete https-proxy
