@@ -14,51 +14,58 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
         
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.26.0
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '24'
-          cache: 'yarn'
-          
+          cache: 'pnpm'
+
       - name: Install dependencies
         run: |
-          yarn cache clean
-          yarn config delete proxy
-          yarn config delete https-proxy
-          yarn config delete registry
-          yarn install --network-timeout 1000000
-          
+          pnpm config delete proxy
+          pnpm config delete https-proxy
+          pnpm config delete registry
+          pnpm install --frozen-lockfile
+
       - name: Run lint
-        run: yarn lint
-        
+        run: pnpm lint
+
       - name: Run type check
-        run: yarn check-types
-        
+        run: pnpm check-types
+
   build-test:
     runs-on: ubuntu-latest
     needs: lint-and-typecheck
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-        
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.26.0
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '24'
-          cache: 'yarn'
+          cache: 'pnpm'
           
       - name: Install dependencies
         run: |
-          yarn cache clean
-          yarn config delete proxy
-          yarn config delete https-proxy
-          yarn config delete registry
-          yarn install --network-timeout 1000000
-          yarn remove win-protect
+          pnpm config delete proxy
+          pnpm config delete https-proxy
+          pnpm config delete registry
+          pnpm install --frozen-lockfile
           
       - name: Build TypeScript (Electron)
         run: tsc -p electron
         
       - name: Build Frontend
-        run: yarn copy-files
+        run: pnpm copy-files
