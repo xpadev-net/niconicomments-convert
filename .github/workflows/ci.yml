@@ -14,48 +14,48 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
         
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.26.0
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'pnpm'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.26.0
-          
       - name: Install dependencies
         run: |
           pnpm config delete proxy
           pnpm config delete https-proxy
           pnpm config delete registry
           pnpm install --frozen-lockfile
-          
+
       - name: Run lint
         run: pnpm lint
-        
+
       - name: Run type check
         run: pnpm check-types
-        
+
   build-test:
     runs-on: ubuntu-latest
     needs: lint-and-typecheck
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10.26.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
           
       - name: Install dependencies
         run: |
