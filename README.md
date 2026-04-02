@@ -22,5 +22,13 @@ niconicommentsを使って動画を書き出す簡易ツール(?)です
 ## 使い方  
 → [チュートリアル](https://github.com/xpadev-net/niconicomments-convert/wiki/%E3%83%81%E3%83%A5%E3%83%BC%E3%83%88%E3%83%AA%E3%82%A2%E3%83%AB)
 
+## 開発者向け
+- パッケージマネージャーは `pnpm` を使用します
+- 依存関係のインストール: `pnpm install`
+- Lint: `pnpm lint`
+- 型チェック: `pnpm check-types`
+- フロントエンドビルド: `pnpm copy-files`
+- Electronビルド: `pnpm build:win` / `pnpm build:mac`
+
 ## お願い
 なんかいい名前つけてください

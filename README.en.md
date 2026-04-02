@@ -25,5 +25,13 @@ I made it up as I went along, so if you get an error, start it up again and try 
 - Convert  
   A notification will appear when the conversion is complete
 
+## For developers
+- This repository uses `pnpm` as its package manager.
+- Install dependencies: `pnpm install`
+- Lint: `pnpm lint`
+- Type-check: `pnpm check-types`
+- Build frontend assets: `pnpm copy-files`
+- Build Electron app: `pnpm build:win` / `pnpm build:mac`
+
 ## Request to Users
 Please name it something nice.

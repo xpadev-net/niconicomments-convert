@@ -2,17 +2,20 @@
   "name": "niconicomments-convert",
   "private": false,
   "version": "0.0.34",
+  "packageManager": "pnpm@10.26.0",
   "type": "commonjs",
   "license": "MIT",
   "main": "build/electron/electron.js",
   "author": "xpadev(xpadev.net)",
   "homepage": "https://github.com/xpadev-net/niconicomments-convert",
   "scripts": {
-    "build:win": "tsc -p electron&&npm run copy-files&&node build-script/win.js",
-    "build:mac": "tsc -p electron&&npm run copy-files&&node build-script/mac.js",
-    "build": "tsc -p electron&&npm run copy-files&&node build-script/win.js&&node build-script/mac.js",
-    "copy-files": "npx rimraf build/electron/html&&vite build",
-    "check-types": "npx tsc --noEmit -p ./ && npx tsc --noEmit -p ./electron",
+    "prebuild:win": "pnpm install --frozen-lockfile --no-optional",
+    "prebuild:mac": "pnpm install --frozen-lockfile --no-optional",
+    "build:win": "pnpm run prebuild:win&&tsc -p electron&&pnpm run copy-files&&node build-script/win.js",
+    "build:mac": "pnpm run prebuild:mac&&tsc -p electron&&pnpm run copy-files&&node build-script/mac.js",
+    "build": "pnpm run build:win&&pnpm run build:mac",
+    "copy-files": "pnpm exec rimraf build/electron/html&&vite build",
+    "check-types": "pnpm exec tsc --noEmit -p ./ && pnpm exec tsc --noEmit -p ./electron",
     "electron:dev": "tsc -p electron&&concurrently \"vite\" \"electron --unhandled-rejections=strict .\"",
     "eslint": "biome lint ./src ./electron",
     "eslint:fix": "biome lint --write --unsafe ./src ./electron",
@@ -80,7 +83,9 @@
       "output": "dist"
     }
   },
-  "resolutions": {
-    "@babel/runtime": "7.29.2"
+  "pnpm": {
+    "overrides": {
+      "@babel/runtime": "7.29.2"
+    }
   }
 }

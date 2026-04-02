@@ -14,15 +14,17 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-      - run: |
-          yarn cache clean
-          yarn config delete proxy
-          yarn config delete https-proxy
-          yarn config delete registry
-          yarn install --network-timeout 1000000
-          yarn remove win-protect
 
-      - run: yarn build:mac
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.26.0
+      - run: |
+          pnpm config delete proxy
+          pnpm config delete https-proxy
+          pnpm config delete registry
+          pnpm install --frozen-lockfile
+
+      - run: pnpm build:mac
       - uses: softprops/action-gh-release@v2
         with:
           draft: true
@@ -38,15 +40,17 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-      - run: |
-          yarn cache clean
-          yarn config delete proxy
-          yarn config delete https-proxy
-          yarn config delete registry
-          yarn install --network-timeout 1000000
-          yarn remove win-protect
 
-      - run: yarn build:win
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.26.0
+      - run: |
+          pnpm config delete proxy
+          pnpm config delete https-proxy
+          pnpm config delete registry
+          pnpm install --frozen-lockfile
+
+      - run: pnpm build:win
       - uses: softprops/action-gh-release@v2
         with:
           draft: true
@@ -68,7 +72,12 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '24'
-          cache: 'yarn'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.26.0
       - name: Get current version
         id: version
         run: |
