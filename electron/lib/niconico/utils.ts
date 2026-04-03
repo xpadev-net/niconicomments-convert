@@ -56,4 +56,5 @@ const getV3GuestMetadata = async (nicoId: string): Promise<V3MetadataBody> => {
   }
   return metadata.data.response;
 };
+
 export { getMetadata, getUserInfo };

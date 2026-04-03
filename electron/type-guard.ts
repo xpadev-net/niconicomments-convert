@@ -175,4 +175,5 @@ const typeGuard = {
       typeof i === "string" && !!i.match(/expires|Max-Age|path|domain/),
   },
 };
+
 export { typeGuard };

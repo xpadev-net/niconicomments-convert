@@ -42,4 +42,5 @@ function spawn(
     stop: () => p.kill("SIGINT"),
   };
 }
+
 export { spawn };

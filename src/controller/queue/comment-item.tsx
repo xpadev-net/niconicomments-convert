@@ -25,4 +25,5 @@ const CommentItem: FC<Props> = ({ queue, className }) => {
     );
   }, [queue, className]);
 };
+
 export { CommentItem };

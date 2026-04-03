@@ -160,4 +160,5 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
     </div>
   );
 };
+
 export { RemoteCommentPicker };

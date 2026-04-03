@@ -7,4 +7,5 @@ function uuid(): UUID {
     return v.toString(16);
   }) as UUID;
 }
+
 export { uuid };

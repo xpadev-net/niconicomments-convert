@@ -193,4 +193,5 @@ const AuthSetting: FC = () => {
     </div>
   );
 };
+
 export { AuthSetting };

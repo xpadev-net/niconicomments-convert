@@ -29,4 +29,5 @@ const Movie: FC = () => {
     </div>
   );
 };
+
 export { Movie };

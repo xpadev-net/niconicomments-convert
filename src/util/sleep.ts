@@ -5,4 +5,5 @@ const sleep = (time: number): Promise<void> => {
     }, time);
   });
 };
+
 export { sleep };

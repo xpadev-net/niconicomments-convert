@@ -46,4 +46,5 @@ const QueueDisplay: FC = () => {
     </div>
   );
 };
+
 export { QueueDisplay };

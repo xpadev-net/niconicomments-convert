@@ -76,4 +76,5 @@ const LocalCommentPicker: FC<Props> = ({ onChange }) => {
     </div>
   );
 };
+
 export { LocalCommentPicker };

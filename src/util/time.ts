@@ -42,4 +42,5 @@ const formatDate = (_date: Date): string => {
     2,
   )}`;
 };
+
 export { formatDate, str2time, time2str };
