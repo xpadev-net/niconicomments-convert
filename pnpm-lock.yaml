@@ -46,7 +46,7 @@ importers:
         version: 5.1.6(encoding@0.1.13)
       undici:
         specifier: ^8.0.0
-        version: 8.0.0
+        version: 8.1.0
     devDependencies:
       '@biomejs/biome':
         specifier: ^2.4.9
@@ -2581,8 +2581,8 @@ packages:
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
-  undici@8.0.0:
-    resolution: {integrity: sha512-RGabV5g1ggSX5mU4k+B8BLWgb418gDbg0wAVFeiU00iOxtw4ufGsE6GFsuSd2uqOKooWSLf71JGapOFYpE8f+A==}
+  undici@8.1.0:
+    resolution: {integrity: sha512-E9MkTS4xXLnRPYqxH2e6Hr2/49e7WFDKczKcCaFH4VaZs2iNvHMqeIkyUAD9vM8kujy9TjVrRlQ5KkdEJxB2pw==}
     engines: {node: '>=22.19.0'}
 
   unique-filename@1.1.1:
@@ -5458,7 +5458,7 @@ snapshots:
 
   undici-types@7.16.0: {}
 
-  undici@8.0.0: {}
+  undici@8.1.0: {}
 
   unique-filename@1.1.1:
     dependencies:
