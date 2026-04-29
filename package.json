@@ -32,7 +32,7 @@
     "@xpadev-net/niconicomments": "^0.2.78",
     "@xpadev-net/xml2js": "0.6.2-2",
     "electron-log": "^5.4.3",
-    "electron-store": "^8.2.0",
+    "electron-store": "^11.0.0",
     "jotai": "^2.19.1",
     "sqlite3": "5.1.6",
     "undici": "^8.0.2"
