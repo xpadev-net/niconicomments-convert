@@ -2,7 +2,7 @@
   "name": "niconicomments-convert",
   "private": false,
   "version": "0.0.34",
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@11.0.8",
   "type": "commonjs",
   "license": "MIT",
   "main": "build/electron/electron.js",
