@@ -118,7 +118,7 @@ const startRenderer = async (): Promise<void> => {
               );
               void sendBlob(frame, emptyBuffer);
             } else {
-              logger.error(
+              throw new Error(
                 `canvas.toBlob returned null at frame ${frame} and emptyBuffer is unavailable`,
               );
             }
