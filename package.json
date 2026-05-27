@@ -31,6 +31,7 @@
     "@mui/material": "^9.0.0",
     "@xpadev-net/niconicomments": "^0.2.78",
     "@xpadev-net/xml2js": "0.6.2-2",
+    "ansi-regex": "^5.0.1",
     "electron-log": "^5.4.3",
     "electron-store": "^8.2.0",
     "jotai": "^2.19.1",

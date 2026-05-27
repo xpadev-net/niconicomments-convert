@@ -59,15 +59,18 @@ const startRenderer = async (): Promise<void> => {
   let inProgress = false;
   let convertedFrames = 0;
 
-  const sendBlob = (frameId: number, blob: Blob): void => {
-    void blob.arrayBuffer().then((buffer) => {
-      void window.api.request({
+  const sendBlob = async (frameId: number, blob: Blob): Promise<void> => {
+    try {
+      const buffer = await blob.arrayBuffer();
+      await window.api.request({
         type: "blob",
         host: "renderer",
         frameId: frameId + 1,
         data: new Uint8Array(buffer),
       });
-    });
+    } catch (e) {
+      logger.error(`sendBlob failed at frame ${frameId}`, e);
+    }
   };
 
   const { commentData, queue } = (await window.api.request({
@@ -98,17 +101,34 @@ const startRenderer = async (): Promise<void> => {
     ) * targetFrameRate;
   const process = async (): Promise<void> => {
     for (let i = 0; i < targetFrameRate; i++) {
-      const vpos = Math.ceil(i * (100 / targetFrameRate)) + offset;
-      const frame = generatedFrames;
-      // @ts-expect-error
-      if ((nico.timeline[vpos]?.length || 0) === 0 && emptyBuffer) {
-        sendBlob(frame, emptyBuffer);
-      } else {
-        nico.drawCanvas(vpos);
-        canvas.toBlob((blob) => {
-          if (!blob) return;
-          sendBlob(frame, blob);
-        });
+      try {
+        const vpos = Math.ceil(i * (100 / targetFrameRate)) + offset;
+        const frame = generatedFrames;
+        // @ts-expect-error
+        if ((nico.timeline[vpos]?.length || 0) === 0 && emptyBuffer) {
+          void sendBlob(frame, emptyBuffer);
+        } else {
+          nico.drawCanvas(vpos);
+          canvas.toBlob((blob) => {
+            if (blob) {
+              void sendBlob(frame, blob);
+            } else if (emptyBuffer) {
+              logger.warn(
+                `canvas.toBlob returned null at frame ${frame}, using emptyBuffer`,
+              );
+              void sendBlob(frame, emptyBuffer);
+            } else {
+              logger.error(
+                `canvas.toBlob returned null at frame ${frame} and emptyBuffer is unavailable`,
+              );
+            }
+          });
+        }
+      } catch (e) {
+        logger.error(
+          `process loop error at generatedFrames=${generatedFrames}`,
+          e,
+        );
       }
       generatedFrames++;
       if (generatedFrames >= totalFrames) {
@@ -125,7 +145,7 @@ const startRenderer = async (): Promise<void> => {
     }
     offset += 100;
     while (generatedFrames - convertedFrames > 200) {
-      console.log(`waiting... ${generatedFrames - convertedFrames}`);
+      logger.debug(`waiting... ${generatedFrames - convertedFrames}`);
       await sleep(100);
     }
     setTimeout(() => void process(), 0);
@@ -135,9 +155,10 @@ const startRenderer = async (): Promise<void> => {
   window.api.onResponse((_, data) => {
     if (data.target !== "renderer") return;
     if (typeGuard.renderer.reportProgress(data)) {
-      console.log(`received progress: ${data.progress.processed}`);
+      logger.debug(`received progress: ${data.progress.processed}`);
       convertedFrames = data.progress.processed;
     } else if (typeGuard.renderer.end(data)) {
+      inProgress = false;
       window.close();
     }
   });
