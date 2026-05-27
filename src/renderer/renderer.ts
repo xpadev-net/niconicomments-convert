@@ -129,6 +129,10 @@ const startRenderer = async (): Promise<void> => {
       (queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0),
     ) * targetFrameRate;
   const process = async (): Promise<void> => {
+    await Promise.allSettled(pendingBlobs);
+    pendingBlobs.length = 0;
+    await Promise.allSettled(pendingSends);
+    pendingSends.length = 0;
     for (let i = 0; i < targetFrameRate; i++) {
       const frame = generatedFrames;
       try {
