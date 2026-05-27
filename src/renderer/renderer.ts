@@ -59,20 +59,6 @@ const startRenderer = async (): Promise<void> => {
   let inProgress = false;
   let convertedFrames = 0;
 
-  const sendBlob = async (frameId: number, blob: Blob): Promise<void> => {
-    try {
-      const buffer = await blob.arrayBuffer();
-      await window.api.request({
-        type: "blob",
-        host: "renderer",
-        frameId: frameId + 1,
-        data: new Uint8Array(buffer),
-      });
-    } catch (e) {
-      logger.error(`sendBlob failed at frame ${frameId}`, e);
-    }
-  };
-
   const { commentData, queue } = (await window.api.request({
     type: "load",
     host: "renderer",
@@ -94,6 +80,31 @@ const startRenderer = async (): Promise<void> => {
   if (!emptyBuffer) {
     throw new Error("Failed to initialize canvas: canvas.toBlob returned null");
   }
+
+  const sendBlob = async (frameId: number, blob: Blob): Promise<void> => {
+    const buffer = await blob.arrayBuffer();
+    await window.api.request({
+      type: "blob",
+      host: "renderer",
+      frameId: frameId + 1,
+      data: new Uint8Array(buffer),
+    });
+  };
+
+  const sendFrame = (frameId: number, blob: Blob): void => {
+    void sendBlob(frameId, blob).catch((e) => {
+      logger.error(`sendBlob failed at frame ${frameId}`, e);
+      if (blob !== emptyBuffer) {
+        logger.warn(`falling back to emptyBuffer for frame ${frameId}`);
+        void sendBlob(frameId, emptyBuffer).catch((e2) => {
+          logger.error(
+            `sendBlob emptyBuffer fallback also failed at frame ${frameId}`,
+            e2,
+          );
+        });
+      }
+    });
+  };
   message.innerText = "";
   let generatedFrames = 0;
   let offset = Math.ceil((queue.option.ss ?? 0) * 100);
@@ -108,31 +119,25 @@ const startRenderer = async (): Promise<void> => {
       try {
         const vpos = Math.ceil(i * (100 / targetFrameRate)) + offset;
         // @ts-expect-error
-        if ((nico.timeline[vpos]?.length || 0) === 0 && emptyBuffer) {
-          void sendBlob(frame, emptyBuffer);
+        if ((nico.timeline[vpos]?.length || 0) === 0) {
+          sendFrame(frame, emptyBuffer);
         } else {
           nico.drawCanvas(vpos);
           canvas.toBlob((blob) => {
             if (blob) {
-              void sendBlob(frame, blob);
-            } else if (emptyBuffer) {
+              sendFrame(frame, blob);
+            } else {
               logger.warn(
                 `canvas.toBlob returned null at frame ${frame}, using emptyBuffer`,
               );
-              void sendBlob(frame, emptyBuffer);
-            } else {
-              logger.error(
-                `canvas.toBlob returned null at frame ${frame} and emptyBuffer is unavailable`,
-              );
+              sendFrame(frame, emptyBuffer);
             }
           });
         }
       } catch (e) {
         logger.error(`process loop error at frame ${frame}`, e);
-        if (emptyBuffer) {
-          logger.warn(`falling back to emptyBuffer for frame ${frame}`);
-          void sendBlob(frame, emptyBuffer);
-        }
+        logger.warn(`falling back to emptyBuffer for frame ${frame}`);
+        sendFrame(frame, emptyBuffer);
       }
       generatedFrames++;
       if (generatedFrames >= totalFrames) {
