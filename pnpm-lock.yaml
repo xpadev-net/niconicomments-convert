@@ -77,8 +77,8 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1(vite@8.0.7(@types/node@24.12.2)(jiti@2.6.1)(sass@1.99.0))
       ansi-regex:
-        specifier: ^5.0.1
-        version: 5.0.1
+        specifier: ^6.0.0
+        version: 6.2.2
       body-parser:
         specifier: ^2.2.2
         version: 2.2.2
