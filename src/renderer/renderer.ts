@@ -91,6 +91,8 @@ const startRenderer = async (): Promise<void> => {
     });
   };
 
+  let droppedFrames = 0;
+
   const sendFrame = (frameId: number, blob: Blob): void => {
     void sendBlob(frameId, blob).catch((e) => {
       logger.error(`sendBlob failed at frame ${frameId}`, e);
@@ -101,12 +103,14 @@ const startRenderer = async (): Promise<void> => {
             `sendBlob emptyBuffer fallback also failed at frame ${frameId}`,
             e2,
           );
+          droppedFrames++;
         });
       } else {
         logger.error(
           `sendBlob with emptyBuffer failed at frame ${frameId} — no further fallback available`,
           e,
         );
+        droppedFrames++;
       }
     });
   };
@@ -149,7 +153,7 @@ const startRenderer = async (): Promise<void> => {
         await window.api.request({
           type: "end",
           host: "renderer",
-          frameId: generatedFrames,
+          frameId: generatedFrames - droppedFrames,
         });
         message.innerText = "変換の終了を待っています...";
         return;
