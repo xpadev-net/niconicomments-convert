@@ -138,7 +138,6 @@ const startRenderer = async (): Promise<void> => {
           host: "renderer",
           frameId: generatedFrames,
         });
-        inProgress = false;
         message.innerText = "変換の終了を待っています...";
         return;
       }
