@@ -93,6 +93,10 @@ const startRenderer = async (): Promise<void> => {
 
   let droppedFrames = 0;
   const pendingSends: Promise<void>[] = [];
+  const pendingBlobs: Promise<void>[] = [];
+
+  const toBlobAsync = (canvas: HTMLCanvasElement): Promise<Blob | null> =>
+    new Promise((resolve) => canvas.toBlob(resolve));
 
   const sendFrame = (frameId: number, blob: Blob): Promise<void> => {
     const promise = sendBlob(frameId, blob).catch((e) => {
@@ -134,16 +138,18 @@ const startRenderer = async (): Promise<void> => {
           sendFrame(frame, emptyBuffer);
         } else {
           nico.drawCanvas(vpos);
-          canvas.toBlob((blob) => {
-            if (blob) {
-              sendFrame(frame, blob);
-            } else {
-              logger.warn(
-                `canvas.toBlob returned null at frame ${frame}, using emptyBuffer`,
-              );
-              sendFrame(frame, emptyBuffer);
-            }
-          });
+          pendingBlobs.push(
+            toBlobAsync(canvas).then((blob) => {
+              if (blob) {
+                void sendFrame(frame, blob);
+              } else {
+                logger.warn(
+                  `canvas.toBlob returned null at frame ${frame}, using emptyBuffer`,
+                );
+                void sendFrame(frame, emptyBuffer);
+              }
+            }),
+          );
         }
       } catch (e) {
         logger.error(`process loop error at frame ${frame}`, e);
@@ -152,8 +158,10 @@ const startRenderer = async (): Promise<void> => {
       }
       generatedFrames++;
       if (generatedFrames >= totalFrames) {
-        await sleep(100);
+        await Promise.allSettled(pendingBlobs);
         await Promise.allSettled(pendingSends);
+        pendingBlobs.length = 0;
+        pendingSends.length = 0;
         await window.api.request({
           type: "end",
           host: "renderer",
