@@ -102,6 +102,11 @@ const startRenderer = async (): Promise<void> => {
             e2,
           );
         });
+      } else {
+        logger.error(
+          `sendBlob with emptyBuffer failed at frame ${frameId} — no further fallback available`,
+          e,
+        );
       }
     });
   };
