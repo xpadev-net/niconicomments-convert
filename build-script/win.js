@@ -1,5 +1,7 @@
 const builder = require("electron-builder");
 
+process.env.CSC_IDENTITY_AUTO_DISCOVERY = "false";
+
 builder.build({
   config: {
     appId: "net.xpadev.niconicomments-convert",
@@ -12,6 +14,7 @@ builder.build({
           //'ia32',
         ],
       },
+      signAndEditExecutable: false,
     },
   },
   publish: "never",

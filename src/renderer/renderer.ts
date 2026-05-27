@@ -59,17 +59,6 @@ const startRenderer = async (): Promise<void> => {
   let inProgress = false;
   let convertedFrames = 0;
 
-  const sendBlob = (frameId: number, blob: Blob): void => {
-    void blob.arrayBuffer().then((buffer) => {
-      void window.api.request({
-        type: "blob",
-        host: "renderer",
-        frameId: frameId + 1,
-        data: new Uint8Array(buffer),
-      });
-    });
-  };
-
   const { commentData, queue } = (await window.api.request({
     type: "load",
     host: "renderer",
@@ -88,6 +77,49 @@ const startRenderer = async (): Promise<void> => {
   const emptyBuffer: Blob | null = await new Promise((resolve) =>
     canvas.toBlob((blob) => resolve(blob)),
   );
+  if (!emptyBuffer) {
+    throw new Error("Failed to initialize canvas: canvas.toBlob returned null");
+  }
+
+  const sendBlob = async (frameId: number, blob: Blob): Promise<void> => {
+    const buffer = await blob.arrayBuffer();
+    await window.api.request({
+      type: "blob",
+      host: "renderer",
+      frameId: frameId + 1,
+      data: new Uint8Array(buffer),
+    });
+  };
+
+  let droppedFrames = 0;
+  const pendingSends: Promise<void>[] = [];
+  const pendingBlobs: Promise<void>[] = [];
+
+  const toBlobAsync = (canvas: HTMLCanvasElement): Promise<Blob | null> =>
+    new Promise((resolve) => canvas.toBlob(resolve));
+
+  const sendFrame = (frameId: number, blob: Blob): Promise<void> => {
+    const promise = sendBlob(frameId, blob).catch((e) => {
+      logger.error(`sendBlob failed at frame ${frameId}`, e);
+      if (blob !== emptyBuffer) {
+        logger.warn(`falling back to emptyBuffer for frame ${frameId}`);
+        return sendBlob(frameId, emptyBuffer).catch((e2) => {
+          logger.error(
+            `sendBlob emptyBuffer fallback also failed at frame ${frameId}`,
+            e2,
+          );
+          droppedFrames++;
+        });
+      }
+      logger.error(
+        `sendBlob with emptyBuffer failed at frame ${frameId} — no further fallback available`,
+        e,
+      );
+      droppedFrames++;
+    });
+    pendingSends.push(promise);
+    return promise;
+  };
   message.innerText = "";
   let generatedFrames = 0;
   let offset = Math.ceil((queue.option.ss ?? 0) * 100);
@@ -97,27 +129,48 @@ const startRenderer = async (): Promise<void> => {
       (queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0),
     ) * targetFrameRate;
   const process = async (): Promise<void> => {
+    await Promise.allSettled(pendingBlobs);
+    pendingBlobs.length = 0;
+    await Promise.allSettled(pendingSends);
+    pendingSends.length = 0;
     for (let i = 0; i < targetFrameRate; i++) {
-      const vpos = Math.ceil(i * (100 / targetFrameRate)) + offset;
       const frame = generatedFrames;
-      // @ts-expect-error
-      if ((nico.timeline[vpos]?.length || 0) === 0 && emptyBuffer) {
-        sendBlob(frame, emptyBuffer);
-      } else {
-        nico.drawCanvas(vpos);
-        canvas.toBlob((blob) => {
-          if (!blob) return;
-          sendBlob(frame, blob);
-        });
+      try {
+        const vpos = Math.ceil(i * (100 / targetFrameRate)) + offset;
+        // @ts-expect-error
+        if ((nico.timeline[vpos]?.length || 0) === 0) {
+          sendFrame(frame, emptyBuffer);
+        } else {
+          nico.drawCanvas(vpos);
+          pendingBlobs.push(
+            toBlobAsync(canvas).then((blob) => {
+              if (blob) {
+                void sendFrame(frame, blob);
+              } else {
+                logger.warn(
+                  `canvas.toBlob returned null at frame ${frame}, using emptyBuffer`,
+                );
+                void sendFrame(frame, emptyBuffer);
+              }
+            }),
+          );
+        }
+      } catch (e) {
+        logger.error(`process loop error at frame ${frame}`, e);
+        logger.warn(`falling back to emptyBuffer for frame ${frame}`);
+        sendFrame(frame, emptyBuffer);
       }
       generatedFrames++;
       if (generatedFrames >= totalFrames) {
+        await Promise.allSettled(pendingBlobs);
+        await Promise.allSettled(pendingSends);
+        pendingBlobs.length = 0;
+        pendingSends.length = 0;
         await window.api.request({
           type: "end",
           host: "renderer",
-          frameId: generatedFrames,
+          frameId: generatedFrames - droppedFrames,
         });
-        inProgress = false;
         message.innerText = "変換の終了を待っています...";
         return;
       }
@@ -125,7 +178,7 @@ const startRenderer = async (): Promise<void> => {
     }
     offset += 100;
     while (generatedFrames - convertedFrames > 200) {
-      console.log(`waiting... ${generatedFrames - convertedFrames}`);
+      logger.debug(`waiting... ${generatedFrames - convertedFrames}`);
       await sleep(100);
     }
     setTimeout(() => void process(), 0);
@@ -135,9 +188,10 @@ const startRenderer = async (): Promise<void> => {
   window.api.onResponse((_, data) => {
     if (data.target !== "renderer") return;
     if (typeGuard.renderer.reportProgress(data)) {
-      console.log(`received progress: ${data.progress.processed}`);
+      logger.debug(`received progress: ${data.progress.processed}`);
       convertedFrames = data.progress.processed;
     } else if (typeGuard.renderer.end(data)) {
+      inProgress = false;
       window.close();
     }
   });
