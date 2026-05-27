@@ -92,27 +92,29 @@ const startRenderer = async (): Promise<void> => {
   };
 
   let droppedFrames = 0;
+  const pendingSends: Promise<void>[] = [];
 
-  const sendFrame = (frameId: number, blob: Blob): void => {
-    void sendBlob(frameId, blob).catch((e) => {
+  const sendFrame = (frameId: number, blob: Blob): Promise<void> => {
+    const promise = sendBlob(frameId, blob).catch((e) => {
       logger.error(`sendBlob failed at frame ${frameId}`, e);
       if (blob !== emptyBuffer) {
         logger.warn(`falling back to emptyBuffer for frame ${frameId}`);
-        void sendBlob(frameId, emptyBuffer).catch((e2) => {
+        return sendBlob(frameId, emptyBuffer).catch((e2) => {
           logger.error(
             `sendBlob emptyBuffer fallback also failed at frame ${frameId}`,
             e2,
           );
           droppedFrames++;
         });
-      } else {
-        logger.error(
-          `sendBlob with emptyBuffer failed at frame ${frameId} — no further fallback available`,
-          e,
-        );
-        droppedFrames++;
       }
+      logger.error(
+        `sendBlob with emptyBuffer failed at frame ${frameId} — no further fallback available`,
+        e,
+      );
+      droppedFrames++;
     });
+    pendingSends.push(promise);
+    return promise;
   };
   message.innerText = "";
   let generatedFrames = 0;
@@ -150,6 +152,8 @@ const startRenderer = async (): Promise<void> => {
       }
       generatedFrames++;
       if (generatedFrames >= totalFrames) {
+        await sleep(100);
+        await Promise.allSettled(pendingSends);
         await window.api.request({
           type: "end",
           host: "renderer",
