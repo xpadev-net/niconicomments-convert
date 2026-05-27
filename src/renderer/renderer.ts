@@ -91,6 +91,9 @@ const startRenderer = async (): Promise<void> => {
   const emptyBuffer: Blob | null = await new Promise((resolve) =>
     canvas.toBlob((blob) => resolve(blob)),
   );
+  if (!emptyBuffer) {
+    throw new Error("Failed to initialize canvas: canvas.toBlob returned null");
+  }
   message.innerText = "";
   let generatedFrames = 0;
   let offset = Math.ceil((queue.option.ss ?? 0) * 100);
