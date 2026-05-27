@@ -101,9 +101,9 @@ const startRenderer = async (): Promise<void> => {
     ) * targetFrameRate;
   const process = async (): Promise<void> => {
     for (let i = 0; i < targetFrameRate; i++) {
+      const frame = generatedFrames;
       try {
         const vpos = Math.ceil(i * (100 / targetFrameRate)) + offset;
-        const frame = generatedFrames;
         // @ts-expect-error
         if ((nico.timeline[vpos]?.length || 0) === 0 && emptyBuffer) {
           void sendBlob(frame, emptyBuffer);
@@ -125,10 +125,11 @@ const startRenderer = async (): Promise<void> => {
           });
         }
       } catch (e) {
-        logger.error(
-          `process loop error at generatedFrames=${generatedFrames}`,
-          e,
-        );
+        logger.error(`process loop error at frame ${frame}`, e);
+        if (emptyBuffer) {
+          logger.warn(`falling back to emptyBuffer for frame ${frame}`);
+          void sendBlob(frame, emptyBuffer);
+        }
       }
       generatedFrames++;
       if (generatedFrames >= totalFrames) {
