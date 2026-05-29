@@ -1,5 +1,36 @@
+allowBuilds:
+  '@parcel/watcher': true
+  electron: set this to true or false
+  electron-winstaller: true
+  lefthook: true
+  sqlite3: true
+  win-protect: true
+minimumReleaseAgeExclude:
+  - tar@7.5.7
+  - tar@7.5.3
+  - tar@7.5.8
+  - tar@7.5.10
+  - tar@7.5.11
+  - tar@7.5.4
+  - postcss@8.5.10
+  - fast-uri@3.1.1
+  - fast-uri@3.1.2
+  - '@xmldom/xmldom@0.8.13'
+  - ip-address@10.1.1
+  - brace-expansion@5.0.6
+  - '@tootallnate/once@2.0.1'
+  - qs@6.15.2
+  - tmp@0.2.6
 onlyBuiltDependencies:
   - "@parcel/watcher"
   - electron
   - lefthook
   - sqlite3
+overrides:
+  '@tootallnate/once@<2.0.1': ^2.0.1
+  tar@<7.5.7: ^7.5.7
+  tar@<7.5.8: ^7.5.8
+  tar@<=7.5.10: ^7.5.11
+  tar@<=7.5.2: ^7.5.3
+  tar@<=7.5.3: ^7.5.4
+  tar@<=7.5.9: ^7.5.10
