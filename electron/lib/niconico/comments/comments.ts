@@ -67,7 +67,10 @@ const convertToXml = (comments: FormattedComment[]): string => {
           vpos: comment.vpos,
           date: comment.date,
           date_usec: comment.date_usec,
-          user_id: comment.user_id,
+          // 投稿者コメントは user_id 属性が存在しないことで判定されるため、
+          // 内部的に割り当てた匿名の user_id を出力に含めない
+          // https://github.com/xpadev-net/niconicomments-convert/issues/357
+          user_id: comment.owner ? undefined : comment.user_id,
           mail: comment.mail.join(" "),
           premium: comment.premium ? 1 : 0,
           anonymity: comment.owner ? 1 : 0,
