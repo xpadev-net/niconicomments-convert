@@ -9,6 +9,7 @@ export type NiconicommentsOptions = {
   showCollision: OptionItem<boolean>;
   showCommentCount: OptionItem<boolean>;
   keepCA: OptionItem<boolean>;
+  preferFixedLoc: OptionItem<boolean>;
   scale: OptionItem<number>;
   mode: OptionItem<ModeType>;
 };

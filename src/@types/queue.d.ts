@@ -88,6 +88,7 @@ export type ConvertQueue = BaseQueue & {
     height: number;
     format: CommentFormat;
     options: Options;
+    preferFixedLoc?: boolean;
   };
   wait?: UUID[];
 };

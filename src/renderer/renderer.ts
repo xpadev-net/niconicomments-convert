@@ -2,6 +2,10 @@ import NiconiComments from "@xpadev-net/niconicomments";
 
 import type { ApiResponseLoad } from "@/@types/response.renderer";
 import { transformComments } from "@/renderer/comment-utils";
+import {
+  applyPreferFixedLocAt,
+  type TimelineComment,
+} from "@/renderer/prefer-fixed-loc";
 import { typeGuard } from "@/type-guard";
 import { encodeJson } from "@/util/json";
 import { getLogger } from "@/util/log";
@@ -74,6 +78,16 @@ const startRenderer = async (): Promise<void> => {
     format,
     lazy: true,
   });
+  const drawCanvas = (vpos: number): void => {
+    if (queue.option.preferFixedLoc) {
+      applyPreferFixedLocAt(
+        (nico as unknown as { timeline?: Record<number, TimelineComment[]> })
+          .timeline,
+        vpos,
+      );
+    }
+    nico.drawCanvas(vpos);
+  };
   const emptyBuffer: Blob | null = await new Promise((resolve) =>
     canvas.toBlob((blob) => resolve(blob)),
   );
@@ -141,7 +155,7 @@ const startRenderer = async (): Promise<void> => {
         if ((nico.timeline[vpos]?.length || 0) === 0) {
           sendFrame(frame, emptyBuffer);
         } else {
-          nico.drawCanvas(vpos);
+          drawCanvas(vpos);
           pendingBlobs.push(
             toBlobAsync(canvas).then((blob) => {
               if (blob) {

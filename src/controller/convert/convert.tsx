@@ -54,6 +54,11 @@ const initialConfig: Options = {
       name: "CA衝突抑制",
       type: "boolean",
     },
+    preferFixedLoc: {
+      value: false,
+      name: "ue/shitaを前面に",
+      type: "boolean",
+    },
     scale: {
       value: 1,
       name: "スケール",
@@ -225,6 +230,7 @@ const Convert: FC = () => {
       }
       const nicoOption: { [key: string]: unknown } = {};
       for (const key in options.nico) {
+        if (key === "preferFixedLoc") continue;
         const item = options.nico[key as keyof NiconicommentsOptions];
         if (item.type === "number") {
           nicoOption[key] = Number(item.value);
@@ -257,6 +263,7 @@ const Convert: FC = () => {
             options: {
               ...nicoOption,
             },
+            preferFixedLoc: options.nico.preferFixedLoc.value,
           },
           wait,
           progress: { percent: 0, total: 0, processed: 0 },
