@@ -35,6 +35,9 @@ jobs:
       - name: Run type check
         run: pnpm check-types
 
+      - name: Run tests
+        run: pnpm test
+
   build-test:
     runs-on: ubuntu-latest
     needs: lint-and-typecheck

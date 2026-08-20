@@ -21,6 +21,7 @@
     "format:fix": "biome format --write ./src ./electron",
     "lint": "biome check ./src ./electron",
     "lint:fix": "biome check --write --unsafe ./src ./electron",
+    "test": "node --test src/renderer/prefer-fixed-loc.test.mts",
     "prepare": "lefthook install"
   },
   "dependencies": {

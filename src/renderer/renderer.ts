@@ -4,6 +4,7 @@ import type { ApiResponseLoad } from "@/@types/response.renderer";
 import { transformComments } from "@/renderer/comment-utils";
 import {
   applyPreferFixedLocAt,
+  type PreferFixedLocLimit,
   type TimelineComment,
 } from "@/renderer/prefer-fixed-loc";
 import { typeGuard } from "@/type-guard";
@@ -78,15 +79,35 @@ const startRenderer = async (): Promise<void> => {
     format,
     lazy: true,
   });
+  const nicoTimeline = (
+    nico as unknown as { timeline?: Record<number, TimelineComment[]> }
+  ).timeline;
+  if (queue.option.preferFixedLoc && nicoTimeline === undefined) {
+    throw new Error(
+      "preferFixedLoc requires niconicomments timeline, but it was not found",
+    );
+  }
+  const preferFixedLocLimit: PreferFixedLocLimit = {
+    commentLimit: queue.option.options.config?.commentLimit,
+    hideCommentOrder: queue.option.options.config?.hideCommentOrder,
+  };
   const drawCanvas = (vpos: number): void => {
-    if (queue.option.preferFixedLoc) {
-      applyPreferFixedLocAt(
-        (nico as unknown as { timeline?: Record<number, TimelineComment[]> })
-          .timeline,
-        vpos,
-      );
+    if (!queue.option.preferFixedLoc) {
+      nico.drawCanvas(vpos);
+      return;
     }
-    nico.drawCanvas(vpos);
+    const original = applyPreferFixedLocAt(
+      nicoTimeline,
+      vpos,
+      preferFixedLocLimit,
+    );
+    try {
+      nico.drawCanvas(vpos);
+    } finally {
+      if (original && nicoTimeline) {
+        nicoTimeline[vpos] = original;
+      }
+    }
   };
   const emptyBuffer: Blob | null = await new Promise((resolve) =>
     canvas.toBlob((blob) => resolve(blob)),
