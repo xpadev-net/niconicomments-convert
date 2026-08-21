@@ -246,7 +246,7 @@ const processOnLoad = async (): Promise<ApiResponseLoad> => {
 
 const processOnInterrupt = (queueId: UUID): void => {
   const queue = queueList.filter((i) => i.id === queueId)[0];
-  if (!queue || queue.status !== "processing") return;
+  if (queue?.status !== "processing") return;
   queue.status = "interrupted";
   if (queue.type === "convert") {
     void convertQueue
