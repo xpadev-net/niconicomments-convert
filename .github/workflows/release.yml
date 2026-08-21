@@ -12,8 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
-        with:
-          version: 11.22.0
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -37,8 +35,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
-        with:
-          version: 11.22.0
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -68,8 +64,6 @@ jobs:
           ref: ${{ github.event_name == 'workflow_dispatch' && 'develop' || github.ref }}
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 11.22.0
 
       - name: Setup node.js
         uses: actions/setup-node@v6
