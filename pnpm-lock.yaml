@@ -33,8 +33,8 @@ importers:
         specifier: ^9.0.0
         version: 9.3.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.5))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.5))(@types/react@19.2.14)(react@19.2.5))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@xpadev-net/niconicomments':
-        specifier: ^0.2.78
-        version: 0.2.78
+        specifier: ^0.4.0
+        version: 0.4.0
       '@xpadev-net/xml2js':
         specifier: 0.6.2-2
         version: 0.6.2-2
@@ -767,9 +767,9 @@ packages:
     engines: {node: '>=10.0.0'}
     deprecated: this version has critical issues, please update to the latest version
 
-  '@xpadev-net/niconicomments@0.2.78':
-    resolution: {integrity: sha512-DB1FOfAdhPXWPvUv/9Rbt4JwI79zQF37xcwfXOQbhHZ0twbS75oof+4XxD5dMTqAYXMaLAavho+Hx8a6Gr6Pyg==}
-    engines: {node: '>=20.0.0'}
+  '@xpadev-net/niconicomments@0.4.0':
+    resolution: {integrity: sha512-WcMB+0USvXTFCO1PGQNDYTpLPHjOI0j2YPdWofB2lGuEShVeoLY1H7ZTc3UzoNjqH2f+QhqK+cTxN4ZlZYh7EA==}
+    engines: {node: '>=22.0.0'}
 
   '@xpadev-net/xml2js@0.6.2-2':
     resolution: {integrity: sha512-NT6u7ey3sRc5ijdLZvVTg0qFYvokS7NDQaLcCllIDiKQWVZxVTjL4UJ/gzMaG9ofezDVe7uI7cvpTP4JWL7/JQ==}
@@ -3292,7 +3292,7 @@ snapshots:
 
   '@xmldom/xmldom@0.8.14': {}
 
-  '@xpadev-net/niconicomments@0.2.78': {}
+  '@xpadev-net/niconicomments@0.4.0': {}
 
   '@xpadev-net/xml2js@0.6.2-2':
     dependencies:
