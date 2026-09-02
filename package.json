@@ -34,7 +34,7 @@
     "electron-log": "^5.4.3",
     "electron-store": "^8.2.0",
     "jotai": "^2.20.0",
-    "sqlite3": "5.1.6",
+    "sqlite3": "6.0.1",
     "undici": "^8.9.0"
   },
   "devDependencies": {
