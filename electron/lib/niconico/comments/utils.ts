@@ -19,6 +19,7 @@ export const convertV3ToFormatted = (
         mail: comment.commands,
         user_id: -1,
         layer: -1,
+        ignoreScale: false,
         is_my_post: false,
       };
       if (tmpParam.content.startsWith("/") && tmpParam.owner) {
