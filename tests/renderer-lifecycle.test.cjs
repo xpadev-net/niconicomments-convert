@@ -12,7 +12,7 @@ const deferred = () => {
   });
   return { promise, resolve, reject };
 };
-const windowHarness = () => {
+const windowHarness = (options = {}) => {
   const windows = [];
   class BrowserWindow extends EventEmitter {
     constructor() {
@@ -25,6 +25,8 @@ const windowHarness = () => {
     }
     removeMenu() {}
     loadURL() {
+      if (options.syncLoadError)
+        throw new Error("loadURL failed synchronously");
       return this.loading.promise;
     }
     isDestroyed() {
@@ -209,4 +211,15 @@ test("a late load IPC rejection cannot fail the next session", async () => {
   pending.reject(new Error("old load failed"));
   await assert.rejects(request, /old load failed/);
   assert.equal(harness.failures.length, 0);
+});
+
+test("synchronous renderer setup errors destroy the newly created window", () => {
+  const harness = windowHarness({ syncLoadError: true });
+  const failures = [];
+  assert.throws(
+    () => harness.createRendererWindow((error) => failures.push(error)),
+    /loadURL failed synchronously/,
+  );
+  assert.equal(harness.windows[0].destroyed, true);
+  assert.equal(failures.length, 0);
 });

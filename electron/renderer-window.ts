@@ -22,33 +22,38 @@ const createRendererWindow = (
     },
     show: !!(store.get("showRendererWindow") ?? true),
   });
-  rendererWindow.removeMenu();
-  rendererWindow.on("close", (e) => {
-    // The owning session destroys this window after converter cleanup.
-    e.preventDefault();
-  });
-  const fail = (error: Error): void => {
-    if (!closingWindows.has(rendererWindow)) onFailure(error);
-  };
-  rendererWindow.on("closed", () =>
-    fail(new Error("Renderer window closed unexpectedly")),
-  );
-  rendererWindow.on("unresponsive", () =>
-    fail(new Error("Renderer is unresponsive")),
-  );
-  rendererWindow.webContents.on("render-process-gone", (_, details) => {
-    fail(
-      new Error(
-        `Renderer process gone: ${details.reason} (${details.exitCode})`,
-      ),
+  try {
+    rendererWindow.removeMenu();
+    rendererWindow.on("close", (e) => {
+      // The owning session destroys this window after converter cleanup.
+      e.preventDefault();
+    });
+    const fail = (error: Error): void => {
+      if (!closingWindows.has(rendererWindow)) onFailure(error);
+    };
+    rendererWindow.on("closed", () =>
+      fail(new Error("Renderer window closed unexpectedly")),
     );
-  });
-  void rendererWindow.loadURL(`${baseUrl}?renderer`).catch(fail);
+    rendererWindow.on("unresponsive", () =>
+      fail(new Error("Renderer is unresponsive")),
+    );
+    rendererWindow.webContents.on("render-process-gone", (_, details) => {
+      fail(
+        new Error(
+          `Renderer process gone: ${details.reason} (${details.exitCode})`,
+        ),
+      );
+    });
+    void rendererWindow.loadURL(`${baseUrl}?renderer`).catch(fail);
 
-  if (!app.isPackaged) {
-    rendererWindow.webContents.openDevTools();
+    if (!app.isPackaged) {
+      rendererWindow.webContents.openDevTools();
+    }
+    return rendererWindow;
+  } catch (error) {
+    closeRendererWindow(rendererWindow);
+    throw error;
   }
-  return rendererWindow;
 };
 
 const closeRendererWindow = (rendererWindow: BrowserWindow): void => {
