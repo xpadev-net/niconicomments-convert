@@ -58,7 +58,7 @@ jobs:
           pnpm install --frozen-lockfile
           
       - name: Build TypeScript (Electron)
-        run: tsc -p electron
+        run: pnpm exec tsc -p electron
         
       - name: Build Frontend
         run: pnpm copy-files
