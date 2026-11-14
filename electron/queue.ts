@@ -35,6 +35,7 @@ type ConversionSession = ReturnType<typeof startConverter> & {
   queue: ConvertQueue;
   lastFrame: number;
   endFrame: number;
+  inputEndScheduled: boolean;
   frames: Map<number, Uint8Array>;
   writes: Promise<void>;
 };
@@ -87,15 +88,17 @@ const startMovieDownload = async (): Promise<void> => {
         sendProgress();
       },
     );
-    targetQueue.status = "completed";
+    if (targetQueue.status === "processing") targetQueue.status = "completed";
   } catch (e) {
     logger.error("failed to download movie", e);
-    targetQueue.status = "fail";
-    sendMessageToController({
-      type: "message",
-      title: "動画のダウンロード中にエラーが発生しました",
-      message: `エラー内容:\n${encodeError(e)}`,
-    });
+    if (targetQueue.status === "processing") {
+      targetQueue.status = "fail";
+      sendMessageToController({
+        type: "message",
+        title: "動画のダウンロード中にエラーが発生しました",
+        message: `エラー内容:\n${encodeError(e)}`,
+      });
+    }
   }
   sendProgress();
   void startMovieDownload();
@@ -124,15 +127,17 @@ const startCommentDownload = async (): Promise<void> => {
       };
       sendProgress();
     });
-    targetQueue.status = "completed";
+    if (targetQueue.status === "processing") targetQueue.status = "completed";
   } catch (e) {
     logger.error("failed to download comment", e);
-    targetQueue.status = "fail";
-    sendMessageToController({
-      type: "message",
-      title: "コメントのダウンロード中にエラーが発生しました",
-      message: `エラー内容:\n${encodeError(e)}`,
-    });
+    if (targetQueue.status === "processing") {
+      targetQueue.status = "fail";
+      sendMessageToController({
+        type: "message",
+        title: "コメントのダウンロード中にエラーが発生しました",
+        message: `エラー内容:\n${encodeError(e)}`,
+      });
+    }
   }
   sendProgress();
   void startCommentDownload();
@@ -140,19 +145,35 @@ const startCommentDownload = async (): Promise<void> => {
 };
 
 const startConvert = async (): Promise<void> => {
-  const queued = queueLists.convert.filter((i) => i.status === "queued");
-  if (
-    activeSession ||
-    queueLists.convert.filter((i) => i.status === "processing").length > 0 ||
-    queued.length === 0 ||
-    !queued[0]
-  )
-    return;
-  for (const queueId of queued[0].wait ?? []) {
-    const queue = queueList.filter((i) => i.id === queueId)[0];
-    if (queue?.status !== "completed") return;
-  }
-  const queue = queued[0];
+  // Propagate terminal dependency states, including chains of waiting jobs.
+  let changed: boolean;
+  do {
+    changed = false;
+    for (const queue of queueLists.convert) {
+      if (queue.status !== "queued") continue;
+      const dependency = (queue.wait ?? [])
+        .map((id) => queueList.find((item) => item.id === id))
+        .find(
+          (item) => item?.status === "fail" || item?.status === "interrupted",
+        );
+      if (!dependency) continue;
+      queue.status = dependency.status === "fail" ? "fail" : "interrupted";
+      changed = true;
+    }
+    if (changed) sendProgress();
+  } while (changed);
+
+  if (activeSession) return;
+  const queue = queueLists.convert.find(
+    (item) =>
+      item.status === "queued" &&
+      (item.wait ?? []).every(
+        (id) =>
+          queueList.find((dependency) => dependency.id === id)?.status ===
+          "completed",
+      ),
+  );
+  if (!queue) return;
   processingQueue = queue;
   queue.status = "processing";
   queue.progress = {
@@ -168,6 +189,7 @@ const startConvert = async (): Promise<void> => {
       queue,
       lastFrame: 0,
       endFrame: -1,
+      inputEndScheduled: false,
       frames: new Map(),
       writes: Promise.resolve(),
     };
@@ -219,7 +241,9 @@ const failConversion = (error: unknown, session = activeSession): void => {
 };
 
 const finishInput = (session: ConversionSession): void => {
-  if (session.lastFrame !== session.endFrame) return;
+  if (session.lastFrame !== session.endFrame || session.inputEndScheduled)
+    return;
+  session.inputEndScheduled = true;
   void session.writes
     .then(() => {
       if (session === activeSession && session.queue.status === "processing")
@@ -297,8 +321,14 @@ const processOnLoad = async (): Promise<ApiResponseLoad> => {
 
 const processOnInterrupt = (queueId: UUID): void => {
   const queue = queueList.filter((i) => i.id === queueId)[0];
-  if (queue?.status !== "processing") return;
+  if (queue?.status !== "processing" && queue?.status !== "queued") return;
+  const wasQueued = queue.status === "queued";
   queue.status = "interrupted";
+  sendProgress();
+  if (wasQueued) {
+    void startConvert();
+    return;
+  }
   if (queue.type === "convert") {
     activeSession?.frames.clear();
     activeSession?.stop();
@@ -309,6 +339,7 @@ const processOnInterrupt = (queueId: UUID): void => {
   } else if (queue.type === "comment") {
     interruptCommentDownload();
   }
+  void startConvert();
 };
 
 export {
