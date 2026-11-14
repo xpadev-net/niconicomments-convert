@@ -83,6 +83,8 @@ function spawn(
   let settled = false;
   let closed = false;
   let cancelled = false;
+  let terminating = false;
+  let failure: { cause: unknown } | undefined;
   let killTimer: ReturnType<typeof setTimeout> | undefined;
   const stdout = new OutputTail(maxOutputBytes);
   const stderr = new OutputTail(maxOutputBytes);
@@ -98,10 +100,15 @@ function spawn(
     stdoutTruncated: stdout.truncated,
     stderrTruncated: stderr.truncated,
   });
-  const stop = (): void => {
-    if (settled || closed || cancelled) return;
-    cancelled = true;
-    if (!process || process.exitCode !== null || process.signalCode !== null)
+  const terminate = (): void => {
+    if (closed || terminating) return;
+    terminating = true;
+    if (
+      !process ||
+      process.pid === undefined ||
+      process.exitCode !== null ||
+      process.signalCode !== null
+    )
       return;
     process.kill("SIGINT");
     killTimer = setTimeout(() => {
@@ -115,22 +122,37 @@ function spawn(
     }, killTimeoutMs);
     killTimer.unref();
   };
+  const stop = (): void => {
+    if (settled || closed || cancelled) return;
+    cancelled = true;
+    terminate();
+  };
   const promise = new Promise<SpawnResult>((resolve, reject) => {
     const cleanup = (): void => {
       clearTimeout(killTimer);
       signal?.removeEventListener("abort", stop);
     };
-    const fail = (error: unknown): void => {
-      if (settled) return;
+    const rejectFailure = (error: unknown, output = result()): void => {
       settled = true;
-      signal?.removeEventListener("abort", stop);
+      cleanup();
       reject(
         new ProcessError(
           error instanceof Error ? error.message : String(error),
-          result(),
+          output,
           error,
         ),
       );
+    };
+    const fail = (error: unknown): void => {
+      if (settled || failure) return;
+      failure = { cause: error };
+      if (process && !closed) {
+        // Keep the first failure, drain remaining output, and wait for teardown.
+        // Callers must not start the next job while this child can still write.
+        terminate();
+      } else {
+        rejectFailure(error);
+      }
     };
     if (
       !Number.isSafeInteger(maxOutputBytes) ||
@@ -161,8 +183,15 @@ function spawn(
       closed = true;
       cleanup();
       if (settled) return;
+      const output = result(
+        process?.pid === undefined ? null : code,
+        exitSignal,
+      );
+      if (failure) {
+        rejectFailure(failure.cause, output);
+        return;
+      }
       settled = true;
-      const output = result(code, exitSignal);
       if (!cancelled && code !== null && successCodes.includes(code)) {
         resolve(output);
       } else {
@@ -186,18 +215,14 @@ function spawn(
       if ("setEncoding" in stream) stream.setEncoding("utf8");
       stream.on("data", (data: string) => {
         tail.append(data);
-        if (settled) return;
+        if (settled || failure) return;
         try {
           callback?.(data);
         } catch (error) {
-          stop();
           fail(error);
         }
       });
-      stream.on("error", (error) => {
-        stop();
-        fail(error);
-      });
+      stream.on("error", fail);
     };
     readOutput(process.stdout, stdout, onData);
     readOutput(process.stderr, stderr, onError);

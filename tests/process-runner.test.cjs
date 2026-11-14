@@ -24,17 +24,18 @@ function loadWithMocks(filename, mocks) {
   return module.exports;
 }
 
-function fakeExecution() {
+function fakeExecution(onData) {
   const child = new EventEmitter();
   child.stdout = new PassThrough();
   child.stderr = new PassThrough();
+  child.pid = 12345;
   child.exitCode = null;
   child.signalCode = null;
   child.kill = () => true;
   const runner = loadWithMocks("build/electron/lib/spawn.js", {
     "node:child_process": { spawn: () => child },
   });
-  return { child, ...runner.spawn("fake-command") };
+  return { child, ...runner.spawn("fake-command", [], {}, onData) };
 }
 
 const processTest = (name, fn) => test(name, { timeout: 10000 }, fn);
@@ -585,3 +586,123 @@ for (const [name, createConverter] of [
     assert.equal(errors[0].title, "書き出し中にエラーが発生しました");
   });
 }
+
+for (const failureType of ["callback", "stream", "process"]) {
+  processTest(
+    `${failureType} failures wait for close and preserve the first cause`,
+    async () => {
+      const cause = new Error(`${failureType} failed`);
+      const { child, promise } = fakeExecution(() => {
+        throw cause;
+      });
+      const signals = [];
+      child.kill = (signal) => {
+        signals.push(signal);
+        return true;
+      };
+      let settled = false;
+      void promise.then(
+        () => {
+          settled = true;
+        },
+        () => {
+          settled = true;
+        },
+      );
+      if (failureType === "callback") child.stdout.write("trigger");
+      else if (failureType === "stream") child.stdout.emit("error", cause);
+      else child.emit("error", cause);
+      await Promise.resolve();
+      assert.equal(settled, false);
+      assert.deepEqual(signals, ["SIGINT"]);
+      child.emit("error", new Error("secondary failure"));
+      child.stderr.write("final diagnostics");
+      child.emit("exit", 0, null);
+      await Promise.resolve();
+      assert.equal(settled, false);
+      child.emit("close", 0, null);
+      await assert.rejects(promise, (error) => {
+        assert.equal(error.cause, cause);
+        assert.equal(error.message, cause.message);
+        assert.equal(error.code, 0);
+        assert.equal(error.stderr, "final diagnostics");
+        assert.equal(error.cancelled, false);
+        return true;
+      });
+    },
+  );
+}
+
+test("a failed conversion closes its child before the next conversion starts", {
+  skip: process.platform === "win32",
+  timeout: 10000,
+}, async (t) => {
+  const cause = new Error("output callback failed");
+  const executions = [];
+  const secondStarted = Promise.withResolvers();
+  const Converter = loadWithMocks("build/electron/ffmpeg-stream/stream.js", {
+    "../assets": { ffmpegPath: "fake-ffmpeg" },
+    "../lib/log": {
+      getLogger: () => ({
+        debug() {},
+        error() {},
+        log: (_tag, line) => {
+          if (line === "trigger") throw cause;
+        },
+      }),
+    },
+    "../lib/spawn": {
+      spawn: (_command, _args, options, ...callbacks) => {
+        const first = executions.length === 0;
+        const startsAfterFirstClose = first || executions[0].closed;
+        const execution = spawn(
+          process.execPath,
+          [
+            "-e",
+            first
+              ? `
+          process.on('SIGINT', () => {});
+          process.stderr.write('header\\ntrigger\\n');
+          setInterval(() => process.stderr.write('still writing\\n'), 5);
+        `
+              : "process.exitCode = 0",
+          ],
+          { ...options, killTimeoutMs: 100 },
+          ...callbacks,
+        );
+        const record = { ...execution, closed: false, startsAfterFirstClose };
+        execution.process.once("close", () => {
+          record.closed = true;
+        });
+        executions.push(record);
+        if (!first) secondStarted.resolve();
+        return execution;
+      },
+    },
+  }).Converter;
+  t.after(() => {
+    for (const { process } of executions) process.kill("SIGKILL");
+  });
+  const queue = loadConversionQueue(Converter);
+  const next = { ...structuredClone(queue.job), id: "next-conversion" };
+  queue.appendQueue(queue.job);
+  queue.appendQueue(next);
+  await secondStarted.promise;
+  assert.equal(executions[1].startsAfterFirstClose, true);
+  assert.equal(executions[0].closed, true);
+  await assert.rejects(executions[0].promise, (error) => {
+    assert.equal(error.cause, cause);
+    assert.equal(error.signal, "SIGKILL");
+    assert.equal(error.cancelled, false);
+    assert.match(error.stderr, /still writing/);
+    return true;
+  });
+  await executions[1].promise;
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(queue.job.status, "fail");
+  assert.equal(next.status, "completed");
+  assert.equal(
+    queue.messages.filter((message) => message.type === "message").length,
+    1,
+  );
+});
