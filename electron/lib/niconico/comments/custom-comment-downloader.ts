@@ -24,7 +24,7 @@ let when: number;
 let option: TCommentOptionCustom;
 let metadata: V3MetadataComment;
 let progress: (total: number, progress: number, message?: string) => void;
-let interrupt: boolean;
+let signal: AbortSignal;
 let userList: string[];
 let threadComments: FormattedComment[];
 let resolve: (comments: FormattedComment[]) => void;
@@ -46,8 +46,9 @@ export const downloadCustomComment = (
   _threadId: number,
   _start: number,
   _userList: string[],
+  _signal: AbortSignal,
 ): Promise<FormattedComment[]> => {
-  interrupt = false;
+  signal = _signal;
   userList = _userList;
   threadComments = [];
   baseData = _baseData;
@@ -71,17 +72,11 @@ export const downloadCustomComment = (
   });
 };
 
-export const stopDownloadCustomComment = () => {
-  interrupt = true;
-};
-
 const download = async () => {
-  if (interrupt) {
-    resolve(threadComments);
-    return;
-  }
+  signal.throwIfAborted();
 
   const req = await fetch(`${metadata.nvComment.server}/v1/threads`, {
+    signal,
     method: "POST",
     headers: {
       "content-type": "text/plain;charset=UTF-8",
@@ -98,6 +93,7 @@ const download = async () => {
     }),
   });
   const res = (await req.json()) as unknown;
+  signal.throwIfAborted();
   const thread = (res as V1Raw)?.data?.threads[0];
   if (!NiconiComments.typeGuard.v1.thread(thread))
     throw new Error("failed to get comments");
