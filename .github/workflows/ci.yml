@@ -33,6 +33,9 @@ jobs:
       - name: Run type check
         run: pnpm check-types
 
+      - name: Compile Electron for regression tests
+        run: pnpm exec tsc -p electron
+
       - name: Run regression tests
         run: node --test tests/*.test.cjs
 

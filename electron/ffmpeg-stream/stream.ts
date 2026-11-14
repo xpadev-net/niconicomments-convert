@@ -5,7 +5,6 @@ Released under the MIT License.
 source file: https://github.com/phaux/node-ffmpeg-stream/blob/master/src/index.ts
  */
 import type { ChildProcess } from "node:child_process";
-import { spawn } from "node:child_process";
 import { createReadStream, createWriteStream, unlink } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -15,6 +14,7 @@ import { promisify } from "node:util";
 
 import { ffmpegPath } from "../assets";
 import { getLogger } from "../lib/log";
+import { spawn } from "../lib/spawn";
 
 const logger = getLogger("[ffmpeg-stream]");
 
@@ -87,8 +87,7 @@ export function ffmpeg(): Converter {
 export class Converter {
   private fdCount = 0;
   private readonly pipes: Pipe[] = [];
-  private process?: ChildProcess;
-  private killed = false;
+  private readonly abortController = new AbortController();
 
   /** @deprecated Use [[createInputStream]] or [[createInputFromFile]] */
   input(options?: Options): Writable;
@@ -245,19 +244,36 @@ export class Converter {
       const stdio = this.getStdioArg();
       logger.log(`spawn: ${FFMPEG_PATH} ${command.join(" ")}`);
       logger.log(`spawn stdio: ${stdio.join(" ")}`);
-      this.process = spawn(FFMPEG_PATH, command, { stdio });
-      const finished = this.handleProcess();
-
-      for (const pipe of this.pipes) {
-        pipe.onSpawn?.(this.process);
+      let logSectionNum = 0;
+      const execution = spawn(
+        FFMPEG_PATH,
+        command,
+        {
+          stdio,
+          signal: this.abortController.signal,
+          successCodes: EXIT_CODES,
+        },
+        undefined,
+        (data) => {
+          for (const line of data.split(/\r\n|\r|\n/u)) {
+            if (/^\s*$/u.exec(line) != null) continue;
+            if (/^\s/u.exec(line) == null) logSectionNum++;
+            if (logSectionNum > 1) logger.log("[ffmpeg]", line);
+          }
+        },
+      );
+      try {
+        if (execution.process) {
+          for (const pipe of this.pipes) {
+            pipe.onSpawn?.(execution.process);
+          }
+        }
+        await execution.promise;
+      } catch (error) {
+        execution.stop();
+        await execution.promise.catch(() => {});
+        throw error;
       }
-
-      if (this.killed) {
-        // the converter was already killed so stop it immediately
-        this.process.kill();
-      }
-
-      await finished;
       for (const pipe of pipes) {
         await pipe.onFinish?.();
       }
@@ -271,14 +287,11 @@ export class Converter {
   }
 
   stop(): void {
-    this.process?.kill("SIGINT");
+    this.abortController.abort();
   }
 
   kill(): void {
-    // kill the process if it already started
-    this.process?.kill();
-    // set the flag so it will be killed after it's initialized
-    this.killed = true;
+    this.stop();
   }
 
   private getUniqueFd(): number {
@@ -309,48 +322,5 @@ export class Converter {
     }
 
     return command;
-  }
-
-  private async handleProcess(): Promise<void> {
-    await new Promise<void>((resolve, reject): void => {
-      let logSectionNum = 0;
-
-      if (this.process == null) {
-        reject(Error("Converter not started"));
-        return;
-      }
-
-      if (this.process.stderr != null) {
-        this.process.stderr.setEncoding("utf8");
-
-        this.process.stderr.on("data", (data: string) => {
-          const lines = data.split(/\r\n|\r|\n/u);
-          for (const line of lines) {
-            // skip empty lines
-            if (/^\s*$/u.exec(line) != null) continue;
-            // if not indented: increment section counter
-            if (/^\s/u.exec(line) == null) logSectionNum++;
-            // only log sections following the first one
-            if (logSectionNum > 1) {
-              logger.log("[ffmpeg]", line);
-            }
-          }
-        });
-      }
-
-      this.process.on("error", (err) => {
-        logger.error("[ffmpeg]", err);
-        return reject(err);
-      });
-
-      this.process.on("exit", (code, signal) => {
-        logger.log(
-          `exit: code=${code ?? "unknown"} sig=${signal ?? "unknown"}`,
-        );
-        if (code == null) return resolve();
-        if (EXIT_CODES.includes(code)) return resolve();
-        reject(Error("Converting failed"));
-      });
-    });
   }
 }
