@@ -34,11 +34,12 @@ execFileSync(
 function harness({
   clip = { start: "", end: "" },
   fps = 30,
+  duration = 10,
   accepted = true,
   fail = false,
 } = {}) {
   const states = [
-    { type: "local", path: "movie.mp4", duration: 10 },
+    { type: "local", path: "movie.mp4", duration },
     { type: "local", path: "comments.json", format: "formatted" },
     clip,
   ];
@@ -165,7 +166,7 @@ test("invalid clip text survives blur and cannot silently become an omitted boun
     h.render(),
     (element) => element.props?.label === "開始位置",
   );
-  startField.props.onBlur({ target: { value: "bad" } });
+  startField.props.onBlur?.({ target: { value: "bad" } });
   assert.equal(h.states[2].start, "bad");
   h.convert();
   assert.equal(h.requests.length, 0);
@@ -197,4 +198,26 @@ test("IPC failure clears the loading state and preserves selected inputs", async
   assert.ok(h.states[0]);
   assert.ok(h.states[1]);
   assert.equal(h.messages.length, 1);
+});
+
+test("blur preserves millisecond boundaries, including the exact end of the movie", async () => {
+  const h = harness({
+    clip: { start: "0.001", end: "9.999" },
+    duration: 9.999,
+  });
+  for (const [label, value] of [
+    ["開始位置", "0.001"],
+    ["終了位置", "9.999"],
+  ]) {
+    const field = h.find(
+      h.render(),
+      (element) => element.props?.label === label,
+    );
+    field.props.onBlur?.({ target: { value } });
+  }
+  h.convert();
+  await flush();
+  assert.equal(h.messages.length, 0);
+  assert.equal(h.requests[1].data.option.ss, 0.001);
+  assert.equal(h.requests[1].data.option.to, 9.999);
 });

@@ -24,7 +24,7 @@ import { CommentPicker } from "@/controller/comment-picker";
 import { MoviePicker } from "@/controller/movie-picker";
 import { getConversionError } from "@/domain/conversion";
 import { typeGuard } from "@/type-guard";
-import { str2time, time2str } from "@/util/time";
+import { str2time } from "@/util/time";
 import { uuid } from "@/util/uuid";
 
 import { commentAtom, movieAtom, optionsAtom, rawClipAtom } from "./atoms";
@@ -307,11 +307,6 @@ const Convert: FC = () => {
               onChange={(e) =>
                 setRawClip({ ...rawClip, start: e.target.value })
               }
-              onBlur={(e) => {
-                const time = str2time(e.target.value);
-                if (time !== undefined)
-                  setRawClip({ ...rawClip, start: time2str(time) });
-              }}
             />
             <TextField
               label="終了位置"
@@ -319,11 +314,6 @@ const Convert: FC = () => {
               variant="standard"
               value={rawClip.end}
               onChange={(e) => setRawClip({ ...rawClip, end: e.target.value })}
-              onBlur={(e) => {
-                const time = str2time(e.target.value);
-                if (time !== undefined)
-                  setRawClip({ ...rawClip, end: time2str(time) });
-              }}
             />
             <TextField
               label="FPS"
