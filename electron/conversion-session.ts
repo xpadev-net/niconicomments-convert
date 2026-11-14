@@ -31,7 +31,7 @@ export class ConversionSession {
       if (this.failure) throw this.failure;
     } catch (error) {
       this.fail(error);
-      throw error;
+      throw this.failure ?? error;
     } finally {
       await this.dispose();
     }

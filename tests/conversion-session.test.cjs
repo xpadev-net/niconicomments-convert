@@ -238,13 +238,18 @@ test("frame write failure stops the owning converter and reports failure before 
   await tick();
   assert.equal(backends[0].stops, 1);
   assert.equal(second.status, "queued");
-  backends[0].complete();
+  backends[0].fail(new Error("FFmpeg shutdown failed"));
   await tick();
   assert.equal(first.status, "fail");
   assert.equal(second.status, "processing");
   assert.equal(
     messages.filter((message) => message.type === "message").length,
     1,
+  );
+  assert.ok(
+    messages
+      .find((message) => message.type === "message")
+      .message.includes("write failed"),
   );
   backends[1].complete();
   await tick();
@@ -405,7 +410,7 @@ test("renderer failure stops its session, waits for FFmpeg, and ignores late lif
   assert.equal(api.isRendererSender(renderers[0].webContents), false);
   assert.equal(first.status, "processing");
   assert.equal(second.status, "queued");
-  backends[0].complete();
+  backends[0].fail(new Error("FFmpeg terminated unexpectedly: SIGINT"));
   await tick();
   assert.equal(first.status, "fail");
   assert.equal(second.status, "processing");
@@ -417,6 +422,11 @@ test("renderer failure stops its session, waits for FFmpeg, and ignores late lif
   assert.equal(
     messages.filter((message) => message.type === "message").length,
     1,
+  );
+  assert.ok(
+    messages
+      .find((message) => message.type === "message")
+      .message.includes("renderer crashed"),
   );
   backends[1].complete();
   await tick();
