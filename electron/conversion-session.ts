@@ -29,6 +29,9 @@ export class ConversionSession {
     try {
       await this.converter.run();
       if (this.failure) throw this.failure;
+    } catch (error) {
+      this.fail(error);
+      throw this.failure ?? error;
     } finally {
       await this.dispose();
     }
@@ -59,10 +62,18 @@ export class ConversionSession {
     this.converter.stop();
   }
 
-  private readonly onError = (error: Error): void => {
-    if (!this.accepting) return;
-    this.failure = error;
+  get failed(): boolean {
+    return this.failure !== undefined;
+  }
+
+  fail(error: unknown): void {
+    if (!this.accepting || this.interrupted) return;
+    this.failure = error instanceof Error ? error : new Error(String(error));
     this.stop();
+  }
+
+  private readonly onError = (error: Error): void => {
+    this.fail(error);
   };
 
   appendFrame(frameId: number, data: Uint8Array): void {

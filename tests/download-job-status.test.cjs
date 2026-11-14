@@ -113,6 +113,7 @@ const setupQueue = (downloads = {}, mocks = {}, globals = {}) => {
           notifications.push(structuredClone(message)),
       },
       "electron/renderer-window": {
+        closeRendererWindow: (renderer) => renderer.destroy(),
         createRendererWindow: () => ({
           webContents: { id: ++rendererId },
           isDestroyed: () => false,

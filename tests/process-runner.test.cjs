@@ -506,6 +506,7 @@ function loadConversionQueue(Converter) {
       },
     },
     "./renderer-window": {
+      closeRendererWindow: (renderer) => renderer.destroy(),
       createRendererWindow: () => ({
         webContents: { id: ++rendererId },
         destroyed: false,

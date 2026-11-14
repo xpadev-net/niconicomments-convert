@@ -138,6 +138,7 @@ function harness() {
       },
     },
     "./renderer-window": {
+      closeRendererWindow: (renderer) => renderer.destroy(),
       createRendererWindow: () => ({
         webContents: { id: ++rendererId },
         isDestroyed: () => false,

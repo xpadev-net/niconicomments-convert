@@ -64,6 +64,7 @@ function setup() {
     "./lib/niconico/dmc": {},
     "./lib/niconico/dms": {},
     "./renderer-window": {
+      closeRendererWindow: (renderer) => renderer.destroy(),
       createRendererWindow: () => ({
         webContents: { id: ++rendererId },
         isDestroyed: () => false,

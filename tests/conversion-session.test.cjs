@@ -54,6 +54,7 @@ function harness({
   stalled = false,
   writeError = false,
   delayedDestroy = false,
+  windowError = false,
 } = {}) {
   const backends = [];
   const { ConversionSession } = load("conversion-session.js", {
@@ -84,6 +85,7 @@ function harness({
   });
   let nextRendererId = 1;
   const renderers = [];
+  const rendererFailures = [];
   const messages = [];
   const api = load("queue.js", {
     "node:fs": { readFileSync: () => "[]" },
@@ -93,7 +95,9 @@ function harness({
       sendMessageToController: (message) => messages.push(message),
     },
     "./renderer-window": {
-      createRendererWindow() {
+      createRendererWindow(onFailure) {
+        rendererFailures.push(onFailure);
+        if (windowError) throw new Error("window creation failed");
         const renderer = {
           webContents: { id: nextRendererId++ },
           destroyed: false,
@@ -108,6 +112,7 @@ function harness({
         renderers.push(renderer);
         return renderer;
       },
+      closeRendererWindow: (renderer) => renderer.destroy(),
       sendMessageToRenderer: (renderer, message) =>
         renderer.messages.push(message),
     },
@@ -117,7 +122,14 @@ function harness({
     "./lib/niconico/dmc": {},
     "./lib/niconico/dms": {},
   });
-  return { api, backends, renderers, messages, ConversionSession };
+  return {
+    api,
+    backends,
+    renderers,
+    rendererFailures,
+    messages,
+    ConversionSession,
+  };
 }
 
 test("consecutive conversions isolate end markers, buffered frames, IPC and progress", async () => {
@@ -226,13 +238,18 @@ test("frame write failure stops the owning converter and reports failure before 
   await tick();
   assert.equal(backends[0].stops, 1);
   assert.equal(second.status, "queued");
-  backends[0].complete();
+  backends[0].fail(new Error("FFmpeg shutdown failed"));
   await tick();
   assert.equal(first.status, "fail");
   assert.equal(second.status, "processing");
   assert.equal(
     messages.filter((message) => message.type === "message").length,
     1,
+  );
+  assert.ok(
+    messages
+      .find((message) => message.type === "message")
+      .message.includes("write failed"),
   );
   backends[1].complete();
   await tick();
@@ -369,4 +386,146 @@ test("normal input completion drains the last frame before closing the FFmpeg pi
     child.emit("close", 0, null);
     await finished;
   }
+});
+
+test("renderer failure stops its session, waits for FFmpeg, and ignores late lifecycle errors", async () => {
+  const { api, backends, renderers, rendererFailures, messages } = harness({
+    stalled: true,
+  });
+  const first = queue("failed"),
+    second = queue("next");
+  api.appendQueue(first);
+  api.appendQueue(second);
+  const { sessionId } = await api.processOnLoad(1);
+  assert.equal(api.isRendererSender(renderers[0].webContents), true);
+  api.appendFrame(1, sessionId, 1, Uint8Array.of(1));
+  await tick();
+  rendererFailures[0](new Error("renderer crashed"));
+  rendererFailures[0](new Error("duplicate failure"));
+  assert.equal(backends[0].stops, 1);
+  assert.equal(backends[0].inputStream.destroyed, true);
+  assert.equal(renderers[0].destroyed, true);
+  assert.equal(api.isRendererSender(renderers[0].webContents), false);
+  assert.equal(first.status, "processing");
+  assert.equal(second.status, "queued");
+  backends[0].fail(new Error("FFmpeg terminated unexpectedly: SIGINT"));
+  await tick();
+  assert.equal(first.status, "fail");
+  assert.equal(second.status, "processing");
+  assert.equal(api.isRendererSender(renderers[1].webContents), true);
+  rendererFailures[0](new Error("late renderer failure"));
+  api.failConversion(1, new Error("late IPC"));
+  assert.equal(backends[1].stops, 0);
+  assert.equal(renderers[1].destroyed, false);
+  assert.equal(
+    messages.filter((message) => message.type === "message").length,
+    1,
+  );
+  assert.ok(
+    messages
+      .find((message) => message.type === "message")
+      .message.includes("renderer crashed"),
+  );
+  backends[1].complete();
+  await tick();
+});
+
+test("renderer failure IPC stops only the owning session", async () => {
+  const { api, backends, messages } = harness();
+  const first = queue("failed");
+  api.appendQueue(first);
+  api.failConversion(99, new Error("foreign renderer"));
+  assert.equal(backends[0].stops, 0);
+  api.failConversion(1, new Error("drawing failed"));
+  assert.equal(backends[0].stops, 1);
+  backends[0].complete();
+  await tick();
+  assert.equal(first.status, "fail");
+  assert.ok(
+    messages
+      .find((message) => message.type === "message")
+      .message.includes("drawing failed"),
+  );
+});
+
+test("FFmpeg failure closes the stream and renderer before continuing", async () => {
+  const { api, backends, renderers, messages } = harness();
+  const first = queue("failed"),
+    second = queue("next");
+  api.appendQueue(first);
+  api.appendQueue(second);
+  backends[0].fail(new Error("FFmpeg failed"));
+  await tick();
+  assert.equal(first.status, "fail");
+  assert.equal(backends[0].inputStream.closed, true);
+  assert.equal(backends[0].stops, 1);
+  assert.equal(renderers[0].destroyed, true);
+  assert.equal(second.status, "processing");
+  assert.equal(
+    messages.filter((message) => message.type === "message").length,
+    1,
+  );
+  backends[1].complete();
+  await tick();
+});
+
+test("window creation failure stops the converter and preserves the original error", async () => {
+  const { api, backends, messages } = harness({ windowError: true });
+  const first = queue("failed");
+  api.appendQueue(first);
+  await tick();
+  assert.equal(first.status, "fail");
+  assert.equal(backends[0].stops, 1);
+  assert.equal(backends[0].inputStream.closed, true);
+  assert.ok(
+    messages
+      .find((message) => message.type === "message")
+      .message.includes("window creation failed"),
+  );
+});
+
+test("FFmpeg pipe errors reach the session input and stop the converter", async () => {
+  const child = new EventEmitter();
+  child.kill = () => queueMicrotask(() => child.emit("close", null, "SIGTERM"));
+  const pipe = new Writable({
+    write(_, __, callback) {
+      callback();
+    },
+  });
+  child.stdio = [null, null, null, pipe];
+  const Converter = loadProcessConverter(child);
+  const converter = new Converter();
+  const input = converter.createInputStream({});
+  let inputError;
+  input.on("error", (error) => {
+    inputError = error;
+    input.destroy();
+    converter.stop();
+  });
+  const finished = converter.run();
+  await tick();
+  pipe.emit("error", new Error("EPIPE"));
+  await assert.rejects(finished, {
+    name: "AbortError",
+    cancelled: true,
+    signal: "SIGTERM",
+  });
+  assert.equal(inputError.message, "EPIPE");
+  assert.equal(input.destroyed, true);
+});
+
+test("FFmpeg unexpected signal termination rejects the conversion", async () => {
+  const child = new EventEmitter();
+  child.kill = () => true;
+  child.stdio = [null, null, null];
+  const Converter = loadProcessConverter(child);
+  const converter = new Converter();
+  const finished = converter.run();
+  await tick();
+  child.emit("close", null, "SIGTERM");
+  await assert.rejects(finished, {
+    name: "ProcessError",
+    cancelled: false,
+    signal: "SIGTERM",
+  });
 });

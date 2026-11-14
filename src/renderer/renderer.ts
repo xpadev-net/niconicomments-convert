@@ -1,17 +1,18 @@
 import NiconiComments from "@xpadev-net/niconicomments";
 
 import type { ApiResponseLoad } from "@/@types/response.renderer";
+import type { ApiResponseType } from "@/@types/types";
 import { transformComments } from "@/renderer/comment-utils";
 import { typeGuard } from "@/type-guard";
-import { encodeJson } from "@/util/json";
 import { getLogger } from "@/util/log";
 import { sleep } from "@/util/sleep";
 
 const logger = getLogger("[renderer]");
 
 const setupRenderer = async (): Promise<void> => {
-  document.title = "renderer - niconicomments-convert";
-  document.body.innerHTML = `<canvas width="1920" height="1080" id="canvas"></canvas><div id="msg">準備しています...</div><style>
+  try {
+    document.title = "renderer - niconicomments-convert";
+    document.body.innerHTML = `<canvas width="1920" height="1080" id="canvas"></canvas><div id="msg">準備しています...</div><style>
   canvas{
     position: fixed;
     top: 0;
@@ -40,176 +41,148 @@ const setupRenderer = async (): Promise<void> => {
     padding: 0;
     box-sizing: border-box;
   }</style>`;
-  try {
     await startRenderer();
   } catch (e) {
     logger.error(e);
-    await window.api.request({
-      type: "message",
-      title: "未知のエラーが発生しました",
-      message: `エラー内容：\n${encodeJson(e)}`,
-      host: "renderer",
-    });
+    try {
+      await window.api.request({
+        type: "failure",
+        message: e instanceof Error ? (e.stack ?? e.message) : String(e),
+        host: "renderer",
+      });
+    } catch (reportError) {
+      logger.error("Failed to report renderer failure", reportError);
+    }
   }
 };
 
 const startRenderer = async (): Promise<void> => {
   const message = document.getElementById("msg");
-  if (!message) return;
-  let inProgress = false;
+  if (!message) throw new Error("Renderer message element is missing");
+  let inProgress = true;
   let convertedFrames = 0;
-
-  const response = (await window.api.request({
-    type: "load",
-    host: "renderer",
-  })) as ApiResponseLoad | undefined;
-  if (!response) return;
-  const { commentData, queue, sessionId } = response;
-  inProgress = true;
-  message.textContent = "コメントを処理しています...";
-  const { format, data } = transformComments(queue.comment.format, commentData);
-  const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-  canvas.width = queue.option.width;
-  canvas.height = queue.option.height;
-  const nico = new NiconiComments(canvas, data, {
-    ...queue.option.options,
-    format,
-    // Populate the timeline before using it to skip empty frames.
-    lazy: false,
+  let finish = (): void => {};
+  const finished = new Promise<void>((resolve) => {
+    finish = resolve;
   });
-  const emptyBuffer: Blob | null = await new Promise((resolve) =>
-    canvas.toBlob((blob) => resolve(blob)),
-  );
-  if (!emptyBuffer) {
-    throw new Error("Failed to initialize canvas: canvas.toBlob returned null");
-  }
-
-  const sendBlob = async (frameId: number, blob: Blob): Promise<void> => {
-    if (!inProgress) return;
-    const buffer = await blob.arrayBuffer();
-    if (!inProgress) return;
-    await window.api.request({
-      type: "blob",
-      sessionId,
-      host: "renderer",
-      frameId: frameId + 1,
-      data: new Uint8Array(buffer),
-    });
-  };
-
-  let droppedFrames = 0;
-  const pendingSends: Promise<void>[] = [];
-  const pendingBlobs: Promise<void>[] = [];
-
-  const toBlobAsync = (canvas: HTMLCanvasElement): Promise<Blob | null> =>
-    new Promise((resolve) => canvas.toBlob(resolve));
-
-  const sendFrame = (frameId: number, blob: Blob): Promise<void> => {
-    const promise = sendBlob(frameId, blob).catch((e) => {
-      logger.error(`sendBlob failed at frame ${frameId}`, e);
-      if (blob !== emptyBuffer) {
-        logger.warn(`falling back to emptyBuffer for frame ${frameId}`);
-        return sendBlob(frameId, emptyBuffer).catch((e2) => {
-          logger.error(
-            `sendBlob emptyBuffer fallback also failed at frame ${frameId}`,
-            e2,
-          );
-          droppedFrames++;
-        });
-      }
-      logger.error(
-        `sendBlob with emptyBuffer failed at frame ${frameId} — no further fallback available`,
-        e,
-      );
-      droppedFrames++;
-    });
-    pendingSends.push(promise);
-    return promise;
-  };
-  message.textContent = "";
-  let generatedFrames = 0;
-  let offset = Math.ceil((queue.option.ss ?? 0) * 100);
-  const targetFrameRate = queue.option.fps || 30;
-  const totalFrames =
-    Math.ceil(
-      (queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0),
-    ) * targetFrameRate;
-  const process = async (): Promise<void> => {
-    if (!inProgress) return;
-    await Promise.allSettled(pendingBlobs);
-    pendingBlobs.length = 0;
-    await Promise.allSettled(pendingSends);
-    pendingSends.length = 0;
-    for (let i = 0; i < targetFrameRate; i++) {
-      if (!inProgress) return;
-      const frame = generatedFrames;
-      try {
-        const vpos = Math.ceil(i * (100 / targetFrameRate)) + offset;
-        // @ts-expect-error
-        if ((nico.timeline[vpos]?.length || 0) === 0) {
-          sendFrame(frame, emptyBuffer);
-        } else {
-          nico.drawCanvas(vpos);
-          pendingBlobs.push(
-            toBlobAsync(canvas).then((blob) => {
-              if (blob) {
-                void sendFrame(frame, blob);
-              } else {
-                logger.warn(
-                  `canvas.toBlob returned null at frame ${frame}, using emptyBuffer`,
-                );
-                void sendFrame(frame, emptyBuffer);
-              }
-            }),
-          );
-        }
-      } catch (e) {
-        logger.error(`process loop error at frame ${frame}`, e);
-        logger.warn(`falling back to emptyBuffer for frame ${frame}`);
-        sendFrame(frame, emptyBuffer);
-      }
-      generatedFrames++;
-      if (generatedFrames >= totalFrames) {
-        await Promise.allSettled(pendingBlobs);
-        await Promise.allSettled(pendingSends);
-        pendingBlobs.length = 0;
-        pendingSends.length = 0;
-        await window.api.request({
-          type: "end",
-          sessionId,
-          host: "renderer",
-          frameId: generatedFrames - droppedFrames,
-        });
-        message.textContent = "変換の終了を待っています...";
-        return;
-      }
-      await sleep(0);
-    }
-    offset += 100;
-    while (inProgress && generatedFrames - convertedFrames > 200) {
-      logger.debug(`waiting... ${generatedFrames - convertedFrames}`);
-      await sleep(100);
-    }
-    setTimeout(() => void process(), 0);
-  };
-  void process();
-
-  window.api.onResponse((_, data) => {
+  const onResponse = (_: unknown, data: ApiResponseType): void => {
     if (data.target !== "renderer") return;
     if (typeGuard.renderer.reportProgress(data)) {
-      logger.debug(`received progress: ${data.progress.processed}`);
       convertedFrames = data.progress.processed;
     } else if (typeGuard.renderer.end(data)) {
       inProgress = false;
+      finish();
       window.close();
     }
-  });
+  };
+  window.api.onResponse(onResponse);
   window.onbeforeunload = (e) => {
     if (inProgress) {
       e.preventDefault();
       e.returnValue = "";
     }
   };
+
+  try {
+    const response = (await window.api.request({
+      type: "load",
+      host: "renderer",
+    })) as ApiResponseLoad | undefined;
+    if (!response || !inProgress) return;
+    const { commentData, queue, sessionId } = response;
+    message.textContent = "コメントを処理しています...";
+    const { format, data } = transformComments(
+      queue.comment.format,
+      commentData,
+    );
+    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    canvas.width = queue.option.width;
+    canvas.height = queue.option.height;
+    const nico = new NiconiComments(canvas, data, {
+      ...queue.option.options,
+      format,
+      // Populate the timeline before using it to skip empty frames.
+      lazy: false,
+    });
+    const toBlobAsync = (): Promise<Blob> =>
+      new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("canvas.toBlob returned null"));
+        });
+      });
+    const emptyBuffer = await toBlobAsync();
+    if (!inProgress) return;
+    const sendBlob = async (frameId: number, blob: Blob): Promise<void> => {
+      const buffer = await blob.arrayBuffer();
+      if (!inProgress) return;
+      await window.api.request({
+        type: "blob",
+        sessionId,
+        host: "renderer",
+        frameId: frameId + 1,
+        data: new Uint8Array(buffer),
+      });
+    };
+
+    message.textContent = "";
+    let generatedFrames = 0;
+    let offset = Math.ceil((queue.option.ss ?? 0) * 100);
+    const targetFrameRate = queue.option.fps || 30;
+    const totalFrames =
+      Math.ceil(
+        (queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0),
+      ) * targetFrameRate;
+    while (inProgress && generatedFrames < totalFrames) {
+      const pendingFrames: Promise<void>[] = [];
+      let frameFailed = false;
+      for (
+        let i = 0;
+        inProgress &&
+        !frameFailed &&
+        i < targetFrameRate &&
+        generatedFrames < totalFrames;
+        i++
+      ) {
+        const frame = generatedFrames++;
+        const vpos = Math.ceil(i * (100 / targetFrameRate)) + offset;
+        const pendingFrame = (async () => {
+          // @ts-expect-error
+          if ((nico.timeline[vpos]?.length || 0) === 0) {
+            await sendBlob(frame, emptyBuffer);
+          } else {
+            nico.drawCanvas(vpos);
+            await sendBlob(frame, await toBlobAsync());
+          }
+        })();
+        // Observe rejections before yielding; Promise.all propagates them below.
+        void pendingFrame.catch(() => {
+          frameFailed = true;
+        });
+        pendingFrames.push(pendingFrame);
+        await sleep(0);
+      }
+      await Promise.all(pendingFrames);
+      offset += 100;
+      while (inProgress && generatedFrames - convertedFrames > 200) {
+        await sleep(100);
+      }
+      await sleep(0);
+    }
+    if (!inProgress) return;
+    await window.api.request({
+      type: "end",
+      sessionId,
+      host: "renderer",
+      frameId: generatedFrames,
+    });
+    message.textContent = "変換の終了を待っています...";
+    await finished;
+  } finally {
+    inProgress = false;
+    window.api.remove(onResponse);
+    window.onbeforeunload = null;
+  }
 };
 
 export { setupRenderer };

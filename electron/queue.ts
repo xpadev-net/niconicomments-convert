@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import { parseStringPromise } from "@xpadev-net/xml2js";
+import type { WebContents } from "electron";
 
 import type { UUID } from "@/@types/brand";
 import type { Queue, QueueLists } from "@/@types/queue";
@@ -10,7 +11,11 @@ import { ConversionSession } from "./conversion-session";
 import { encodeError } from "./lib/json";
 import { getLogger } from "./lib/log";
 import { download, downloadComment } from "./lib/niconico";
-import { createRendererWindow, sendMessageToRenderer } from "./renderer-window";
+import {
+  closeRendererWindow,
+  createRendererWindow,
+  sendMessageToRenderer,
+} from "./renderer-window";
 
 const logger = getLogger("[queue]");
 
@@ -181,25 +186,27 @@ const startConvert = async (): Promise<void> => {
   try {
     session = { conversion: new ConversionSession(queue, sendProgress) };
     activeSession = session;
-    session.renderer = createRendererWindow();
+    const owner = session;
+    session.renderer = createRendererWindow((error) =>
+      failSession(owner, error),
+    );
     sendProgress();
     await session.conversion.run();
   } catch (e) {
+    session?.conversion.fail(e);
     if (!session?.conversion.interrupted) {
       status = "fail";
       logger.error("failed to convert", e);
       sendMessageToController({
         type: "message",
         title: "書き出し中にエラーが発生しました",
-        message: `エラー内容:\n${encodeError(e)}`,
+        message: `エラー内容:\n${encodeError(e instanceof Error ? e : new Error(String(e)))}`,
       });
     }
   } finally {
     // Keep the session lock and processing status until all resources are gone.
     await session?.conversion.dispose();
-    if (session?.renderer && !session.renderer.isDestroyed()) {
-      session.renderer.destroy();
-    }
+    if (session?.renderer) closeRendererWindow(session.renderer);
     queue.status = session?.conversion.interrupted ? "interrupted" : status;
     activeSession = undefined;
     sendProgress();
@@ -212,11 +219,32 @@ const getRendererSession = (rendererId: number, sessionId?: string) => {
   if (
     !session ||
     session.conversion.interrupted ||
+    session.conversion.failed ||
     session.renderer?.webContents.id !== rendererId ||
     (sessionId !== undefined && session.conversion.id !== sessionId)
   )
     return;
   return session;
+};
+
+const isRendererSender = (sender: WebContents): boolean => {
+  const session = getRendererSession(sender.id);
+  return (
+    !!session?.renderer &&
+    !session.renderer.isDestroyed() &&
+    session.renderer.webContents === sender
+  );
+};
+
+const failSession = (session: ActiveSession, error: unknown): void => {
+  if (session !== activeSession) return;
+  session.conversion.fail(error);
+  if (session.renderer) closeRendererWindow(session.renderer);
+};
+
+const failConversion = (rendererId: number, error: unknown): void => {
+  const session = getRendererSession(rendererId);
+  if (session) failSession(session, error);
 };
 
 const appendFrame = (
@@ -246,7 +274,11 @@ const sendProgress = (): void => {
     data: queueList,
   });
   const session = activeSession;
-  if (session?.renderer && !session.conversion.interrupted) {
+  if (
+    session?.renderer &&
+    !session.conversion.interrupted &&
+    !session.conversion.failed
+  ) {
     sendMessageToRenderer(session.renderer, {
       type: "reportProgress",
       progress: session.conversion.queue.progress,
@@ -305,7 +337,9 @@ const processOnInterrupt = (queueId: UUID): void => {
 export {
   appendFrame,
   appendQueue,
+  failConversion,
   isConversionProcessing,
+  isRendererSender,
   markAsCompleted,
   processOnInterrupt,
   processOnLoad,
