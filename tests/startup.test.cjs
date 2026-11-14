@@ -57,7 +57,7 @@ for (const isPackaged of [true, false]) {
         },
       },
     });
-    assert.equal(context.binPath, "/writable/app-data/bin");
+    assert.equal(context.binPath, path.join("/writable/app-data", "bin"));
   });
 }
 
@@ -117,11 +117,22 @@ const assetHarness = (t, options = {}) => {
   const downloads = [],
     progress = [],
     windows = [];
+  const permissions = [];
   const signal = new AbortController();
   const api = load(
     "assets.js",
     {
       "./context": { binPath },
+      "node:fs": {
+        ...fs,
+        promises: {
+          ...fs.promises,
+          chmod: async (filename, mode) => {
+            permissions.push({ filename, mode });
+            await fs.promises.chmod(filename, mode);
+          },
+        },
+      },
       "./binary-downloader-window": {
         createBinaryDownloaderWindow: async () => {
           windows.push("open");
@@ -163,6 +174,7 @@ const assetHarness = (t, options = {}) => {
     binPath,
     signal,
     downloads,
+    permissions,
     progress,
     windows,
     run: () => api.onStartUp(signal.signal),
@@ -193,7 +205,8 @@ for (const platform of ["darwin", "win32"]) {
         fs.readFileSync(harness[`${name}Path`], "utf8"),
         "ffmpeg version 6.1",
       );
-      if (platform === "darwin")
+      // Windows does not expose POSIX execute bits, even for a simulated Mac download.
+      if (platform === "darwin" && process.platform !== "win32")
         assert.equal(fs.statSync(harness[`${name}Path`]).mode & 0o777, 0o755);
       assert.equal(
         harness.progress.filter((message) => message.name === name).at(-1)
@@ -201,6 +214,10 @@ for (const platform of ["darwin", "win32"]) {
         1,
       );
     }
+    assert.deepEqual(
+      harness.permissions.map(({ mode }) => mode),
+      platform === "darwin" ? [0o755, 0o755] : [],
+    );
     assert.ok(
       fs.readdirSync(harness.binPath).every((name) => !name.includes(".part")),
     );
