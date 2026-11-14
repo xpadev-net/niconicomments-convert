@@ -28,6 +28,7 @@ const queueLists: QueueLists = {
 };
 let convertQueue = Promise.resolve();
 let processingQueue: ConvertQueue;
+let isConverting = false;
 let lastFrame = 0;
 let endFrame = -1;
 let inputEndScheduled = false;
@@ -79,15 +80,17 @@ const startMovieDownload = async (): Promise<void> => {
         sendProgress();
       },
     );
-    targetQueue.status = "completed";
+    if (targetQueue.status === "processing") targetQueue.status = "completed";
   } catch (e) {
     logger.error("failed to download movie", e);
-    targetQueue.status = "fail";
-    sendMessageToController({
-      type: "message",
-      title: "動画のダウンロード中にエラーが発生しました",
-      message: `エラー内容:\n${encodeError(e)}`,
-    });
+    if (targetQueue.status === "processing") {
+      targetQueue.status = "fail";
+      sendMessageToController({
+        type: "message",
+        title: "動画のダウンロード中にエラーが発生しました",
+        message: `エラー内容:\n${encodeError(e)}`,
+      });
+    }
   }
   sendProgress();
   void startMovieDownload();
@@ -116,15 +119,17 @@ const startCommentDownload = async (): Promise<void> => {
       };
       sendProgress();
     });
-    targetQueue.status = "completed";
+    if (targetQueue.status === "processing") targetQueue.status = "completed";
   } catch (e) {
     logger.error("failed to download comment", e);
-    targetQueue.status = "fail";
-    sendMessageToController({
-      type: "message",
-      title: "コメントのダウンロード中にエラーが発生しました",
-      message: `エラー内容:\n${encodeError(e)}`,
-    });
+    if (targetQueue.status === "processing") {
+      targetQueue.status = "fail";
+      sendMessageToController({
+        type: "message",
+        title: "コメントのダウンロード中にエラーが発生しました",
+        message: `エラー内容:\n${encodeError(e)}`,
+      });
+    }
   }
   sendProgress();
   void startCommentDownload();
@@ -132,49 +137,70 @@ const startCommentDownload = async (): Promise<void> => {
 };
 
 const startConvert = async (): Promise<void> => {
-  const queued = queueLists.convert.filter((i) => i.status === "queued");
-  if (
-    queueLists.convert.filter((i) => i.status === "processing").length > 0 ||
-    queued.length === 0 ||
-    !queued[0]
-  )
-    return;
-  for (const queueId of queued[0].wait ?? []) {
-    const queue = queueList.filter((i) => i.id === queueId)[0];
-    if (queue?.status !== "completed") return;
-  }
+  // Propagate terminal dependency states, including chains of waiting jobs.
+  let changed: boolean;
+  do {
+    changed = false;
+    for (const queue of queueLists.convert) {
+      if (queue.status !== "queued") continue;
+      const dependency = (queue.wait ?? [])
+        .map((id) => queueList.find((item) => item.id === id))
+        .find(
+          (item) => item?.status === "fail" || item?.status === "interrupted",
+        );
+      if (!dependency) continue;
+      queue.status = dependency.status === "fail" ? "fail" : "interrupted";
+      changed = true;
+    }
+    if (changed) sendProgress();
+  } while (changed);
+
+  if (isConverting) return;
+  const targetQueue = queueLists.convert.find(
+    (queue) =>
+      queue.status === "queued" &&
+      (queue.wait ?? []).every(
+        (id) =>
+          queueList.find((item) => item.id === id)?.status === "completed",
+      ),
+  );
+  if (!targetQueue) return;
+  isConverting = true;
   try {
-    processingQueue = queued[0];
+    processingQueue = targetQueue;
     processingQueue.status = "processing";
     processingQueue.progress = {
       percent: 0,
       processed: 0,
       total:
-        (queued[0].option.fps || 30) *
-        ((queued[0].option.to ?? queued[0].movie.duration) -
-          (queued[0].option.ss ?? 0)),
+        (targetQueue.option.fps || 30) *
+        ((targetQueue.option.to ?? targetQueue.movie.duration) -
+          (targetQueue.option.ss ?? 0)),
     };
     lastFrame = 0;
     endFrame = -1;
     inputEndScheduled = false;
     createRendererWindow();
     sendProgress();
-    await startConverter(queued[0]);
+    await startConverter(targetQueue);
     if (processingQueue.status === "processing")
       processingQueue.status = "completed";
   } catch (e) {
     logger.error("failed to convert", e);
-    processingQueue.status = "fail";
-    sendMessageToController({
-      type: "message",
-      title: "書き出し中にエラーが発生しました",
-      message: `エラー内容:\n${encodeError(e)}`,
-    });
+    if (processingQueue.status === "processing") {
+      processingQueue.status = "fail";
+      sendMessageToController({
+        type: "message",
+        title: "書き出し中にエラーが発生しました",
+        message: `エラー内容:\n${encodeError(e)}`,
+      });
+    }
   }
   sendMessageToRenderer({
     type: "end",
   });
   sendProgress();
+  isConverting = false;
   void startConvert();
 };
 
@@ -248,8 +274,14 @@ const processOnLoad = async (): Promise<ApiResponseLoad> => {
 
 const processOnInterrupt = (queueId: UUID): void => {
   const queue = queueList.filter((i) => i.id === queueId)[0];
-  if (queue?.status !== "processing") return;
+  if (queue?.status !== "processing" && queue?.status !== "queued") return;
+  const wasQueued = queue.status === "queued";
   queue.status = "interrupted";
+  sendProgress();
+  if (wasQueued) {
+    void startConvert();
+    return;
+  }
   if (queue.type === "convert") {
     void convertQueue
       .then(() => inputStream.end())
@@ -265,6 +297,7 @@ const processOnInterrupt = (queueId: UUID): void => {
   } else if (queue.type === "comment") {
     interruptCommentDownload();
   }
+  void startConvert();
 };
 
 export {
