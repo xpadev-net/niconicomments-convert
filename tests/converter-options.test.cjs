@@ -21,7 +21,7 @@ for (const saved of [false, true]) {
       export const outputs = [];
       export class Converter {
         createInputFromFile() {}
-        createInputStream() { return { destroy() {} }; }
+        createInputStream() {}
         output(path, options) { outputs.push(options); }
         async run() {}
       }
@@ -53,7 +53,7 @@ for (const saved of [false, true]) {
     });
 
     try {
-      const { startConverter } = await import(entryUrl);
+      const { createConverter } = await import(entryUrl);
       const { defaultOptions } = await import(constUrl.href);
       const { template } = await import(storeUrl);
       const { outputs } = await import(streamUrl);
@@ -65,8 +65,8 @@ for (const saved of [false, true]) {
         option: { fps, width, height },
       });
 
-      await startConverter(queue(30, 1920, 1080)).promise;
-      await startConverter(queue(60, 1280, 720)).promise;
+      await createConverter(queue(30, 1920, 1080)).run();
+      await createConverter(queue(60, 1280, 720)).run();
 
       assert.equal(outputs[0].r, "30");
       assert.match(outputs[0].filter_complex, /scale=w=1920:h=1080/);

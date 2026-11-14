@@ -5,7 +5,7 @@ import { defaultOptions } from "./const";
 import { Converter } from "./ffmpeg-stream/stream";
 import { store } from "./store";
 
-const startConverter = (queue: ConvertQueue) => {
+const createConverter = (queue: ConvertQueue) => {
   const converter = new Converter();
   converter.createInputFromFile(queue.movie.path, {
     ss: queue.option.ss,
@@ -16,15 +16,10 @@ const startConverter = (queue: ConvertQueue) => {
     r: queue.option.fps,
   });
   converter.output(queue.output.path, getFfmpegOptions(queue));
-  const promise = converter.run().finally(() => inputStream.destroy());
   return {
     inputStream,
-    promise,
-    stop: (): void => {
-      inputStream.destroy();
-      // kill() also handles cancellation before FFmpeg has spawned.
-      converter.kill();
-    },
+    run: () => converter.run(),
+    stop: () => converter.stop(),
   };
 };
 
@@ -49,4 +44,4 @@ const getFfmpegOptions = (queue: ConvertQueue): FfmpegOptions => {
   return options;
 };
 
-export { startConverter };
+export { createConverter };

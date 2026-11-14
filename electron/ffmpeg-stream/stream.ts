@@ -89,6 +89,7 @@ export class Converter {
   private readonly pipes: Pipe[] = [];
   private process?: ChildProcess;
   private killed = false;
+  private stopped = false;
 
   /** @deprecated Use [[createInputStream]] or [[createInputFromFile]] */
   input(options?: Options): Writable;
@@ -155,7 +156,16 @@ export class Converter {
         debugStream(stream, `input ${fd}`);
         if (!("write" in stdio)) throw Error(`input ${fd} is not writable`);
         stdio.on("error", (error) => stream.destroy(error));
-        stream.pipe(stdio);
+        if (stream.destroyed) {
+          stdio.destroy();
+        } else {
+          stream.once("close", () => {
+            // A normal readable end already calls stdio.end() through pipe().
+            // Let its pending writes flush; only abort an unfinished input.
+            if (!stream.readableEnded) stdio.destroy();
+          });
+          stream.pipe(stdio);
+        }
       },
     });
 
@@ -256,6 +266,8 @@ export class Converter {
       if (this.killed) {
         // the converter was already killed so stop it immediately
         this.process.kill();
+      } else if (this.stopped) {
+        this.process.kill("SIGINT");
       }
 
       await finished;
@@ -272,6 +284,7 @@ export class Converter {
   }
 
   stop(): void {
+    this.stopped = true;
     this.process?.kill("SIGINT");
   }
 
@@ -315,6 +328,7 @@ export class Converter {
   private async handleProcess(): Promise<void> {
     await new Promise<void>((resolve, reject): void => {
       let logSectionNum = 0;
+      let processError: Error | undefined;
 
       if (this.process == null) {
         reject(Error("Converter not started"));
@@ -341,13 +355,14 @@ export class Converter {
 
       this.process.on("error", (err) => {
         logger.error("[ffmpeg]", err);
-        return reject(err);
+        processError = err;
       });
 
-      this.process.on("exit", (code, signal) => {
+      this.process.on("close", (code, signal) => {
         logger.log(
           `exit: code=${code ?? "unknown"} sig=${signal ?? "unknown"}`,
         );
+        if (processError) return reject(processError);
         if (code == null) {
           reject(
             Error(`FFmpeg terminated unexpectedly: ${signal ?? "unknown"}`),

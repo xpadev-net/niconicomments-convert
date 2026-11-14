@@ -84,11 +84,12 @@ const startRenderer = async (): Promise<void> => {
   };
 
   try {
-    const { commentData, queue } = (await window.api.request({
+    const response = (await window.api.request({
       type: "load",
       host: "renderer",
-    })) as ApiResponseLoad;
-    if (!inProgress) return;
+    })) as ApiResponseLoad | undefined;
+    if (!response || !inProgress) return;
+    const { commentData, queue, sessionId } = response;
     message.textContent = "コメントを処理しています...";
     const { format, data } = transformComments(
       queue.comment.format,
@@ -117,6 +118,7 @@ const startRenderer = async (): Promise<void> => {
       if (!inProgress) return;
       await window.api.request({
         type: "blob",
+        sessionId,
         host: "renderer",
         frameId: frameId + 1,
         data: new Uint8Array(buffer),
@@ -170,6 +172,7 @@ const startRenderer = async (): Promise<void> => {
     if (!inProgress) return;
     await window.api.request({
       type: "end",
+      sessionId,
       host: "renderer",
       frameId: generatedFrames,
     });

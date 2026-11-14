@@ -17,6 +17,7 @@ const runRenderer = async (options = {}) => {
         if (request.type === "load") {
           if (options.loadError) throw new Error("load failed");
           return {
+            sessionId: "test-session",
             queue: {
               comment: { format: "formatted" },
               option: { fps: options.fps ?? 1, width: 1920, height: 1080 },
@@ -126,6 +127,11 @@ test("renderer sends all frame IDs and then the final frame count", async () => 
     [1, 2],
   );
   assert.equal(requests.find((request) => request.type === "end").frameId, 2);
+  assert.ok(
+    requests
+      .filter((request) => request.type === "blob" || request.type === "end")
+      .every((request) => request.sessionId === "test-session"),
+  );
   assert.equal(
     requests.some((request) => request.type === "failure"),
     false,

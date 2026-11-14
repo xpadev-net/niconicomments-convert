@@ -41,7 +41,12 @@ const windowHarness = () => {
     "./queue": { processingQueue: { status: "processing" } },
     "./store": { store: { get: () => false } },
   });
-  return { ...api, windows };
+  return {
+    ...api,
+    windows,
+    closeRendererWindow: (window = windows.at(-1)) =>
+      api.closeRendererWindow(window),
+  };
 };
 
 for (const reason of ["crashed", "oom", "killed"]) {
@@ -86,7 +91,6 @@ test("intentional teardown and late lifecycle events cannot fail the next render
   const failures = [];
   harness.createRendererWindow((error) => failures.push(error));
   const oldWindow = harness.windows[0];
-  assert.equal(harness.isRendererSender(oldWindow.webContents), true);
   harness.closeRendererWindow();
   assert.equal(oldWindow.destroyed, true);
   harness.createRendererWindow((error) => failures.push(error));
@@ -98,8 +102,6 @@ test("intentional teardown and late lifecycle events cannot fail the next render
   );
   await tick();
   assert.equal(failures.length, 0);
-  assert.equal(harness.isRendererSender(oldWindow.webContents), false);
-  assert.equal(harness.isRendererSender(harness.windows[1].webContents), true);
   harness.closeRendererWindow();
 });
 
@@ -108,7 +110,7 @@ const ipcHarness = () => {
     frames = [],
     ends = [];
   let handler;
-  let sender = {};
+  let sender = { id: 1 };
   let onLoad = async () => {};
   const { typeGuard } = load("electron/type-guard.ts", {});
   const { registerListener } = load("electron/ipc-manager.ts", {
@@ -128,12 +130,15 @@ const ipcHarness = () => {
     "./store": {},
     "./type-guard": { typeGuard },
     "./queue": {
-      failConversion: (error) => failures.push(error),
+      failConversion: (rendererId, error) => {
+        assert.equal(rendererId, sender.id);
+        failures.push(error);
+      },
+      isRendererSender: (value) => value === sender,
       appendFrame: (...args) => frames.push(args),
       markAsCompleted: (...args) => ends.push(args),
       processOnLoad: () => onLoad(),
     },
-    "./renderer-window": { isRendererSender: (value) => value === sender },
   });
   registerListener();
   return {
@@ -162,17 +167,22 @@ test("renderer failure IPC terminates only its current session", async () => {
     message: "drawing failed",
   });
   assert.equal(harness.failures[0].message, "drawing failed");
-  harness.sender = {};
+  harness.sender = { id: 2 };
   await harness.request(oldSender, {
     type: "failure",
     message: "late failure",
   });
   await harness.request(oldSender, {
     type: "blob",
+    sessionId: "old-session",
     frameId: 1,
     data: new Uint8Array([1]),
   });
-  await harness.request(oldSender, { type: "end", frameId: 1 });
+  await harness.request(oldSender, {
+    type: "end",
+    sessionId: "old-session",
+    frameId: 1,
+  });
   assert.equal(harness.failures.length, 1);
   assert.equal(harness.frames.length, 0);
   assert.equal(harness.ends.length, 0);
@@ -195,7 +205,7 @@ test("a late load IPC rejection cannot fail the next session", async () => {
   const pending = deferred();
   harness.onLoad = () => pending.promise;
   const request = harness.request(harness.sender, { type: "load" });
-  harness.sender = {};
+  harness.sender = { id: 2 };
   pending.reject(new Error("old load failed"));
   await assert.rejects(request, /old load failed/);
   assert.equal(harness.failures.length, 0);

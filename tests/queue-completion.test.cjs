@@ -6,11 +6,15 @@ const { test } = require("node:test");
 const { runInNewContext } = require("node:vm");
 
 const source = readFileSync("build/electron/queue.js", "utf8");
+const sessionSource = readFileSync(
+  "build/electron/conversion-session.js",
+  "utf8",
+);
 
 function setup() {
   const conversions = [];
   const converter = {
-    startConverter() {
+    createConverter(job) {
       const writes = [];
       const callbacks = [];
       const stream = new Writable({
@@ -19,50 +23,76 @@ function setup() {
           callbacks.push(callback);
         },
       });
-      const conversion = { stream, writes, callbacks, endCalls: 0 };
+      const conversion = { job, stream, writes, callbacks, endCalls: 0 };
       const end = stream.end;
       stream.end = function (...args) {
         conversion.endCalls++;
         return end.apply(this, args);
       };
-      converter.inputStream = stream;
       conversions.push(conversion);
       return {
         inputStream: stream,
-        promise: new Promise((resolve) => stream.on("finish", resolve)),
+        run: () => new Promise((resolve) => stream.on("finish", resolve)),
         stop: () => stream.destroy(),
       };
     },
   };
+  const sessionExports = {};
+  runInNewContext(sessionSource, {
+    exports: sessionExports,
+    require: (name) => (name === "./converter" ? converter : require(name)),
+  });
+  let currentSession;
+  let rendererId = 0;
   const noop = () => {};
   const mocks = {
     "node:fs": require("node:fs"),
     "node:stream": require("node:stream"),
     "@xpadev-net/xml2js": {},
     "./controller-window": { sendMessageToController: noop },
-    "./converter": converter,
+    "./conversion-session": {
+      ConversionSession: class extends sessionExports.ConversionSession {
+        constructor(...args) {
+          super(...args);
+          currentSession = this;
+        }
+      },
+    },
     "./lib/json": {},
     "./lib/log": { getLogger: () => ({ error: noop }) },
     "./lib/niconico": {},
     "./lib/niconico/dmc": {},
     "./lib/niconico/dms": {},
     "./renderer-window": {
-      createRendererWindow: noop,
-      closeRendererWindow: noop,
+      closeRendererWindow: (renderer) => renderer.destroy(),
+      createRendererWindow: () => ({
+        webContents: { id: ++rendererId },
+        isDestroyed: () => false,
+        destroy: noop,
+      }),
       sendMessageToRenderer: noop,
     },
   };
-  const queue = {};
+  const api = {};
   runInNewContext(source, {
-    exports: queue,
+    exports: api,
     require(name) {
       assert.ok(Object.hasOwn(mocks, name), `Unexpected import: ${name}`);
       return mocks[name];
     },
     console,
   });
+  const queue = {
+    appendFrame: (frameId, data) =>
+      api.appendFrame(rendererId, currentSession.id, frameId, data),
+    markAsCompleted: (frameId) =>
+      api.markAsCompleted(rendererId, currentSession.id, frameId),
+    get processingQueue() {
+      return conversions.at(-1).job;
+    },
+  };
   function addConversion() {
-    queue.appendQueue({
+    api.appendQueue({
       type: "convert",
       status: "queued",
       progress: {},

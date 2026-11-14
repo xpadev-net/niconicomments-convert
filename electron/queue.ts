@@ -1,12 +1,13 @@
 import * as fs from "node:fs";
 import { parseStringPromise } from "@xpadev-net/xml2js";
+import type { WebContents } from "electron";
 
 import type { UUID } from "@/@types/brand";
-import type { ConvertQueue, Queue, QueueLists } from "@/@types/queue";
+import type { Queue, QueueLists } from "@/@types/queue";
 import type { ApiResponseLoad } from "@/@types/response.renderer";
 
 import { sendMessageToController } from "./controller-window";
-import { startConverter } from "./converter";
+import { ConversionSession } from "./conversion-session";
 import { encodeError } from "./lib/json";
 import { getLogger } from "./lib/log";
 import { download, downloadComment } from "./lib/niconico";
@@ -24,20 +25,14 @@ const queueLists: QueueLists = {
   movie: [],
   comment: [],
 };
-let processingQueue: ConvertQueue;
-type ConversionSession = ReturnType<typeof startConverter> & {
-  queue: ConvertQueue;
-  lastFrame: number;
-  endFrame: number;
-  inputEndScheduled: boolean;
-  frames: Map<number, Uint8Array>;
-  writes: Promise<void>;
+type ActiveSession = {
+  conversion: ConversionSession;
+  renderer?: ReturnType<typeof createRendererWindow>;
 };
-let activeSession: ConversionSession | undefined;
-
+let activeSession: ActiveSession | undefined;
+const isConversionProcessing = (): boolean => activeSession !== undefined;
 let movieDownloadController: AbortController | undefined;
 let commentDownloadController: AbortController | undefined;
-
 const appendQueue = (queue: Queue): void => {
   queueList.push(queue);
   if (queue.type === "convert") {
@@ -154,7 +149,11 @@ const startConvert = async (): Promise<void> => {
       const dependency = (queue.wait ?? [])
         .map((id) => queueList.find((item) => item.id === id))
         .find(
-          (item) => item?.status === "fail" || item?.status === "interrupted",
+          (item) =>
+            item?.status === "fail" ||
+            item?.status === "interrupted" ||
+            (item === activeSession?.conversion.queue &&
+              activeSession?.conversion.interrupted),
         );
       if (!dependency) continue;
       queue.status = dependency.status === "fail" ? "fail" : "interrupted";
@@ -174,7 +173,6 @@ const startConvert = async (): Promise<void> => {
       ),
   );
   if (!queue) return;
-  processingQueue = queue;
   queue.status = "processing";
   queue.progress = {
     percent: 0,
@@ -183,137 +181,127 @@ const startConvert = async (): Promise<void> => {
       (queue.option.fps || 30) *
       ((queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0)),
   };
+  let session: ActiveSession | undefined;
+  let status: Queue["status"] = "completed";
   try {
-    const session: ConversionSession = {
-      ...startConverter(queue),
-      queue,
-      lastFrame: 0,
-      endFrame: -1,
-      inputEndScheduled: false,
-      frames: new Map(),
-      writes: Promise.resolve(),
-    };
+    session = { conversion: new ConversionSession(queue, sendProgress) };
     activeSession = session;
-    session.inputStream.once("error", (error) =>
-      failConversion(error, session),
+    const owner = session;
+    session.renderer = createRendererWindow((error) =>
+      failSession(owner, error),
     );
-    // Observe FFmpeg immediately, including failures during window creation.
-    const finished = session.promise.catch((error: unknown) =>
-      failConversion(error, session),
-    );
-    try {
-      createRendererWindow((error) => failConversion(error, session));
-      sendProgress();
-      await finished;
-      if (queue.status === "processing") queue.status = "completed";
-    } catch (error) {
-      failConversion(error, session);
-    } finally {
-      session.stop();
-      session.frames.clear();
-      closeRendererWindow();
-      // Wait for FFmpeg to exit before starting the next conversion.
-      await finished;
-    }
+    sendProgress();
+    await session.conversion.run();
   } catch (e) {
-    failConversion(e);
-  } finally {
-    activeSession = undefined;
-  }
-  sendProgress();
-  void startConvert();
-};
-
-const failConversion = (error: unknown, session = activeSession): void => {
-  if (session !== activeSession || processingQueue?.status !== "processing")
-    return;
-  logger.error("failed to convert", error);
-  processingQueue.status = "fail";
-  session?.frames.clear();
-  session?.stop();
-  closeRendererWindow();
-  sendMessageToController({
-    type: "message",
-    title: "書き出し中にエラーが発生しました",
-    message: `エラー内容:\n${encodeError(error instanceof Error ? error : new Error(String(error)))}`,
-  });
-  sendProgress();
-};
-
-const finishInput = (session: ConversionSession): void => {
-  if (session.lastFrame !== session.endFrame || session.inputEndScheduled)
-    return;
-  session.inputEndScheduled = true;
-  void session.writes
-    .then(() => {
-      if (session === activeSession && session.queue.status === "processing")
-        session.inputStream.end();
-    })
-    .catch((error: unknown) => failConversion(error, session));
-};
-
-const appendFrame = (frameId: number, data: Uint8Array): void => {
-  const session = activeSession;
-  if (session?.queue.status !== "processing") return;
-  session.frames.set(frameId, data);
-  while (session.frames.has(session.lastFrame + 1)) {
-    session.lastFrame++;
-    const frame = session.frames.get(session.lastFrame);
-    if (frame) processFrame(session, frame);
-    session.frames.delete(session.lastFrame);
-  }
-  finishInput(session);
-};
-
-const processFrame = (session: ConversionSession, data: Uint8Array): void => {
-  session.writes = session.writes
-    .then(async () => {
-      if (session !== activeSession || session.queue.status !== "processing")
-        return;
-      await new Promise<void>((resolve, reject) => {
-        session.inputStream.write(data, (error) =>
-          error ? reject(error) : resolve(),
-        );
+    session?.conversion.fail(e);
+    if (!session?.conversion.interrupted) {
+      status = "fail";
+      logger.error("failed to convert", e);
+      sendMessageToController({
+        type: "message",
+        title: "書き出し中にエラーが発生しました",
+        message: `エラー内容:\n${encodeError(e instanceof Error ? e : new Error(String(e)))}`,
       });
-      if (session !== activeSession || session.queue.status !== "processing")
-        return;
-      session.queue.progress.processed++;
-      session.queue.progress.percent =
-        session.queue.progress.processed / session.queue.progress.total;
-      sendProgress();
-    })
-    .catch((error: unknown) => failConversion(error, session));
+    }
+  } finally {
+    // Keep the session lock and processing status until all resources are gone.
+    await session?.conversion.dispose();
+    if (session?.renderer) closeRendererWindow(session.renderer);
+    queue.status = session?.conversion.interrupted ? "interrupted" : status;
+    activeSession = undefined;
+    sendProgress();
+    void startConvert();
+  }
 };
 
-const markAsCompleted = (frameId: number): void => {
+const getRendererSession = (rendererId: number, sessionId?: string) => {
   const session = activeSession;
-  if (session?.queue.status !== "processing") return;
-  session.endFrame = frameId;
-  finishInput(session);
+  if (
+    !session ||
+    session.conversion.interrupted ||
+    session.conversion.failed ||
+    session.renderer?.webContents.id !== rendererId ||
+    (sessionId !== undefined && session.conversion.id !== sessionId)
+  )
+    return;
+  return session;
+};
+
+const isRendererSender = (sender: WebContents): boolean => {
+  const session = getRendererSession(sender.id);
+  return (
+    !!session?.renderer &&
+    !session.renderer.isDestroyed() &&
+    session.renderer.webContents === sender
+  );
+};
+
+const failSession = (session: ActiveSession, error: unknown): void => {
+  if (session !== activeSession) return;
+  session.conversion.fail(error);
+  if (session.renderer) closeRendererWindow(session.renderer);
+};
+
+const failConversion = (rendererId: number, error: unknown): void => {
+  const session = getRendererSession(rendererId);
+  if (session) failSession(session, error);
+};
+
+const appendFrame = (
+  rendererId: number,
+  sessionId: string,
+  frameId: number,
+  data: Uint8Array,
+): void => {
+  getRendererSession(rendererId, sessionId)?.conversion.appendFrame(
+    frameId,
+    data,
+  );
+};
+
+const markAsCompleted = (
+  rendererId: number,
+  sessionId: string,
+  frameId: number,
+): void => {
+  getRendererSession(rendererId, sessionId)?.conversion.markAsCompleted(
+    frameId,
+  );
 };
 const sendProgress = (): void => {
   sendMessageToController({
     type: "progress",
     data: queueList,
   });
-  processingQueue?.type === "convert" &&
-    processingQueue.status === "processing" &&
-    sendMessageToRenderer({
+  const session = activeSession;
+  if (
+    session?.renderer &&
+    !session.conversion.interrupted &&
+    !session.conversion.failed
+  ) {
+    sendMessageToRenderer(session.renderer, {
       type: "reportProgress",
-      progress: processingQueue.progress,
+      progress: session.conversion.queue.progress,
     });
+  }
 };
 
-const processOnLoad = async (): Promise<ApiResponseLoad> => {
-  const queue = processingQueue;
+const processOnLoad = async (
+  rendererId: number,
+): Promise<ApiResponseLoad | undefined> => {
+  const session = getRendererSession(rendererId);
+  if (!session) return;
+  const queue = session.conversion.queue;
   let commentData = fs.readFileSync(queue.comment.path, "utf-8");
   if (queue.comment.format === "xml2js") {
     commentData = JSON.stringify(
       await parseStringPromise(commentData, { includeWhiteChars: true }),
     );
   }
+  if (getRendererSession(rendererId) !== session) return;
   return {
     type: "load",
+    sessionId: session.conversion.id,
     commentData,
     queue,
   };
@@ -322,22 +310,27 @@ const processOnLoad = async (): Promise<ApiResponseLoad> => {
 const processOnInterrupt = (queueId: UUID): void => {
   const queue = queueList.filter((i) => i.id === queueId)[0];
   if (queue?.status !== "processing" && queue?.status !== "queued") return;
-  const wasQueued = queue.status === "queued";
-  queue.status = "interrupted";
-  sendProgress();
-  if (wasQueued) {
+  if (queue.status === "queued") {
+    queue.status = "interrupted";
+    sendProgress();
     void startConvert();
     return;
   }
   if (queue.type === "convert") {
-    activeSession?.frames.clear();
-    activeSession?.stop();
-    closeRendererWindow();
+    const session = activeSession;
+    if (session?.conversion.queue !== queue) return;
+    session.conversion.interrupt();
+    if (session.renderer) {
+      sendMessageToRenderer(session.renderer, { type: "end" });
+    }
   } else if (queue.type === "movie") {
+    queue.status = "interrupted";
     movieDownloadController?.abort();
   } else if (queue.type === "comment") {
+    queue.status = "interrupted";
     commentDownloadController?.abort();
   }
+  sendProgress();
   void startConvert();
 };
 
@@ -345,8 +338,9 @@ export {
   appendFrame,
   appendQueue,
   failConversion,
+  isConversionProcessing,
+  isRendererSender,
   markAsCompleted,
-  processingQueue,
   processOnInterrupt,
   processOnLoad,
   queueLists,

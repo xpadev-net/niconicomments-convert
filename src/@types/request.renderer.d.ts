@@ -8,11 +8,13 @@ export type ApiRequestBuffer = {
 };
 export type ApiRequestBlob = {
   type: "blob";
+  sessionId: string;
   frameId: number;
   data: Uint8Array;
 };
 export type ApiRequestEnd = {
   type: "end";
+  sessionId: string;
   frameId: number;
 };
 export type ApiRequestLoad = {

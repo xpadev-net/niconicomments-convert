@@ -3,7 +3,7 @@ const { execFileSync } = require("node:child_process");
 const { mkdtempSync, readFileSync, rmSync, writeFileSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const path = require("node:path");
-const { PassThrough } = require("node:stream");
+const { Writable } = require("node:stream");
 const { after, test } = require("node:test");
 const vm = require("node:vm");
 
@@ -95,6 +95,21 @@ function harness() {
   const interrupted = [];
   const messages = [];
   const snapshots = [];
+  const sessionModule = loadModule("electron/conversion-session.js", {
+    "./converter": {
+      createConverter: (job) => {
+        const task = deferred();
+        const inputStream = new Writable({ write: (_, __, done) => done() });
+        conversions.push({ job, ...task });
+        return {
+          inputStream,
+          run: () => task.promise,
+          stop: () => interrupted.push("convert"),
+        };
+      },
+    },
+  });
+  let rendererId = 0;
   const queue = loadModule("electron/queue.js", {
     "./controller-window": {
       sendMessageToController: (message) => {
@@ -105,34 +120,7 @@ function harness() {
         } else messages.push(message);
       },
     },
-    "./converter": {
-      startConverter: (job) => {
-        const task = deferred();
-        let settled = false;
-        let stopped = false;
-        const inputStream = new PassThrough();
-        const conversion = {
-          job,
-          inputStream,
-          promise: task.promise,
-          resolve() {
-            settled = true;
-            task.resolve();
-          },
-          reject(error) {
-            settled = true;
-            task.reject(error);
-          },
-          stop() {
-            if (!settled && !stopped) interrupted.push("convert");
-            stopped = true;
-            inputStream.destroy();
-          },
-        };
-        conversions.push(conversion);
-        return conversion;
-      },
-    },
+    "./conversion-session": sessionModule,
     "./lib/json": { encodeError: String },
     "./lib/log": { getLogger: () => ({ error: () => {} }) },
     "./lib/niconico": {
@@ -150,8 +138,12 @@ function harness() {
       },
     },
     "./renderer-window": {
-      createRendererWindow: () => {},
-      closeRendererWindow: () => {},
+      closeRendererWindow: (renderer) => renderer.destroy(),
+      createRendererWindow: () => ({
+        webContents: { id: ++rendererId },
+        isDestroyed: () => false,
+        destroy: () => {},
+      }),
       sendMessageToRenderer: () => {},
     },
   });
@@ -325,6 +317,8 @@ test("cancellation waits for the active converter to settle before starting the 
   const next = convertJob("next");
   for (const job of [active, dependent, cancelled, next]) h.appendQueue(job);
   h.processOnInterrupt(active.id);
+  assert.equal(active.status, "processing");
+  assert.equal(h.isConversionProcessing(), true);
   assert.equal(dependent.status, "interrupted");
   h.processOnInterrupt(cancelled.id);
   await flush();

@@ -16,12 +16,12 @@ import {
   appendFrame,
   appendQueue,
   failConversion,
+  isRendererSender,
   markAsCompleted,
   processOnInterrupt,
   processOnLoad,
   sendProgress,
 } from "./queue";
-import { isRendererSender } from "./renderer-window";
 import { store } from "./store";
 import { typeGuard } from "./type-guard";
 
@@ -41,16 +41,21 @@ const registerListener = (): void => {
       return;
     try {
       if (typeGuard.renderer.failure(value)) {
-        failConversion(new Error(value.message));
+        failConversion(event.sender.id, new Error(value.message));
         return;
       }
       if (typeGuard.renderer.blob(value)) {
-        appendFrame(value.frameId, value.data);
+        appendFrame(
+          event.sender.id,
+          value.sessionId,
+          value.frameId,
+          value.data,
+        );
         return;
       }
       logger.debug("ipc message received", "ipcMessage:", value);
       if (typeGuard.renderer.end(value)) {
-        markAsCompleted(value.frameId);
+        markAsCompleted(event.sender.id, value.sessionId, value.frameId);
       } else if (typeGuard.controller.selectComment(value)) {
         return await selectComment();
       } else if (typeGuard.controller.selectMovie(value)) {
@@ -79,7 +84,7 @@ const registerListener = (): void => {
         sendProgress();
         return;
       } else if (typeGuard.renderer.load(value)) {
-        return await processOnLoad();
+        return await processOnLoad(event.sender.id);
       } else if (typeGuard.renderer.message(value)) {
         sendMessageToController(value);
       } else {
@@ -95,7 +100,7 @@ const registerListener = (): void => {
     } catch (e: unknown) {
       // The request may have outlived the renderer that sent it.
       if (fromRenderer) {
-        if (isRendererSender(event.sender)) failConversion(e);
+        if (isRendererSender(event.sender)) failConversion(event.sender.id, e);
         throw e;
       }
       logger.error(
