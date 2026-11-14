@@ -1,7 +1,9 @@
+import { randomUUID } from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import type { ReadableStream } from "node:stream/web";
 import type { Dispatcher } from "undici";
 import { EnvHttpProxyAgent } from "undici";
@@ -10,16 +12,13 @@ import {
   createBinaryDownloaderWindow,
   sendMessageToBinaryDownloader,
 } from "./binary-downloader-window";
-import { basePath } from "./context";
+import { binPath } from "./context";
 import { spawn } from "./lib/spawn";
 
 type lib = "ffmpeg" | "ffprobe";
 
-let target: lib[] = [];
-
 const ext = process.platform === "win32" ? ".exe" : "";
 
-const binPath = path.join(basePath, "bin");
 const ffmpegPath = path.join(binPath, `ffmpeg${ext}`);
 const ffprobePath = path.join(binPath, `ffprobe${ext}`);
 let proxyDispatcher: Dispatcher | undefined;
@@ -55,88 +54,85 @@ const assetsBaseUrl = {
 const version = {
   ffmpeg: "6.1",
 };
-const distro = (() => {
+const getDistro = (): string => {
   const arch = os.arch();
   const dist = process.platform;
   if (dist === "win32" && arch === "x64") {
-    return {
-      ffmpeg: "win32-x64",
-    };
+    return "win32-x64";
   }
   if (dist === "darwin" && arch === "arm64") {
-    return {
-      ffmpeg: "darwin-arm64",
-    };
+    return "darwin-arm64";
   }
   if (dist === "darwin" && arch === "x64") {
-    return {
-      ffmpeg: "darwin-x64",
-    };
+    return "darwin-x64";
   }
   throw new Error("unknown os or architecture");
-})();
+};
 
 const isValidBinary = async (
   path: string,
   version: string,
+  signal: AbortSignal,
 ): Promise<boolean> => {
+  signal.throwIfAborted();
   try {
     if (!fs.existsSync(path)) {
       return false;
     }
-    const result = await spawn(path, ["-version"]).promise;
+    const result = await spawn(path, ["-version"], {
+      signal,
+      timeout: 10_000,
+    }).promise;
     return result.stdout.includes(version);
   } catch (e) {
+    signal.throwIfAborted();
     console.warn(e);
     return false;
   }
 };
 
-const onStartUp = async (): Promise<void> => {
-  target = [];
-  if (!(await isValidBinary(ffmpegPath, version.ffmpeg))) {
+const onStartUp = async (signal: AbortSignal): Promise<void> => {
+  const target: lib[] = [];
+  if (!(await isValidBinary(ffmpegPath, version.ffmpeg, signal))) {
     target.push("ffmpeg");
   }
-  if (!(await isValidBinary(ffprobePath, version.ffmpeg))) {
+  if (!(await isValidBinary(ffprobePath, version.ffmpeg, signal))) {
     target.push("ffprobe");
   }
   if (target.length === 0) return;
-  await createBinaryDownloaderWindow();
-  await downloadBinary(target);
-  closeBinaryDownloaderWindow();
+  try {
+    await createBinaryDownloaderWindow();
+    signal.throwIfAborted();
+    await downloadBinary(target, signal);
+  } finally {
+    closeBinaryDownloaderWindow();
+  }
 };
 
-const downloadBinary = async (target: lib[]): Promise<void> => {
-  if (!fs.existsSync(binPath)) {
-    await fs.promises.mkdir(binPath, { recursive: true });
-  }
-  if (target.includes("ffmpeg")) {
+const downloadBinary = async (
+  target: lib[],
+  signal: AbortSignal,
+): Promise<void> => {
+  const distro = getDistro();
+  await fs.promises.mkdir(binPath, { recursive: true });
+  for (const name of target) {
     await downloadFile(
-      "ffmpeg",
-      `${assetsBaseUrl.ffmpeg}ffmpeg-${distro.ffmpeg}`,
-      ffmpegPath,
+      name,
+      `${assetsBaseUrl.ffmpeg}${name}-${distro}`,
+      name === "ffmpeg" ? ffmpegPath : ffprobePath,
+      signal,
     );
-  }
-  if (target.includes("ffprobe")) {
-    await downloadFile(
-      "ffprobe",
-      `${assetsBaseUrl.ffmpeg}ffprobe-${distro.ffmpeg}`,
-      ffprobePath,
-    );
-  }
-  if (process.platform === "darwin") {
-    fs.chmodSync(ffmpegPath, 0o755);
-    fs.chmodSync(ffprobePath, 0o755);
   }
 };
 const downloadFile = async (
   name: string,
   url: string,
   path: string,
+  signal: AbortSignal,
 ): Promise<void> => {
   let response: Response;
   try {
-    response = await fetch(url, getFetchInit());
+    response = await fetch(url, { ...getFetchInit(), signal });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to download ${name}: ${message}`, { cause: error });
@@ -146,7 +142,6 @@ const downloadFile = async (
       `Failed to download ${name}: ${response.status} ${response.statusText}`,
     );
   }
-  const file = fs.createWriteStream(path);
   const totalRaw = Number(response.headers.get("content-length"));
   const total =
     Number.isFinite(totalRaw) && Number.isInteger(totalRaw) && totalRaw > 0
@@ -164,41 +159,30 @@ const downloadFile = async (
       progress: Math.min(loaded / total, 1),
     });
   });
-  return new Promise<void>((resolve, reject) => {
-    stream.pipe(file);
-    let settled = false;
-    const rejectOnce = (err: Error): void => {
-      if (settled) return;
-      settled = true;
-      stream.destroy();
-      file.destroy();
-      void fs.promises
-        .unlink(path)
-        .catch((unlinkError: NodeJS.ErrnoException) => {
-          if (unlinkError.code !== "ENOENT" && unlinkError.code !== "EBUSY") {
-            console.warn(
-              `Failed to clean up partial download file at ${path}:`,
-              unlinkError,
-            );
-          }
-        });
-      reject(err);
-    };
-    stream.on("error", rejectOnce);
-    file.on("error", rejectOnce);
-    file.on("close", () => {
-      if (settled) return;
-      settled = true;
-      if (canReportProgress) {
-        sendMessageToBinaryDownloader({
-          type: "downloadProgress",
-          name: name,
-          progress: 1,
-        });
-      }
-      resolve();
+  const temporaryPath = `${path}.${randomUUID()}.part${ext}`;
+  try {
+    await pipeline(stream, fs.createWriteStream(temporaryPath), { signal });
+    if (process.platform === "darwin") {
+      await fs.promises.chmod(temporaryPath, 0o755);
+    }
+    if (!(await isValidBinary(temporaryPath, version.ffmpeg, signal))) {
+      throw new Error(`Downloaded ${name} failed version validation`);
+    }
+    signal.throwIfAborted();
+    await fs.promises.rename(temporaryPath, path);
+    sendMessageToBinaryDownloader({
+      type: "downloadProgress",
+      name,
+      progress: 1,
     });
-  });
+  } finally {
+    await fs.promises.rm(temporaryPath, { force: true }).catch((error) => {
+      console.warn(
+        `Failed to clean up partial download at ${temporaryPath}:`,
+        error,
+      );
+    });
+  }
 };
 
 export { ffmpegPath, ffprobePath, onStartUp };
