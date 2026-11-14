@@ -12,12 +12,12 @@ const Comment: FC = () => {
   const download = (comment?: TCommentItemRemote): void => {
     void runControllerTask(async () => {
       if (!comment) return;
-      setKey((pv) => pv + 1);
       await window.api.request({
         type: "appendQueue",
         host: "controller",
         data: comment.ref,
       });
+      setKey((pv) => pv + 1);
       setIsLoading(false);
     }, setIsLoading);
   };

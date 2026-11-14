@@ -14,12 +14,12 @@ const Movie: FC = () => {
   const download = (movie?: TMovieItemRemote): void => {
     void runControllerTask(async () => {
       if (!movie) return;
-      setKey((pv) => pv + 1);
       await window.api.request({
         type: "appendQueue",
         host: "controller",
         data: movie.ref,
       });
+      setKey((pv) => pv + 1);
       setIsLoading(false);
     }, setIsLoading);
   };
