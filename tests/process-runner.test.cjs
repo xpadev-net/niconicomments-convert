@@ -534,7 +534,7 @@ function loadConversionQueue(Converter) {
     movie: { type: "local", path: "input.mp4", duration: 1 },
     comment: { type: "local", path: "comments.json", format: "formatted" },
     output: { path: "output.mp4" },
-    option: { fps: 30, width: 1920, height: 1080 },
+    option: { fps: 30, width: 1920, height: 1080, options: {} },
   };
   return {
     ...queue,

@@ -20,7 +20,7 @@ const createRendererWindow = (
       contextIsolation: true,
       backgroundThrottling: false,
     },
-    show: !!(store.get("showRendererWindow") ?? true),
+    show: store.get("showRendererWindow"),
   });
   try {
     rendererWindow.removeMenu();

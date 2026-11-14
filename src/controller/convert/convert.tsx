@@ -22,8 +22,9 @@ import { SelectField } from "@/components/select-field";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import { CommentPicker } from "@/controller/comment-picker";
 import { MoviePicker } from "@/controller/movie-picker";
+import { getConversionError } from "@/domain/conversion";
 import { typeGuard } from "@/type-guard";
-import { str2time, time2str } from "@/util/time";
+import { str2time } from "@/util/time";
 import { uuid } from "@/util/uuid";
 
 import { commentAtom, movieAtom, optionsAtom, rawClipAtom } from "./atoms";
@@ -157,76 +158,87 @@ const Convert: FC = () => {
 
   const convert = (): void => {
     if (!comment || !movie) return;
+    const start = rawClip.start.trim();
+    const end = rawClip.end.trim();
+    const nicoOption: { [key: string]: unknown } = {};
+    for (const key in options.nico) {
+      const item = options.nico[key as keyof NiconicommentsOptions];
+      nicoOption[key] =
+        item.type === "number" ? Number(item.value) : item.value;
+    }
+    const option = {
+      ss: start ? str2time(start) : undefined,
+      to: end ? str2time(end) : undefined,
+      fps: options.video.fps,
+      width: options.video.width,
+      height: options.video.height,
+      format: comment.format,
+      options: nicoOption,
+    };
+    const error =
+      (start && option.ss === undefined) || (end && option.to === undefined)
+        ? "開始位置・終了位置は秒数または分:秒の形式で指定してください。"
+        : getConversionError(option, movie.duration);
+    if (error) {
+      setMessage({ title: "入力内容を確認してください", content: error });
+      return;
+    }
     void (async () => {
       setIsLoading(true);
-      const output = await window.api.request({
-        type: "selectOutput",
-        host: "controller",
-        options: {
-          filters: [
-            {
-              name: "Movies",
-              extensions: [
-                "mp4",
-                "webm",
-                "avi",
-                "mkv",
-                "wmv",
-                "mov",
-                "ts",
-                "m2ts",
-              ],
-            },
-          ],
-          properties: ["createDirectory"],
-        },
-      });
-      if (typeof output !== "string") {
-        setIsLoading(false);
-        return;
-      }
-      const nicoOption: { [key: string]: unknown } = {};
-      for (const key in options.nico) {
-        const item = options.nico[key as keyof NiconicommentsOptions];
-        if (item.type === "number") {
-          nicoOption[key] = Number(item.value);
-        } else {
-          nicoOption[key] = item.value;
+      try {
+        const output = await window.api.request({
+          type: "selectOutput",
+          host: "controller",
+          options: {
+            filters: [
+              {
+                name: "Movies",
+                extensions: [
+                  "mp4",
+                  "webm",
+                  "avi",
+                  "mkv",
+                  "wmv",
+                  "mov",
+                  "ts",
+                  "m2ts",
+                ],
+              },
+            ],
+            properties: ["createDirectory"],
+          },
+        });
+        if (typeof output !== "string") return;
+        const wait: UUID[] = [];
+        if (comment.type === "remote") wait.push(comment.ref.id);
+        if (movie.type === "remote") wait.push(movie.ref.id);
+        const accepted = await window.api.request({
+          type: "appendQueue",
+          host: "controller",
+          data: {
+            type: "convert",
+            id: uuid(),
+            status: "queued",
+            comment,
+            movie,
+            output: { path: output },
+            option,
+            wait,
+            progress: { percent: 0, total: 0, processed: 0 },
+          },
+        });
+        if (accepted === true) {
+          setComment(undefined);
+          setMovie(undefined);
         }
+      } catch (error) {
+        setMessage({
+          title: "変換の登録に失敗しました",
+          content: error instanceof Error ? error.message : String(error),
+        });
+      } finally {
+        setIsLoading(false);
       }
-      const wait: UUID[] = [];
-      if (comment.type === "remote") wait.push(comment.ref.id);
-      if (movie.type === "remote") wait.push(movie.ref.id);
-      await window.api.request({
-        type: "appendQueue",
-        host: "controller",
-        data: {
-          type: "convert",
-          id: uuid(),
-          status: "queued",
-          comment: comment,
-          movie: movie,
-          output: {
-            path: output,
-          },
-          option: {
-            ss: options.video.start,
-            to: options.video.end,
-            fps: options.video.fps,
-            width: options.video.width,
-            height: (options.video.width * 9) / 16,
-            format: comment.format,
-            options: {
-              ...nicoOption,
-            },
-          },
-          wait,
-          progress: { percent: 0, total: 0, processed: 0 },
-        },
-      });
-      setComment(undefined);
-      setMovie(undefined);
-      setIsLoading(false);
     })();
   };
 
@@ -295,14 +307,6 @@ const Convert: FC = () => {
               onChange={(e) =>
                 setRawClip({ ...rawClip, start: e.target.value })
               }
-              onBlur={(e) => {
-                const time = str2time(e.target.value);
-                setOptions({
-                  ...options,
-                  video: { ...options.video, start: time },
-                });
-                setRawClip({ ...rawClip, start: time2str(time) });
-              }}
             />
             <TextField
               label="終了位置"
@@ -310,24 +314,30 @@ const Convert: FC = () => {
               variant="standard"
               value={rawClip.end}
               onChange={(e) => setRawClip({ ...rawClip, end: e.target.value })}
-              onBlur={(e) => {
-                const time = str2time(e.target.value);
-                setOptions({
-                  ...options,
-                  video: { ...options.video, end: time },
-                });
-                setRawClip({ ...rawClip, end: time2str(time) });
-              }}
             />
             <TextField
               label="FPS"
               variant="standard"
               type={"number"}
-              value={options.video.fps}
+              value={Number.isNaN(options.video.fps) ? "" : options.video.fps}
+              error={
+                !Number.isFinite(options.video.fps) || options.video.fps <= 0
+              }
+              helperText={
+                !Number.isFinite(options.video.fps) || options.video.fps <= 0
+                  ? "0より大きい有限の数値を指定してください"
+                  : undefined
+              }
               onChange={(e) =>
                 setOptions({
                   ...options,
-                  video: { ...options.video, fps: Number(e.target.value) },
+                  video: {
+                    ...options.video,
+                    fps:
+                      e.target.value === ""
+                        ? Number.NaN
+                        : Number(e.target.value),
+                  },
                 })
               }
             />

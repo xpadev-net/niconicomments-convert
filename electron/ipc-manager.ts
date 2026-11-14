@@ -1,4 +1,5 @@
 import { ipcMain } from "electron";
+import { ValidationError } from "../src/domain/validation";
 
 import { sendMessageToController } from "./controller-window";
 import {
@@ -22,7 +23,7 @@ import {
   processOnLoad,
   sendProgress,
 } from "./queue";
-import { store } from "./store";
+import { setSetting, store } from "./store";
 import { typeGuard } from "./type-guard";
 
 const logger = getLogger("[ipcManager]");
@@ -68,14 +69,14 @@ const registerListener = (): void => {
         return await handleDropFiles(value.paths);
       } else if (typeGuard.controller.appendQueue(value)) {
         appendQueue(value.data);
-        return;
+        return true;
       } else if (typeGuard.controller.interruptQueue(value)) {
         processOnInterrupt(value.queueId);
         return;
       } else if (typeGuard.controller.getSetting(value)) {
         return store.get(value.key);
       } else if (typeGuard.controller.setSetting(value)) {
-        return store.set(value.key, value.data);
+        return setSetting(value.key, value.data);
       } else if (typeGuard.controller.getAvailableProfiles(value)) {
         return await getAvailableProfiles();
       } else if (typeGuard.controller.getNiconicoMovieMetadata(value)) {
@@ -98,6 +99,14 @@ const registerListener = (): void => {
         });
       }
     } catch (e: unknown) {
+      if (e instanceof ValidationError) {
+        sendMessageToController({
+          type: "message",
+          title: "入力内容を確認してください",
+          message: e.message,
+        });
+        return false;
+      }
       // The request may have outlived the renderer that sent it.
       if (fromRenderer) {
         if (isRendererSender(event.sender)) failConversion(event.sender.id, e);

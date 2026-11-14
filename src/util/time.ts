@@ -14,7 +14,7 @@ const str2time = (date: string): number | undefined => {
     if (match[2] !== undefined) time += Number(match[2]);
     if (match[3] !== undefined)
       time += Number(match[3]) / 10 ** match[3].length;
-    if (time < 0) {
+    if (!Number.isFinite(time) || time < 0) {
       return undefined;
     }
     return time;
@@ -27,7 +27,7 @@ const str2time = (date: string): number | undefined => {
  * @param time
  */
 const time2str = (time: number | undefined): string => {
-  if (!time) return "";
+  if (time === undefined) return "";
   return `${String(Math.floor(time / 60)).padStart(2, "0")}:${String(
     (time % 60).toFixed(2).padStart(5, "0"),
   )}`;

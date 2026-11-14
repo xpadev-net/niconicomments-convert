@@ -1,4 +1,12 @@
 import type { BrowserProfile } from "@/@types/cookies";
+import type { FfmpegOptions } from "@/@types/ffmpeg";
+
+export type AppSettings = {
+  auth: AuthType;
+  ffmpegOptions: FfmpegOptions;
+  showRendererWindow: boolean;
+  commentFileExt: string;
+};
 
 export type AuthType = AuthByBrowserCookie | AuthByCookieFile | NoAuth;
 

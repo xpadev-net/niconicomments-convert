@@ -14,7 +14,8 @@ const moduleUrl = (source) =>
 for (const saved of [false, true]) {
   test(`consecutive conversions preserve the ${saved ? "saved" : "default"} template`, async () => {
     const storeUrl = moduleUrl(`
-      export const template = ${saved ? '{ r: "{FPS}", filter_complex: "scale=w={width}:h={height}", crf: "25", an: "" }' : "undefined"};
+      import { defaultOptions } from ${JSON.stringify(constUrl.href)};
+      export const template = ${saved ? '{ r: "{FPS}", filter_complex: "scale=w={width}:h={height}", crf: "25", an: "" }' : "defaultOptions"};
       export const store = { get: () => template };
     `);
     const streamUrl = moduleUrl(`

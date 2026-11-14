@@ -234,8 +234,8 @@ for (const [name, options, count, samples] of [
   ],
   ["empty range", { fps: 30, duration: 0 }, 0, []],
   [
-    "default FPS",
-    { fps: 0, duration: 1.1 },
+    "default FPS setting",
+    { fps: 30, duration: 1.1 },
     33,
     [
       [0, 0],

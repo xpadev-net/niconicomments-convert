@@ -15,26 +15,22 @@ import { useLayoutEffect, useState } from "react";
 
 import type { BrowserProfile } from "@/@types/cookies";
 import type { UserData } from "@/@types/niconico";
-import type { AuthByCookieFile, AuthType } from "@/@types/setting";
+import type { AuthType } from "@/@types/setting";
 import { SelectField } from "@/components/select-field";
 import { isLoadingAtom } from "@/controller/atoms";
+import { getSetting } from "@/util/settings";
 
 import Styles from "./auth.module.scss";
 
 const AuthSetting: FC = () => {
   const setIsLoading = useSetAtom(isLoadingAtom);
-  const [authSetting, setAuthSetting] = useState<Partial<AuthType>>();
+  const [authSetting, setAuthSetting] = useState<AuthType>();
   const [availableProfiles, setAvailableProfiles] = useState<
     { profile: BrowserProfile; user: UserData; key: string }[]
   >([]);
   useLayoutEffect(() => {
     void (async () => {
-      const data = (await window.api.request({
-        type: "getSetting",
-        key: "auth",
-        host: "controller",
-      })) as AuthType | undefined;
-      setAuthSetting(data ?? { type: "NoAuth" });
+      setAuthSetting(await getSetting("auth"));
       const profiles = (await window.api.request({
         type: "getAvailableProfiles",
         host: "controller",
@@ -82,7 +78,7 @@ const AuthSetting: FC = () => {
         setIsLoading(false);
         return;
       }
-      setAuthSetting({ ...authSetting, path: cookiePath } as AuthByCookieFile);
+      setAuthSetting({ type: "cookie", path: cookiePath });
       setIsLoading(false);
     })();
   };
@@ -101,16 +97,12 @@ const AuthSetting: FC = () => {
   const onReset = (): void => {
     void (async () => {
       setIsLoading(true);
-      const data = (await window.api.request({
-        type: "getSetting",
-        key: "auth",
-        host: "controller",
-      })) as AuthType | undefined;
-      setAuthSetting(data ?? { type: "NoAuth" });
+      setAuthSetting(await getSetting("auth"));
       setIsLoading(false);
     })();
   };
   const onSave = (): void => {
+    if (!authSetting) return;
     void (async () => {
       setIsLoading(true);
       await window.api.request({

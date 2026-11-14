@@ -1,7 +1,6 @@
 import type { FfmpegOptions } from "@/@types/ffmpeg";
 import type { ConvertQueue } from "@/@types/queue";
 
-import { defaultOptions } from "./const";
 import { Converter } from "./ffmpeg-stream/stream";
 import { store } from "./store";
 
@@ -25,8 +24,7 @@ const createConverter = (queue: ConvertQueue) => {
 
 const getFfmpegOptions = (queue: ConvertQueue): FfmpegOptions => {
   const options = {
-    ...((store.get("ffmpegOptions") as FfmpegOptions | undefined) ??
-      defaultOptions),
+    ...store.get("ffmpegOptions"),
   };
   const replace = {
     "{FPS}": queue.option.fps.toString(),

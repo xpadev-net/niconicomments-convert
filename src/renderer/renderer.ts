@@ -129,7 +129,7 @@ const startRenderer = async (): Promise<void> => {
     message.textContent = "";
     let generatedFrames = 0;
     const startTime = queue.option.ss ?? 0;
-    const targetFrameRate = queue.option.fps || 30;
+    const targetFrameRate = queue.option.fps;
     // Include each frame whose start is before the exclusive end time.
     const totalFrames = getFrameCount(
       startTime,

@@ -2,17 +2,13 @@ import { FormControlLabel, Switch } from "@mui/material";
 import type { FC } from "react";
 import { useLayoutEffect, useState } from "react";
 
+import { getSetting } from "@/util/settings";
+
 const OtherSetting: FC = () => {
   const [showRendererWindow, setShowRendererWindow] = useState<boolean>(false);
   useLayoutEffect(() => {
     void (async () => {
-      const value =
-        (await window.api.request({
-          type: "getSetting",
-          key: "showRendererWindow",
-          host: "controller",
-        })) ?? true;
-      setShowRendererWindow(!!value);
+      setShowRendererWindow(await getSetting("showRendererWindow"));
     })();
   }, []);
   return (

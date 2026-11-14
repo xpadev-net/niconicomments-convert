@@ -116,6 +116,7 @@ const ipcHarness = () => {
   let onLoad = async () => {};
   const { typeGuard } = load("electron/type-guard.ts", {});
   const { registerListener } = load("electron/ipc-manager.ts", {
+    "../src/domain/validation": require("../build/src/domain/validation"),
     electron: {
       ipcMain: {
         handle(_name, callback) {

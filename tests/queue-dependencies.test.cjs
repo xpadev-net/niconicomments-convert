@@ -44,7 +44,13 @@ function loadModule(file, mocks, globals = {}) {
       exports,
       AbortController,
       require: (name) =>
-        Object.hasOwn(mocks, name) ? mocks[name] : require(name),
+        Object.hasOwn(mocks, name)
+          ? mocks[name]
+          : require(
+              name.startsWith(".")
+                ? path.resolve(temporary, path.dirname(file), name)
+                : name,
+            ),
       ...globals,
     },
     { filename: file },
@@ -84,7 +90,7 @@ function convertJob(id, dependencies = []) {
     comment: { type: "local", path: "comments.json", format: "formatted" },
     movie: { type: "local", path: "movie.mp4", duration: 1 },
     output: { path: `${id}.mp4` },
-    option: { fps: 30, ss: 0 },
+    option: { fps: 30, ss: 0, width: 1920, height: 1080, options: {} },
     wait: dependencies.map((job) => job.id),
   };
 }
@@ -384,4 +390,44 @@ test("queued and active rows expose a working cancel button; terminal rows do no
       assert.equal(requests.at(-1).type, "interruptQueue");
     }
   }
+});
+
+test("invalid conversions are rejected before queue mutation, downloads or renderer startup", () => {
+  const h = harness();
+  for (const change of [
+    { fps: 0 },
+    { fps: -1 },
+    { fps: NaN },
+    { fps: Infinity },
+    { ss: 1, to: 1 },
+    { ss: 2, to: 1 },
+    { to: Infinity },
+    { width: 0 },
+    { options: { scale: 0 } },
+  ]) {
+    const job = convertJob("invalid");
+    job.option = { ...job.option, ...change };
+    job.movie = {
+      ...job.movie,
+      type: "remote",
+      ref: downloadJob("movie", "movie"),
+    };
+    job.comment = {
+      ...job.comment,
+      type: "remote",
+      ref: downloadJob("comment", "comment"),
+    };
+    assert.throws(() => h.appendQueue(job));
+    assert.equal(job.status, "queued");
+    for (const list of Object.values(h.queueLists))
+      assert.equal(list.length, 0);
+    assert.equal(h.downloads.movie.length, 0);
+    assert.equal(h.downloads.comment.length, 0);
+    assert.equal(h.conversions.length, 0);
+  }
+  const valid = convertJob("valid");
+  valid.option.fps = 29.97;
+  h.appendQueue(valid);
+  assert.equal(h.conversions[0].job, valid);
+  assert.equal(valid.progress.total, 30);
 });
