@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -158,7 +159,7 @@ const downloadFile = async (
       progress: Math.min(loaded / total, 1),
     });
   });
-  const temporaryPath = `${path}.part${ext}`;
+  const temporaryPath = `${path}.${randomUUID()}.part${ext}`;
   try {
     await pipeline(stream, fs.createWriteStream(temporaryPath), { signal });
     if (process.platform === "darwin") {

@@ -113,7 +113,7 @@ test("an unavailable log path preserves startup diagnostics via console logging"
 });
 
 const assetHarness = (t, options = {}) => {
-  const binPath = path.join(fixture(t), "data", "bin");
+  const binPath = options.binPath ?? path.join(fixture(t), "data", "bin");
   const downloads = [],
     progress = [],
     windows = [];
@@ -226,6 +226,74 @@ test("retry checks the cache again and downloads only the missing binary", async
   assert.ok(harness.downloads[2].split("/").at(-1).startsWith("ffprobe"));
   assert.deepEqual(harness.windows, ["open", "close", "open", "close"]);
 });
+
+for (const platform of ["darwin", "win32"]) {
+  for (const otherFails of [false, true]) {
+    test(`${platform}: another download's ${otherFails ? "failure cleanup" : "publication"} preserves an in-progress download`, async (t) => {
+      const validating = deferred();
+      const resume = deferred();
+      t.after(() => resume.resolve());
+      const content = "ffmpeg version 6.1 first download";
+      let firstTemporaryPath;
+      const first = assetHarness(t, {
+        platform,
+        fetch: async () => new Response(content),
+        imports: {
+          "./lib/spawn": {
+            spawn: (filename) => ({
+              promise: (async () => {
+                if (filename.includes(".part")) {
+                  firstTemporaryPath = filename;
+                  validating.resolve();
+                  await resume.promise;
+                }
+                return { stdout: fs.readFileSync(filename, "utf8") };
+              })(),
+            }),
+          },
+        },
+      });
+      cache(first, "ffprobe");
+      const firstResult = first.run().then(
+        () => undefined,
+        (error) => error,
+      );
+      await validating.promise;
+      try {
+        const other = assetHarness(t, {
+          platform,
+          binPath: first.binPath,
+          fetch: async () =>
+            new Response(
+              otherFails
+                ? "invalid binary"
+                : "ffmpeg version 6.1 other download",
+            ),
+        });
+        if (otherFails) {
+          await assert.rejects(other.run(), /version validation/);
+        } else {
+          await other.run();
+          assert.equal(
+            fs.readFileSync(other.ffmpegPath, "utf8"),
+            "ffmpeg version 6.1 other download",
+          );
+        }
+        assert.equal(fs.readFileSync(firstTemporaryPath, "utf8"), content);
+      } finally {
+        resume.resolve();
+        assert.equal(await firstResult, undefined);
+      }
+      assert.equal(fs.readFileSync(first.ffmpegPath, "utf8"), content);
+      assert.deepEqual(
+        fs.readdirSync(first.binPath).sort(),
+        platform === "win32"
+          ? ["ffmpeg.exe", "ffprobe.exe"]
+          : ["ffmpeg", "ffprobe"],
+      );
+    });
+  }
+}
 
 for (const failure of ["http", "stream", "invalid", "write"]) {
   test(`${failure} failure closes preparation and preserves the existing binary`, async (t) => {
