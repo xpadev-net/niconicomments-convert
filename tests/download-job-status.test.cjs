@@ -9,7 +9,12 @@ const { after, test } = require("node:test");
 // boundaries replaced. Each loader gets fresh module state for queue isolation.
 const build = fs.mkdtempSync(path.join(tmpdir(), "download-job-status-"));
 after(() => fs.rmSync(build, { recursive: true, force: true }));
-execFileSync(path.resolve("node_modules/.bin/tsc"), [
+execFileSync(process.execPath, [
+  path.join(
+    path.dirname(require.resolve("typescript/package.json")),
+    "bin",
+    "tsc",
+  ),
   "-p",
   "electron",
   "--outDir",
@@ -393,6 +398,143 @@ test("dmc: heartbeat failure stops ffmpeg and rejects the download without an un
   await assert.rejects(task, /セッションの更新/);
   assert.equal(stops, 1);
   assert.equal(cleared, true);
+});
+
+for (const failure of ["network", "json"]) {
+  test(`dmc: ${failure} failure during session cleanup preserves completion and releases the conversion`, async () => {
+    const warnings = [];
+    let stops = 0;
+    const spawnDownload = () => ({
+      promise: Promise.resolve(result),
+      stop: () => {
+        stops++;
+      },
+    });
+    const load = loadModules(
+      {
+        "electron/utils/ffmpeg": { DownloadM3U8: spawnDownload },
+      },
+      {
+        fetch: async (url) => {
+          if (!url.includes("_method=DELETE")) return response(session);
+          if (failure === "network") throw new Error("cleanup request failed");
+          return {
+            json: async () => {
+              throw new SyntaxError("invalid JSON");
+            },
+          };
+        },
+        console: { warn: (...args) => warnings.push(args) },
+      },
+    );
+    const { downloadDMC } = load("electron/lib/niconico/dmc");
+    const queue = setupQueue({
+      download: (...args) => downloadDMC(...movieArgs("dmc", args.at(-1))),
+    });
+    const download = movie();
+    download.format = movieArgs("dmc")[1];
+    const convert = conversion(download);
+    queue.appendQueue(convert);
+    await flush();
+    assert.equal(download.status, "completed");
+    assert.equal(convert.status, "completed");
+    assert.deepEqual(queue.converted, [convert.id]);
+    assert.equal(
+      queue.notifications.filter((item) => item.type === "message").length,
+      0,
+    );
+    assert.equal(warnings.length, 1);
+    assert.equal(stops, 0);
+  });
+}
+
+for (const settles of ["resolve", "reject"]) {
+  test(`dmc: interruption during cleanup survives a late ${settles}`, async () => {
+    const pending = deferred();
+    const warnings = [];
+    let deleting = false;
+    const spawnDownload = () => ({
+      promise: Promise.resolve(result),
+      stop() {},
+    });
+    const load = loadModules(
+      {
+        "electron/utils/ffmpeg": { DownloadM3U8: spawnDownload },
+      },
+      {
+        fetch: async (url) => {
+          if (!url.includes("_method=DELETE")) return response(session);
+          deleting = true;
+          return pending.promise;
+        },
+        console: { warn: (...args) => warnings.push(args) },
+      },
+    );
+    const controller = new AbortController();
+    const task = load("electron/lib/niconico/dmc").downloadDMC(
+      ...movieArgs("dmc", controller.signal),
+    );
+    await flush();
+    assert.equal(deleting, true);
+    controller.abort();
+    pending[settles](
+      settles === "resolve" ? response(session) : new Error("cleanup failed"),
+    );
+    await assert.rejects(task, { name: "AbortError" });
+    assert.equal(warnings.length, 0);
+  });
+}
+
+test("dmc: a slow heartbeat blocks overlapping ticks and the next PUT uses the updated session", async () => {
+  const ffmpeg = deferred();
+  const heartbeat = deferred();
+  const requests = [];
+  const updatedSession = structuredClone(session);
+  updatedSession.data.session.version = 2;
+  let tick;
+  let cleared = false;
+  const spawnDownload = () => ({ promise: ffmpeg.promise, stop() {} });
+  const load = loadModules(
+    {
+      "electron/utils/ffmpeg": { DownloadM3U8: spawnDownload },
+    },
+    {
+      fetch: async (url, init) => {
+        if (!url.includes("_method=PUT")) return response(session);
+        requests.push(JSON.parse(init.body));
+        return requests.length === 1
+          ? { json: () => heartbeat.promise }
+          : response(updatedSession);
+      },
+      setInterval: (callback) => {
+        tick = callback;
+        return 1;
+      },
+      clearInterval: () => {
+        cleared = true;
+      },
+    },
+  );
+  const task = load("electron/lib/niconico/dmc").downloadDMC(
+    ...movieArgs("dmc", new AbortController().signal),
+  );
+  await flush();
+  tick();
+  await flush();
+  tick();
+  tick();
+  assert.equal(requests.length, 1);
+  heartbeat.resolve(updatedSession);
+  await flush();
+  tick();
+  await flush();
+  assert.equal(requests.length, 2);
+  assert.deepEqual(requests[1], updatedSession.data);
+  ffmpeg.resolve(result);
+  assert.equal(await task, result);
+  assert.equal(cleared, true);
+  tick();
+  assert.equal(requests.length, 2);
 });
 
 test("movie metadata failure is handled by the queue with a single notification", async () => {

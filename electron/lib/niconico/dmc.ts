@@ -68,8 +68,11 @@ const downloadDMC = async (
   const heartbeatController = new AbortController();
   const heartbeatSignal = AbortSignal.any([signal, heartbeatController.signal]);
   let heartbeatInterval: ReturnType<typeof setInterval> | undefined;
+  let heartbeatPending = false;
   const heartbeatFailure = new Promise<never>((_resolve, reject) => {
     heartbeatInterval = setInterval(() => {
+      if (heartbeatPending || heartbeatSignal.aborted) return;
+      heartbeatPending = true;
       void (async () => {
         const req = await fetch(
           `https://api.dmc.nico/api/sessions/${lastSession.session.id}?_format=json&_method=PUT`,
@@ -85,11 +88,16 @@ const downloadDMC = async (
           },
         );
         const res = (await req.json()) as unknown;
+        heartbeatSignal.throwIfAborted();
         if (!typeGuard.niconico.CreateSessionResponse(res)) {
           throw new Error("セッションの更新に失敗しました");
         }
         lastSession = res.data;
-      })().catch(reject);
+      })()
+        .catch(reject)
+        .finally(() => {
+          heartbeatPending = false;
+        });
     }, 30 * 1000);
   });
   try {
@@ -97,20 +105,25 @@ const downloadDMC = async (
     signal.throwIfAborted();
     clearInterval(heartbeatInterval);
     heartbeatController.abort();
-    const delReq = await fetch(
-      `https://api.dmc.nico/api/sessions/${lastSession.session.id}?_format=json&_method=DELETE`,
-      {
-        signal,
-        method: "POST",
-        headers: {
-          Origin: "https://www.nicovideo.jp",
-          Referer: "https://www.nicovideo.jp",
-          "Content-Type": "text/plain;charset=UTF-8",
+    try {
+      const delReq = await fetch(
+        `https://api.dmc.nico/api/sessions/${lastSession.session.id}?_format=json&_method=DELETE`,
+        {
+          signal,
+          method: "POST",
+          headers: {
+            Origin: "https://www.nicovideo.jp",
+            Referer: "https://www.nicovideo.jp",
+            "Content-Type": "text/plain;charset=UTF-8",
+          },
+          body: JSON.stringify(lastSession),
         },
-        body: JSON.stringify(lastSession),
-      },
-    );
-    await delReq.json();
+      );
+      await delReq.json();
+    } catch (error) {
+      signal.throwIfAborted();
+      console.warn("failed to delete DMC session", error);
+    }
     signal.throwIfAborted();
     return result;
   } catch (error) {
