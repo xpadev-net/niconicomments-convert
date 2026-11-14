@@ -4,7 +4,7 @@ import { app, BrowserWindow } from "electron";
 import type { ApiResponsesToController } from "@/@types/response.controller";
 
 import { baseUrl } from "./context";
-import { processingQueue } from "./queue";
+import { isConversionProcessing } from "./queue";
 
 let controllerWindow: BrowserWindow;
 const createControllerWindow = (): void => {
@@ -19,7 +19,7 @@ const createControllerWindow = (): void => {
   });
   controllerWindow.removeMenu();
   controllerWindow.on("close", (e) => {
-    if (processingQueue?.status === "processing") {
+    if (isConversionProcessing()) {
       e.preventDefault();
     }
   });

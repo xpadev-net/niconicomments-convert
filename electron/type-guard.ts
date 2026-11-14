@@ -111,11 +111,13 @@ const typeGuard = {
     blob: (i: unknown): i is ApiRequestBlob =>
       typeof i === "object" &&
       (i as ApiRequestFromRenderer).host === "renderer" &&
-      (i as ApiRequestBlob).type === "blob",
+      (i as ApiRequestBlob).type === "blob" &&
+      typeof (i as ApiRequestBlob).sessionId === "string",
     end: (i: unknown): i is ApiRequestEnd =>
       typeof i === "object" &&
       (i as ApiRequestFromRenderer).host === "renderer" &&
-      (i as ApiRequestEnd).type === "end",
+      (i as ApiRequestEnd).type === "end" &&
+      typeof (i as ApiRequestEnd).sessionId === "string",
     load: (i: unknown): i is ApiRequestLoad =>
       typeof i === "object" &&
       (i as ApiRequestFromRenderer).host === "renderer" &&

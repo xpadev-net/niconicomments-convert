@@ -10,6 +10,7 @@ export type ApiResponseProgressRenderer = {
 };
 export type ApiResponseLoad = {
   type: "load";
+  sessionId: string;
   queue: ConvertQueue;
   commentData: string;
 };
