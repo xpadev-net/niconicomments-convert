@@ -3,6 +3,7 @@ import type { SaveDialogOptions } from "electron";
 import type { UUID } from "@/@types/brand";
 import type { Queue } from "@/@types/queue";
 import type { ApiRequestLoad } from "@/@types/request.renderer";
+import type { AppSettings } from "@/@types/setting";
 
 export type ApiRequestFromController = {
   host: "controller";
@@ -31,13 +32,15 @@ export type ApiRequestAppendQueue = {
 };
 export type ApiRequestGetSetting = {
   type: "getSetting";
-  key: string;
+  key: keyof AppSettings;
 };
 export type ApiRequestSetSetting = {
-  type: "setSetting";
-  key: string;
-  data: unknown;
-};
+  [K in keyof AppSettings]: {
+    type: "setSetting";
+    key: K;
+    data: AppSettings[K];
+  };
+}[keyof AppSettings];
 
 export type ApiRequestDownloadMovie = {
   type: "downloadMovie";

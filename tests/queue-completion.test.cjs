@@ -46,6 +46,8 @@ function setup() {
   let rendererId = 0;
   const noop = () => {};
   const mocks = {
+    "../src/domain/conversion": require("../build/src/domain/conversion"),
+    "../src/domain/validation": require("../build/src/domain/validation"),
     "node:fs": require("node:fs"),
     "node:stream": require("node:stream"),
     "@xpadev-net/xml2js": {},
@@ -96,7 +98,7 @@ function setup() {
       type: "convert",
       status: "queued",
       progress: {},
-      option: { fps: 2 },
+      option: { fps: 2, width: 1920, height: 1080, options: {} },
       movie: { type: "local", duration: 1 },
       comment: { type: "local" },
     });

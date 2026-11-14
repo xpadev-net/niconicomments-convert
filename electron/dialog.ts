@@ -10,6 +10,7 @@ import type {
   ApiResponseSelectMovie,
 } from "@/@types/response.controller";
 import type { SpawnResult } from "@/@types/spawn";
+import { isPositiveFinite } from "../src/domain/validation";
 
 import { ffprobePath } from "./assets";
 import { sendMessageToController } from "./controller-window";
@@ -130,11 +131,17 @@ const analyzeMovieFile = async (
     if (stream.height) {
       height = stream.height;
     }
-    if (stream.duration) {
-      duration = stream.duration;
-    }
+    const streamDuration =
+      typeof stream.duration === "string"
+        ? Number(stream.duration)
+        : stream.duration;
+    if (isPositiveFinite(streamDuration)) duration = streamDuration;
   }
-  if (!(height && width && duration)) {
+  if (
+    !isPositiveFinite(height) ||
+    !isPositiveFinite(width) ||
+    !isPositiveFinite(duration)
+  ) {
     logger.error("failed to get resolution or duration", "metadata:", metadata);
     return {
       message: {

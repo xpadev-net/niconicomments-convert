@@ -5,6 +5,8 @@ import type { WebContents } from "electron";
 import type { UUID } from "@/@types/brand";
 import type { Queue, QueueLists } from "@/@types/queue";
 import type { ApiResponseLoad } from "@/@types/response.renderer";
+import { getConversionError } from "../src/domain/conversion";
+import { ValidationError } from "../src/domain/validation";
 
 import { sendMessageToController } from "./controller-window";
 import { ConversionSession } from "./conversion-session";
@@ -34,6 +36,10 @@ const isConversionProcessing = (): boolean => activeSession !== undefined;
 let movieDownloadController: AbortController | undefined;
 let commentDownloadController: AbortController | undefined;
 const appendQueue = (queue: Queue): void => {
+  if (queue.type === "convert") {
+    const error = getConversionError(queue.option, queue.movie?.duration);
+    if (error) throw new ValidationError(error);
+  }
   queueList.push(queue);
   if (queue.type === "convert") {
     queueLists.convert.push(queue);
@@ -178,7 +184,7 @@ const startConvert = async (): Promise<void> => {
     percent: 0,
     processed: 0,
     total:
-      (queue.option.fps || 30) *
+      queue.option.fps *
       ((queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0)),
   };
   let session: ActiveSession | undefined;

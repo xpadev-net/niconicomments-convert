@@ -6,6 +6,7 @@ import { useLayoutEffect, useState } from "react";
 
 import type { FfmpegOptions } from "@/@types/ffmpeg";
 
+import { getSetting } from "@/util/settings";
 import { uuid } from "@/util/uuid";
 import { defaultOptions } from "../../../../electron/const";
 import Styles from "./convert.module.scss";
@@ -40,12 +41,7 @@ const ConvertSetting: FC = () => {
   const [option, setOption] = useState<OptionsValue>({});
   useLayoutEffect(() => {
     void (async () => {
-      const value = ((await window.api.request({
-        type: "getSetting",
-        key: "ffmpegOptions",
-        host: "controller",
-      })) ?? defaultOptions) as FfmpegOptions;
-      setOption(transform(value));
+      setOption(transform(await getSetting("ffmpegOptions")));
     })();
   }, []);
   const update = (type: "key" | "value", id: string, value: string): void => {

@@ -99,7 +99,7 @@ const conversion = (dependency, id = "convert") => ({
     dependency?.type === "movie"
       ? { type: "remote", ref: dependency, duration: 1 }
       : { type: "local", duration: 1 },
-  option: { fps: 30 },
+  option: { fps: 30, width: 1920, height: 1080, options: {} },
   wait: dependency ? [dependency.id] : [],
 });
 const setupQueue = (downloads = {}, mocks = {}, globals = {}) => {

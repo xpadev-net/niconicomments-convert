@@ -128,7 +128,7 @@ const startRenderer = async (): Promise<void> => {
     message.textContent = "";
     let generatedFrames = 0;
     let offset = Math.ceil((queue.option.ss ?? 0) * 100);
-    const targetFrameRate = queue.option.fps || 30;
+    const targetFrameRate = queue.option.fps;
     const totalFrames =
       Math.ceil(
         (queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0),
