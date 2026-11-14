@@ -14,8 +14,9 @@ import {
 import Button from "@mui/material/Button";
 import { useAtom, useAtomValue } from "jotai";
 import type { FC } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import type { ApiResponseType } from "@/@types/types";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import { Comment } from "@/controller/comment";
 import { Convert } from "@/controller/convert";
@@ -23,6 +24,7 @@ import { Movie } from "@/controller/movie";
 import { QueueDisplay } from "@/controller/queue";
 import { Setting } from "@/controller/setting";
 import { Sidebar } from "@/controller/sidebar";
+import { typeGuard } from "@/type-guard";
 
 import Styles from "./controller.module.scss";
 
@@ -70,6 +72,22 @@ const Controller: FC = () => {
   const [tab, setTab] = useState<string>("convert");
   const [message, setMessage] = useAtom(messageAtom);
   const isLoading = useAtomValue(isLoadingAtom);
+
+  useEffect(() => {
+    const eventHandler = (_: unknown, data: ApiResponseType): void => {
+      if (data.target !== "controller") return;
+      if (typeGuard.controller.message(data)) {
+        setMessage({
+          title: data.title ?? "未知のエラーが発生しました",
+          content: data.message,
+        });
+      }
+    };
+    window.api.onResponse(eventHandler);
+    return () => {
+      window.api.remove(eventHandler);
+    };
+  }, [setMessage]);
   return (
     <>
       <div className={Styles.wrapper}>
