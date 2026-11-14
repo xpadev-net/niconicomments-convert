@@ -1,7 +1,6 @@
 import type { TRemoteMovieItemFormat } from "@/@types/queue";
 import type { SpawnResult } from "@/@types/spawn";
 
-import { sendMessageToController } from "../../controller-window";
 import { downloadDMC } from "./dmc";
 import { downloadDMS } from "./dms";
 import { getMetadata } from "./utils";
@@ -11,23 +10,19 @@ const download = async (
   format: TRemoteMovieItemFormat,
   path: string,
   progress: (total: number, downloaded: number, eta: number) => void,
-): Promise<SpawnResult | undefined> => {
-  const metadata = await getMetadata(nicoId);
+  signal: AbortSignal,
+): Promise<SpawnResult> => {
+  const metadata = await getMetadata(nicoId, signal);
+  signal.throwIfAborted();
   if (!metadata) {
-    sendMessageToController({
-      type: "message",
-      title: "動画情報の取得に失敗しました",
-      message:
-        "動画が削除などされていないか確認してください\nniconico / download / failed to get metadata",
-    });
-    return;
+    throw new Error(
+      "動画情報の取得に失敗しました。動画が削除などされていないか確認してください",
+    );
   }
   if (format.type === "dmc") {
-    return await downloadDMC(metadata, format, path, progress);
+    return await downloadDMC(metadata, format, path, progress, signal);
   }
-  if (format.type === "dms") {
-    return await downloadDMS(metadata, format, path, progress);
-  }
+  return await downloadDMS(metadata, format, path, progress, signal);
 };
 
 export { download };

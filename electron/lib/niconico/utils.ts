@@ -26,14 +26,18 @@ const getUserInfo = async (cookies: string): Promise<UserData | undefined> => {
 
 const getMetadata = async (
   nicoId: string,
+  signal?: AbortSignal,
 ): Promise<V3MetadataBody | undefined> => {
+  signal?.throwIfAborted();
   const cookies = await getCookies();
+  signal?.throwIfAborted();
   if (!cookies) {
-    return getV3GuestMetadata(nicoId);
+    return getV3GuestMetadata(nicoId, signal);
   }
   const req = await fetch(
     `https://www.nicovideo.jp/watch/${nicoId}?responseType=json`,
     {
+      signal,
       headers: {
         Cookie: convertToEncodedCookie(cookies),
       },
@@ -41,14 +45,18 @@ const getMetadata = async (
   );
   const metadata = (await req.json()) as unknown;
   if (!typeGuard.niconico.WatchPageJson(metadata)) {
-    return getV3GuestMetadata(nicoId);
+    return getV3GuestMetadata(nicoId, signal);
   }
   return metadata.data.response;
 };
 
-const getV3GuestMetadata = async (nicoId: string): Promise<V3MetadataBody> => {
+const getV3GuestMetadata = async (
+  nicoId: string,
+  signal?: AbortSignal,
+): Promise<V3MetadataBody> => {
   const req = await fetch(
     `https://www.nicovideo.jp/watch/${nicoId}?responseType=json`,
+    { signal },
   );
   const metadata = (await req.json()) as unknown;
   if (!typeGuard.niconico.WatchPageJson(metadata)) {

@@ -9,13 +9,7 @@ import { sendMessageToController } from "./controller-window";
 import { ConversionSession } from "./conversion-session";
 import { encodeError } from "./lib/json";
 import { getLogger } from "./lib/log";
-import {
-  download,
-  downloadComment,
-  interruptCommentDownload,
-} from "./lib/niconico";
-import { interruptDMC } from "./lib/niconico/dmc";
-import { interruptDMS } from "./lib/niconico/dms";
+import { download, downloadComment } from "./lib/niconico";
 import { createRendererWindow, sendMessageToRenderer } from "./renderer-window";
 
 const logger = getLogger("[queue]");
@@ -32,6 +26,8 @@ type ActiveSession = {
 };
 let activeSession: ActiveSession | undefined;
 const isConversionProcessing = (): boolean => activeSession !== undefined;
+let movieDownloadController: AbortController | undefined;
+let commentDownloadController: AbortController | undefined;
 const appendQueue = (queue: Queue): void => {
   queueList.push(queue);
   if (queue.type === "convert") {
@@ -59,13 +55,10 @@ const appendQueue = (queue: Queue): void => {
 const startMovieDownload = async (): Promise<void> => {
   const queued = queueLists.movie.filter((i) => i.status === "queued");
   const targetQueue = queued[0];
-  if (
-    queueLists.movie.filter((i) => i.status === "processing").length > 0 ||
-    queued.length === 0 ||
-    !targetQueue
-  )
-    return;
+  if (movieDownloadController || queued.length === 0 || !targetQueue) return;
 
+  const controller = new AbortController();
+  movieDownloadController = controller;
   targetQueue.status = "processing";
   targetQueue.progress.percent = 0;
   sendProgress();
@@ -78,11 +71,12 @@ const startMovieDownload = async (): Promise<void> => {
         targetQueue.progress.percent = downloaded / total;
         sendProgress();
       },
+      controller.signal,
     );
     if (targetQueue.status === "processing") targetQueue.status = "completed";
   } catch (e) {
-    logger.error("failed to download movie", e);
     if (targetQueue.status === "processing") {
+      logger.error("failed to download movie", e);
       targetQueue.status = "fail";
       sendMessageToController({
         type: "message",
@@ -90,6 +84,8 @@ const startMovieDownload = async (): Promise<void> => {
         message: `エラー内容:\n${encodeError(e)}`,
       });
     }
+  } finally {
+    movieDownloadController = undefined;
   }
   sendProgress();
   void startMovieDownload();
@@ -99,29 +95,30 @@ const startMovieDownload = async (): Promise<void> => {
 const startCommentDownload = async (): Promise<void> => {
   const queued = queueLists.comment.filter((i) => i.status === "queued");
   const targetQueue = queued[0];
-  if (
-    queueLists.comment.filter((i) => i.status === "processing").length > 0 ||
-    queued.length === 0 ||
-    !targetQueue
-  )
-    return;
+  if (commentDownloadController || queued.length === 0 || !targetQueue) return;
+  const controller = new AbortController();
+  commentDownloadController = controller;
   targetQueue.status = "processing";
   targetQueue.progress.percent = 0;
   sendProgress();
   try {
-    await downloadComment(targetQueue, (total, downloaded, message) => {
-      targetQueue.progress = {
-        percent: downloaded / total,
-        total,
-        processed: downloaded,
-        message,
-      };
-      sendProgress();
-    });
+    await downloadComment(
+      targetQueue,
+      (total, downloaded, message) => {
+        targetQueue.progress = {
+          percent: downloaded / total,
+          total,
+          processed: downloaded,
+          message,
+        };
+        sendProgress();
+      },
+      controller.signal,
+    );
     if (targetQueue.status === "processing") targetQueue.status = "completed";
   } catch (e) {
-    logger.error("failed to download comment", e);
     if (targetQueue.status === "processing") {
+      logger.error("failed to download comment", e);
       targetQueue.status = "fail";
       sendMessageToController({
         type: "message",
@@ -129,6 +126,8 @@ const startCommentDownload = async (): Promise<void> => {
         message: `エラー内容:\n${encodeError(e)}`,
       });
     }
+  } finally {
+    commentDownloadController = undefined;
   }
   sendProgress();
   void startCommentDownload();
@@ -294,11 +293,10 @@ const processOnInterrupt = (queueId: UUID): void => {
     }
   } else if (queue.type === "movie") {
     queue.status = "interrupted";
-    if (queue.format.type === "dmc") interruptDMC();
-    if (queue.format.type === "dms") interruptDMS();
+    movieDownloadController?.abort();
   } else if (queue.type === "comment") {
     queue.status = "interrupted";
-    interruptCommentDownload();
+    commentDownloadController?.abort();
   }
   sendProgress();
   void startConvert();

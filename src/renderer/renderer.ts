@@ -66,7 +66,7 @@ const startRenderer = async (): Promise<void> => {
   if (!response) return;
   const { commentData, queue, sessionId } = response;
   inProgress = true;
-  message.innerText = "コメントを処理しています...";
+  message.textContent = "コメントを処理しています...";
   const { format, data } = transformComments(queue.comment.format, commentData);
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   canvas.width = queue.option.width;
@@ -126,7 +126,7 @@ const startRenderer = async (): Promise<void> => {
     pendingSends.push(promise);
     return promise;
   };
-  message.innerText = "";
+  message.textContent = "";
   let generatedFrames = 0;
   let offset = Math.ceil((queue.option.ss ?? 0) * 100);
   const targetFrameRate = queue.option.fps || 30;
@@ -180,7 +180,7 @@ const startRenderer = async (): Promise<void> => {
           host: "renderer",
           frameId: generatedFrames - droppedFrames,
         });
-        message.innerText = "変換の終了を待っています...";
+        message.textContent = "変換の終了を待っています...";
         return;
       }
       await sleep(0);

@@ -11,46 +11,36 @@ import type {
 import type { CommentQueue } from "@/@types/queue";
 import type { V1Raw } from "@/@types/types";
 
-import { sendMessageToController } from "../../../controller-window";
 import { sleep } from "../../../utils";
 import {
   type BaseData,
   downloadCustomComment,
-  stopDownloadCustomComment,
 } from "./custom-comment-downloader";
 import { convertV3ToFormatted } from "./utils";
-
-let interrupt = false;
 
 const downloadComment = async (
   queue: CommentQueue,
   updateProgress: (total: number, progress: number, message?: string) => void,
+  signal: AbortSignal,
 ): Promise<void> => {
-  try {
-    const formattedComments =
-      queue.option.type === "simple"
-        ? await downloadV3V1SimpleComment(
-            queue.option,
-            queue.metadata,
-            updateProgress,
-          )
-        : await downloadV3V1CustomComment(
-            queue.option,
-            queue.metadata,
-            updateProgress,
-          );
-    console.log("comment downloaded");
-    const xml = convertToXml(formattedComments);
-    console.log("comment converted");
-    fs.writeFileSync(queue.path, xml, "utf-8");
-  } catch (e) {
-    console.error(e);
-    sendMessageToController({
-      type: "message",
-      title: "コメントのダウンロードに失敗しました",
-      message: `コメントのダウンロードに失敗しました\n動画が存在しているか、ログインできているか確認してみてください\n${e}\nlib/niconico/comments.ts / downloadComment`,
-    });
-  }
+  signal.throwIfAborted();
+  const formattedComments =
+    queue.option.type === "simple"
+      ? await downloadV3V1SimpleComment(
+          queue.option,
+          queue.metadata,
+          updateProgress,
+          signal,
+        )
+      : await downloadV3V1CustomComment(
+          queue.option,
+          queue.metadata,
+          updateProgress,
+          signal,
+        );
+  signal.throwIfAborted();
+  const xml = convertToXml(formattedComments);
+  fs.writeFileSync(queue.path, xml, "utf-8");
 };
 
 const convertToXml = (comments: FormattedComment[]): string => {
@@ -84,6 +74,7 @@ const downloadV3V1SimpleComment = async (
   option: TCommentOptionSimple,
   metadata: V3MetadataComment,
   updateProgress: (total: number, progress: number) => void,
+  signal: AbortSignal,
 ): Promise<FormattedComment[]> => {
   const userList: string[] = [];
   const targetThreads = option.threads.filter((thread) => thread.enable);
@@ -99,6 +90,7 @@ const downloadV3V1SimpleComment = async (
     additionals: {},
   };
   const req = await fetch(`${metadata.nvComment.server}/v1/threads`, {
+    signal,
     method: "POST",
     headers: {
       "content-type": "text/plain;charset=UTF-8",
@@ -120,8 +112,8 @@ const downloadV3V1CustomComment = async (
   option: TCommentOptionCustom,
   metadata: V3MetadataComment,
   updateProgress: (total: number, progress: number, message?: string) => void,
+  signal: AbortSignal,
 ): Promise<FormattedComment[]> => {
-  interrupt = false;
   const userList: string[] = [];
   const comments: FormattedComment[][] = [];
   const start = Math.floor(new Date(option.start).getTime() / 1000);
@@ -133,7 +125,7 @@ const downloadV3V1CustomComment = async (
   let threadId = 0;
   for (const thread of option.threads) {
     if (!thread.enable) continue;
-    if (interrupt) break;
+    signal.throwIfAborted();
     const when = Math.floor(new Date(option.start).getTime() / 1000);
     const baseData: BaseData = {
       threadKey: metadata.nvComment.threadKey,
@@ -159,6 +151,7 @@ const downloadV3V1CustomComment = async (
         threadId,
         start,
         userList,
+        signal,
       ),
     );
     threadId++;
@@ -167,9 +160,4 @@ const downloadV3V1CustomComment = async (
   return comments.flat(1);
 };
 
-const interruptCommentDownload = (): void => {
-  interrupt = true;
-  stopDownloadCustomComment();
-};
-
-export { downloadComment, interruptCommentDownload };
+export { downloadComment };
