@@ -14,6 +14,7 @@
     "build:mac": "tsc -p electron && pnpm run copy-files && node build-script/mac.js",
     "build": "pnpm run build:win && pnpm run build:mac",
     "copy-files": "rimraf build/electron/html && vite build",
+    "test:process": "tsc -p electron && node --test tests/process-runner.test.cjs",
     "check-types": "tsc --noEmit -p ./ && tsc --noEmit -p ./electron",
     "electron:dev": "tsc -p electron&&concurrently \"vite\" \"electron --unhandled-rejections=strict .\"",
     "eslint": "biome lint ./src ./electron",

@@ -15,7 +15,7 @@ import { ffprobePath } from "./assets";
 import { sendMessageToController } from "./controller-window";
 import { encodeError } from "./lib/json";
 import { getLogger } from "./lib/log";
-import { spawn } from "./lib/spawn";
+import { ProcessError, spawn } from "./lib/spawn";
 import { store } from "./store";
 import { identifyCommentFormat } from "./utils/niconicomments";
 
@@ -74,17 +74,20 @@ const analyzeMovieFile = async (
       "-show_streams",
     ]).promise;
   } catch (e: unknown) {
-    const error = e as SpawnResult;
-    logger.error("failed to execute ffprobe", "error:", error);
+    const error = e instanceof ProcessError ? e : undefined;
+    logger.error("failed to execute ffprobe", "error:", e);
     return {
       message: {
         type: "message",
         title: "動画ファイルの解析に失敗しました",
-        message: `ffprobeの実行に失敗しました\n終了コード:\n${error.code}\n標準出力:\n${error.stdout}\n標準エラー出力:\n${error.stderr}\ndialog / selectMovie / failed to execute ffprobe`,
+        message: `ffprobeの実行に失敗しました\n終了コード:\n${error?.code ?? "不明"}\nエラー内容:\n${e instanceof Error ? e.message : String(e)}\n標準出力:\n${error?.stdout ?? ""}\n標準エラー出力:\n${error?.stderr ?? ""}\ndialog / selectMovie / failed to execute ffprobe`,
       },
     };
   }
   try {
+    if (ffprobe.stdoutTruncated) {
+      throw new Error("ffprobeの標準出力が保持上限を超えました");
+    }
     metadata = JSON.parse(ffprobe.stdout) as FfprobeOutput;
   } catch (e) {
     logger.error(
