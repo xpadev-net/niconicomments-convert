@@ -153,7 +153,17 @@ export class Converter {
         if (stdio == null) throw Error(`input ${fd} is null`);
         debugStream(stream, `input ${fd}`);
         if (!("write" in stdio)) throw Error(`input ${fd} is not writable`);
-        stream.pipe(stdio);
+        stdio.on("error", (error) => stream.destroy(error));
+        if (stream.destroyed) {
+          stdio.destroy();
+        } else {
+          stream.once("close", () => {
+            // A normal readable end already calls stdio.end() through pipe().
+            // Let its pending writes flush; only abort an unfinished input.
+            if (!stream.readableEnded) stdio.destroy();
+          });
+          stream.pipe(stdio);
+        }
       },
     });
 

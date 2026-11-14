@@ -467,16 +467,30 @@ function loadConversionQueue(Converter) {
     "./ffmpeg-stream/stream": { Converter },
     "./store": { store: { get: () => undefined } },
   });
-  const startConverter = converter.startConverter;
-  converter.startConverter = async (...args) => {
-    try {
-      await startConverter(...args);
-    } finally {
-      conversionSettled = true;
-    }
+  const backends = [];
+  const createConverter = converter.createConverter;
+  converter.createConverter = (...args) => {
+    const backend = createConverter(...args);
+    backends.push(backend);
+    const run = backend.run;
+    backend.run = async () => {
+      try {
+        await run();
+      } finally {
+        conversionSettled = true;
+      }
+    };
+    return backend;
   };
+  const { ConversionSession } = loadWithMocks(
+    "build/electron/conversion-session.js",
+    {
+      "./converter": converter,
+    },
+  );
+  let rendererId = 0;
   const queue = loadWithMocks("build/electron/queue.js", {
-    "./converter": converter,
+    "./conversion-session": { ConversionSession },
     "./controller-window": {
       sendMessageToController: (message) => {
         messages.push(structuredClone(message));
@@ -492,8 +506,17 @@ function loadConversionQueue(Converter) {
       },
     },
     "./renderer-window": {
-      createRendererWindow() {},
-      sendMessageToRenderer: (message) => {
+      createRendererWindow: () => ({
+        webContents: { id: ++rendererId },
+        destroyed: false,
+        isDestroyed() {
+          return this.destroyed;
+        },
+        destroy() {
+          this.destroyed = true;
+        },
+      }),
+      sendMessageToRenderer: (_renderer, message) => {
         rendererMessages.push(message);
       },
     },
@@ -514,7 +537,9 @@ function loadConversionQueue(Converter) {
   };
   return {
     ...queue,
-    converter,
+    stop: () => {
+      for (const backend of backends) backend.stop();
+    },
     job,
     messages,
     rendererMessages,
@@ -536,12 +561,12 @@ processTest(
       },
     );
     const queue = loadConversionQueue(Converter);
-    t.after(() => queue.converter.interruptConverter());
+    t.after(() => queue.stop());
     queue.appendQueue(queue.job);
     await ready.promise;
     assert.equal(queue.job.status, "processing");
     queue.processOnInterrupt(queue.job.id);
-    assert.equal(queue.job.status, "interrupted");
+    assert.equal(queue.job.status, "processing");
     await queue.finished;
     assert.equal(queue.job.status, "interrupted");
     assert.equal(
