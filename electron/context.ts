@@ -5,8 +5,8 @@ const baseUrl = app.isPackaged
   ? `file://${__dirname}/html/index.html`
   : "http://localhost:5173";
 
-const basePath = path.join(__dirname, app.isPackaged ? "../../../" : "");
+const binPath = path.join(app.getPath("userData"), "bin");
 
 const appPrefix = "niconicomments-convert";
 
-export { appPrefix, basePath, baseUrl };
+export { appPrefix, baseUrl, binPath };

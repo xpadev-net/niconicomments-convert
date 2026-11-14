@@ -1,23 +1,9 @@
-import { app, BrowserWindow, globalShortcut } from "electron";
+import { app, globalShortcut } from "electron";
 
-import { onStartUp } from "./assets";
-import { createControllerWindow } from "./controller-window";
 import { registerListener } from "./ipc-manager";
 import { initLogger } from "./lib/log";
+import { startApplication } from "./startup";
 
-app.on("window-all-closed", () => {
-  app.quit();
-});
-app
-  .whenReady()
-  .then(async () => {
-    await onStartUp();
-    createControllerWindow();
-    app.on("activate", () => {
-      if (BrowserWindow.getAllWindows().length === 0) createControllerWindow();
-    });
-  })
-  .catch((e) => console.warn(e));
 if (app.isPackaged) {
   app.on("browser-window-focus", () => {
     globalShortcut.register("CommandOrControl+R", () => {
@@ -35,3 +21,4 @@ if (app.isPackaged) {
 }
 initLogger();
 registerListener();
+void startApplication();

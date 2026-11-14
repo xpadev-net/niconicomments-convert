@@ -26,6 +26,13 @@ I made it up as I went along, so if you get an error, start it up again and try 
   A notification will appear when the conversion is complete
 
 ## For developers
+### Startup and storage
+- ffmpeg / ffprobe are stored in `bin` under Electron's `app.getPath("userData")`.
+- Daily log files are stored in `app.getPath("logs")`.
+- Binaries stored in the installation directory by older versions are downloaded again on first launch after updating.
+- If preparation fails, choose Retry or Exit. Closing the download window cancels preparation and exits the app.
+
+### Commands
 - This repository uses `pnpm` as its package manager.
 - Install dependencies: `pnpm install`
 - Lint: `pnpm lint`

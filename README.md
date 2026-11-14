@@ -23,6 +23,13 @@ niconicommentsを使って動画を書き出す簡易ツール(?)です
 → [チュートリアル](https://github.com/xpadev-net/niconicomments-convert/wiki/%E3%83%81%E3%83%A5%E3%83%BC%E3%83%88%E3%83%AA%E3%82%A2%E3%83%AB)
 
 ## 開発者向け
+### 起動準備と保存先
+- ffmpeg / ffprobe は Electron の `app.getPath("userData")` 配下の `bin` に保存します。
+- ログは `app.getPath("logs")` に日付別で保存します。
+- 旧バージョンでインストール先に保存したバイナリは移行しないため、更新後の初回起動時は再ダウンロードします。
+- 起動準備に失敗した場合は「再試行」「終了」を選択できます。ダウンロード画面を閉じると準備を中止して終了します。
+
+### コマンド
 - パッケージマネージャーは `pnpm` を使用します
 - 依存関係のインストール: `pnpm install`
 - Lint: `pnpm lint`

@@ -1,23 +1,26 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { app } from "electron";
 import log from "electron-log/main";
-
-import { basePath } from "../context";
 
 export const initLogger = (): void => {
   log.initialize();
-  const logDir = path.join(basePath, "logs");
-  if (!fs.existsSync(logDir)) {
-    fs.mkdirSync(logDir);
-  }
-
   const d = new Date();
   const prefix =
     d.getFullYear() +
     `00${d.getMonth() + 1}`.slice(-2) +
     `00${d.getDate()}`.slice(-2);
-  log.transports.file.level = "info";
-  log.transports.file.resolvePathFn = () => path.join(logDir, `${prefix}.log`);
+  try {
+    const logDir = app.getPath("logs");
+    fs.mkdirSync(logDir, { recursive: true });
+    log.transports.file.resolvePathFn = () =>
+      path.join(logDir, `${prefix}.log`);
+    log.transports.file.level = "info";
+  } catch (error) {
+    // Keep startup and its error dialog usable even if the log directory fails.
+    log.transports.file.level = false;
+    log.warn("Failed to initialize file logging:", error);
+  }
   process.on("uncaughtException", (err) => {
     log.error(err);
   });
