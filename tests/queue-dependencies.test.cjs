@@ -41,6 +41,7 @@ function loadModule(file, mocks, globals = {}) {
     readFileSync(path.join(temporary, file), "utf8"),
     {
       exports,
+      AbortController,
       require: (name) =>
         Object.hasOwn(mocks, name) ? mocks[name] : require(name),
       ...globals,
@@ -115,20 +116,19 @@ function harness() {
     "./lib/json": { encodeError: String },
     "./lib/log": { getLogger: () => ({ error: () => {} }) },
     "./lib/niconico": {
-      download: () => {
+      download: (_url, _format, _path, _progress, signal) => {
         const task = deferred();
+        signal.addEventListener("abort", () => interrupted.push("movie"));
         downloads.movie.push(task);
         return task.promise;
       },
-      downloadComment: () => {
+      downloadComment: (_job, _progress, signal) => {
         const task = deferred();
+        signal.addEventListener("abort", () => interrupted.push("comment"));
         downloads.comment.push(task);
         return task.promise;
       },
-      interruptCommentDownload: () => interrupted.push("comment"),
     },
-    "./lib/niconico/dmc": { interruptDMC: () => interrupted.push("movie") },
-    "./lib/niconico/dms": { interruptDMS: () => interrupted.push("movie") },
     "./renderer-window": {
       createRendererWindow: () => {},
       sendMessageToRenderer: () => {},

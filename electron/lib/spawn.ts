@@ -23,6 +23,7 @@ function spawn(
   });
   return {
     promise: new Promise<SpawnResult>((resolve, reject) => {
+      p.on("error", reject);
       p.on("exit", (code) => {
         if (code === 0) {
           resolve({
