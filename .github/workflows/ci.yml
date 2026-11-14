@@ -33,7 +33,7 @@ jobs:
       - name: Run type check
         run: pnpm check-types
 
-      - name: Run tests
+      - name: Run regression tests
         run: pnpm test
 
   build-test:
@@ -58,7 +58,7 @@ jobs:
           pnpm install --frozen-lockfile
           
       - name: Build TypeScript (Electron)
-        run: tsc -p electron
+        run: pnpm exec tsc -p electron
         
       - name: Build Frontend
         run: pnpm copy-files

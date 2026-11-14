@@ -28,8 +28,10 @@ const interruptConverter = (): void => {
 };
 
 const getFfmpegOptions = (queue: ConvertQueue): FfmpegOptions => {
-  const options =
-    (store.get("ffmpegOptions") as FfmpegOptions | undefined) ?? defaultOptions;
+  const options = {
+    ...((store.get("ffmpegOptions") as FfmpegOptions | undefined) ??
+      defaultOptions),
+  };
   const replace = {
     "{FPS}": queue.option.fps.toString(),
     "{width}": queue.option.width.toString(),
