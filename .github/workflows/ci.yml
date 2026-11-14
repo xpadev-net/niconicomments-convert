@@ -62,3 +62,37 @@ jobs:
         
       - name: Build Frontend
         run: pnpm copy-files
+
+  packaged-startup:
+    needs: lint-and-typecheck
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: win
+            executable: dist/win-unpacked/niconicomments-convert.exe
+          - os: macos-15-intel
+            target: mac
+            executable: dist/mac/niconicomments-convert.app/Contents/MacOS/niconicomments-convert
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run regression tests on the distribution OS
+        run: pnpm test
+      - name: Build Frontend
+        run: pnpm copy-files
+      - name: Package application for startup test
+        run: pnpm exec electron-builder --dir --${{ matrix.target }} --x64 --publish never
+      - name: Launch packaged application and check UI and IPC
+        run: pnpm test:smoke "${{ matrix.executable }}"
