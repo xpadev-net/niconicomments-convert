@@ -40,6 +40,8 @@ const object =
     (!exact || Object.keys(value).every((key) => Object.hasOwn(shape, key)));
 const string: Schema<string> = (value): value is string =>
   typeof value === "string";
+const nonemptyString: Schema<string> = (value): value is string =>
+  string(value) && value.trim().length > 0;
 const boolean: Schema<boolean> = (value): value is boolean =>
   typeof value === "boolean";
 const number: Schema<number> = (value): value is number =>
@@ -354,9 +356,11 @@ const requestSchemas: RequestSchemas = {
       {
         ...renderer,
         type: choices("blob"),
-        sessionId: string,
-        frameId: integer,
-        data: (value): value is Uint8Array => value instanceof Uint8Array,
+        sessionId: nonemptyString,
+        // Frame IDs start at 1; zero is only valid as an empty end count.
+        frameId: (value): value is number => integer(value) && value > 0,
+        data: (value): value is Uint8Array =>
+          value instanceof Uint8Array && value.byteLength > 0,
       },
       true,
     ),
@@ -364,7 +368,7 @@ const requestSchemas: RequestSchemas = {
       {
         ...renderer,
         type: choices("end"),
-        sessionId: string,
+        sessionId: nonemptyString,
         frameId: integer,
       },
       true,
