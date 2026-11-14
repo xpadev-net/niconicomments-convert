@@ -2,35 +2,26 @@ import type { CreateSessionRequest, V3MetadataBody } from "@/@types/niconico";
 import type { TDMCFormat } from "@/@types/queue";
 import type { SpawnResult } from "@/@types/spawn";
 
-import { sendMessageToController } from "../../controller-window";
 import { typeGuard } from "../../type-guard";
 import { DownloadM3U8 } from "../../utils/ffmpeg";
-
-let stop: (() => void) | undefined;
 
 const downloadDMC = async (
   metadata: V3MetadataBody,
   format: TDMCFormat,
   path: string,
   progress: (total: number, downloaded: number, eta: number) => void,
-): Promise<SpawnResult | undefined> => {
+  signal: AbortSignal,
+): Promise<SpawnResult> => {
+  signal.throwIfAborted();
   if (!typeGuard.niconico.v3DMC(metadata)) {
     if (typeGuard.niconico.v3DMS(metadata)) {
-      sendMessageToController({
-        title: "動画情報の取得に失敗しました",
-        message:
-          "DMC上に動画が見つかりませんでした\nDMSからの取得を試してみてください\nlib/niconico/dmc.ts / downloadDMC / invalid server",
-        type: "message",
-      });
-      return;
+      throw new Error(
+        "DMC上に動画が見つかりませんでした\nDMSからの取得を試してみてください",
+      );
     }
-    sendMessageToController({
-      title: "動画情報の取得に失敗しました",
-      message:
-        "未購入の有料動画などの可能性があります\nlib/niconico/dmc.ts / downloadDMC / invalid metadata",
-      type: "message",
-    });
-    return;
+    throw new Error(
+      "動画情報の取得に失敗しました。未購入の有料動画などの可能性があります",
+    );
   }
   if (metadata.media.delivery.trackingId) {
     const trackingReq = await fetch(
@@ -38,6 +29,7 @@ const downloadDMC = async (
         t: metadata.media.delivery.trackingId,
       }).toString()}`,
       {
+        signal,
         method: "GET",
         headers: {
           "X-Frontend-Id": "6",
@@ -51,6 +43,7 @@ const downloadDMC = async (
   }
   const requestBody = createSessionCreateRequestBody(metadata, format);
   const req = await fetch("https://api.dmc.nico/api/sessions?_format=json", {
+    signal,
     method: "POST",
     headers: {
       Origin: "https://www.nicovideo.jp",
@@ -61,58 +54,53 @@ const downloadDMC = async (
   });
   const res = (await req.json()) as unknown;
   if (!typeGuard.niconico.CreateSessionResponse(res)) {
-    sendMessageToController({
-      title: "セッションの作成に失敗しました",
-      message:
-        "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください\nlib/niconico/dmc.ts / downloadDMC / invalid session",
-      type: "message",
-    });
-    return;
+    throw new Error(
+      "セッションの作成に失敗しました。時間をおいて再度試してみてください",
+    );
   }
+  signal.throwIfAborted();
   let lastSession = res.data;
-  const heartbeatInterval = setInterval(() => {
-    void (async () => {
-      const req = await fetch(
-        `https://api.dmc.nico/api/sessions/${lastSession.session.id}?_format=json&_method=PUT`,
-        {
-          method: "POST",
-          headers: {
-            Origin: "https://www.nicovideo.jp",
-            Referer: "https://www.nicovideo.jp",
-            "Content-Type": "text/plain;charset=UTF-8",
-          },
-          body: JSON.stringify(lastSession),
-        },
-      );
-      const res = (await req.json()) as unknown;
-      if (!typeGuard.niconico.CreateSessionResponse(res)) {
-        sendMessageToController({
-          title: "セッションの更新に失敗しました",
-          message:
-            "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください\nlib/niconico/dmc.ts / downloadDMC / invalid session",
-          type: "message",
-        });
-        throw new Error("failed to renew session");
-      }
-      lastSession = res.data;
-    })();
-  }, 30 * 1000);
-
-  const { stop: _stop, promise } = DownloadM3U8(
+  const { stop, promise } = DownloadM3U8(
     ["-i", lastSession.session.content_uri, "-c", "copy", path, "-y"],
     progress,
   );
-  let cancelled = false;
-  stop = () => {
-    _stop();
-    cancelled = true;
-  };
+  signal.addEventListener("abort", stop, { once: true });
+  const heartbeatController = new AbortController();
+  const heartbeatSignal = AbortSignal.any([signal, heartbeatController.signal]);
+  let heartbeatInterval: ReturnType<typeof setInterval> | undefined;
+  const heartbeatFailure = new Promise<never>((_resolve, reject) => {
+    heartbeatInterval = setInterval(() => {
+      void (async () => {
+        const req = await fetch(
+          `https://api.dmc.nico/api/sessions/${lastSession.session.id}?_format=json&_method=PUT`,
+          {
+            signal: heartbeatSignal,
+            method: "POST",
+            headers: {
+              Origin: "https://www.nicovideo.jp",
+              Referer: "https://www.nicovideo.jp",
+              "Content-Type": "text/plain;charset=UTF-8",
+            },
+            body: JSON.stringify(lastSession),
+          },
+        );
+        const res = (await req.json()) as unknown;
+        if (!typeGuard.niconico.CreateSessionResponse(res)) {
+          throw new Error("セッションの更新に失敗しました");
+        }
+        lastSession = res.data;
+      })().catch(reject);
+    }, 30 * 1000);
+  });
   try {
-    const result = await promise;
+    const result = await Promise.race([promise, heartbeatFailure]);
+    signal.throwIfAborted();
     clearInterval(heartbeatInterval);
+    heartbeatController.abort();
     const delReq = await fetch(
       `https://api.dmc.nico/api/sessions/${lastSession.session.id}?_format=json&_method=DELETE`,
       {
+        signal,
         method: "POST",
         headers: {
           Origin: "https://www.nicovideo.jp",
@@ -123,16 +111,17 @@ const downloadDMC = async (
       },
     );
     await delReq.json();
+    signal.throwIfAborted();
     return result;
-  } catch (_e) {
-    if (!cancelled) {
-      sendMessageToController({
-        title: "動画のダウンロードに失敗しました",
-        message:
-          "時間をおいて再度試してみてください\n解決しない場合は開発者までお問い合わせください\nlib/niconico/dms.ts / downloadDMS / failed to download",
-        type: "message",
-      });
-    }
+  } catch (error) {
+    stop();
+    // Wait for ffmpeg to exit before the queue starts the next movie download.
+    await promise.catch(() => {});
+    throw error;
+  } finally {
+    clearInterval(heartbeatInterval);
+    heartbeatController.abort();
+    signal.removeEventListener("abort", stop);
   }
 };
 
@@ -211,8 +200,4 @@ const createSessionCreateRequestBody = (
   return sessionBody;
 };
 
-const interruptDMC = (): void => {
-  stop?.();
-};
-
-export { downloadDMC, interruptDMC };
+export { downloadDMC };
