@@ -15,44 +15,61 @@ const typeGuard = {
   controller: {
     selectMovie: (i: unknown): i is ApiResponseSelectMovie =>
       typeof i === "object" &&
+      i !== null &&
       (i as ApiResponseSelectMovie).type === "selectMovie",
     selectComment: (i: unknown): i is ApiResponseSelectComment =>
       typeof i === "object" &&
+      i !== null &&
       (i as ApiResponseSelectComment).type === "selectComment",
     dropFiles: (i: unknown): i is ApiResponseDropFiles =>
-      typeof i === "object" && (i as ApiResponseDropFiles).type === "dropFiles",
+      typeof i === "object" &&
+      i !== null &&
+      (i as ApiResponseDropFiles).type === "dropFiles",
     progress: (i: unknown): i is ApiResponseProgress =>
-      typeof i === "object" && (i as ApiResponseProgress).type === "progress",
+      typeof i === "object" &&
+      i !== null &&
+      (i as ApiResponseProgress).type === "progress",
     start: (i: unknown): i is ApiResponseStartController =>
       typeof i === "object" &&
+      i !== null &&
       (i as ApiResponseStartController).type === "start",
     end: (i: unknown): i is ApiResponseEnd =>
-      typeof i === "object" && (i as ApiResponseEnd).type === "end",
+      typeof i === "object" &&
+      i !== null &&
+      (i as ApiResponseEnd).type === "end",
     message: (i: unknown): i is ApiResponseMessage =>
-      typeof i === "object" && (i as ApiResponseMessage).type === "message",
+      typeof i === "object" &&
+      i !== null &&
+      (i as ApiResponseMessage).type === "message",
     v3DMC: (i: unknown): i is V3MetadataBody<"dmc"> =>
       typeof i === "object" &&
       i !== null &&
       "media" in (i as V3MetadataBody) &&
-      !!(i as V3MetadataBody).media.delivery,
+      !!(i as V3MetadataBody).media?.delivery,
     v3DMS: (i: unknown): i is V3MetadataBody<"dms"> =>
       typeof i === "object" &&
       i !== null &&
       "media" in (i as V3MetadataBody) &&
-      !!(i as V3MetadataBody).media.domand,
+      !!(i as V3MetadataBody).media?.domand,
   },
   renderer: {
     progress: (i: unknown): i is ApiResponseProgress =>
-      typeof i === "object" && (i as ApiResponseProgress).type === "progress",
+      typeof i === "object" &&
+      i !== null &&
+      (i as ApiResponseProgress).type === "progress",
     end: (i: unknown): i is ApiResponseEnd =>
-      typeof i === "object" && (i as ApiResponseEnd).type === "end",
+      typeof i === "object" &&
+      i !== null &&
+      (i as ApiResponseEnd).type === "end",
     reportProgress: (i: unknown): i is ApiResponseReportProgress =>
       typeof i === "object" &&
+      i !== null &&
       (i as ApiResponseReportProgress).type === "reportProgress",
   },
   binaryDownloader: {
     progress: (i: unknown): i is ApiResponseDownloadProgress =>
       typeof i === "object" &&
+      i !== null &&
       (i as ApiResponseDownloadProgress).type === "downloadProgress",
   },
 };

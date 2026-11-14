@@ -18,6 +18,7 @@ const createBinaryDownloaderWindow = async (): Promise<void> => {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
       contextIsolation: true,
+      additionalArguments: ["--ipc-role=downloader"],
     },
   });
   binaryDownloaderWindow.removeMenu();

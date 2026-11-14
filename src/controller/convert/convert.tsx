@@ -14,7 +14,6 @@ import TextField from "@mui/material/TextField";
 import { useSetAtom } from "jotai";
 import type { FC, DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-
 import type { UUID } from "@/@types/brand";
 import type { NiconicommentsOptions, Options } from "@/@types/options";
 import type { TCommentItem, TMovieItem } from "@/@types/queue";
@@ -23,6 +22,7 @@ import { SelectField } from "@/components/select-field";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import { CommentPicker } from "@/controller/comment-picker";
 import { MoviePicker } from "@/controller/movie-picker";
+import { runControllerTask } from "@/controller/task";
 import { typeGuard } from "@/type-guard";
 import { str2time, time2str } from "@/util/time";
 import { uuid } from "@/util/uuid";
@@ -122,17 +122,12 @@ const Convert: FC = () => {
               format: data.comment.format,
             });
           }
-        } else if (typeGuard.controller.message(data)) {
-          setMessage({
-            title: data.title ?? "未知のエラーが発生しました",
-            content: data.message,
-          });
         }
       } finally {
         setIsLoading(false);
       }
     },
-    [setIsLoading, setMessage],
+    [setIsLoading],
   );
 
   const isFileDragEvent = useCallback(
@@ -177,7 +172,7 @@ const Convert: FC = () => {
             .filter((filePath): filePath is string => !!filePath),
         ),
       );
-      void handleDropRequest(paths);
+      void runControllerTask(() => handleDropRequest(paths));
     };
 
     window.addEventListener("dragenter", onWindowDragEnter);
@@ -195,7 +190,7 @@ const Convert: FC = () => {
 
   const convert = (): void => {
     if (!comment || !movie) return;
-    void (async () => {
+    void runControllerTask(async () => {
       setIsLoading(true);
       const output = await window.api.request({
         type: "selectOutput",
@@ -265,7 +260,7 @@ const Convert: FC = () => {
       setComment(undefined);
       setMovie(undefined);
       setIsLoading(false);
-    })();
+    }, setIsLoading);
   };
 
   useEffect(() => {

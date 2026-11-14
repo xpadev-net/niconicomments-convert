@@ -2,7 +2,7 @@ import type { SaveDialogOptions } from "electron";
 
 import type { UUID } from "@/@types/brand";
 import type { Queue } from "@/@types/queue";
-import type { ApiRequestLoad } from "@/@types/request.renderer";
+import type { Settings } from "@/@types/setting";
 
 export type ApiRequestFromController = {
   host: "controller";
@@ -19,7 +19,10 @@ export type ApiRequestSelectComment = {
 };
 export type ApiRequestSelectOutput = {
   type: "selectOutput";
-  options: SaveDialogOptions;
+  options: Pick<
+    SaveDialogOptions,
+    "title" | "defaultPath" | "filters" | "properties"
+  >;
 };
 export type ApiRequestSelectFile = {
   type: "selectFile";
@@ -30,21 +33,11 @@ export type ApiRequestAppendQueue = {
   data: Queue;
 };
 export type ApiRequestGetSetting = {
-  type: "getSetting";
-  key: string;
-};
+  [K in keyof Settings]: { type: "getSetting"; key: K };
+}[keyof Settings];
 export type ApiRequestSetSetting = {
-  type: "setSetting";
-  key: string;
-  data: unknown;
-};
-
-export type ApiRequestDownloadMovie = {
-  type: "downloadMovie";
-  url: string;
-  format: string;
-  path: string;
-};
+  [K in keyof Settings]: { type: "setSetting"; key: K; data: Settings[K] };
+}[keyof Settings];
 
 export type ApiRequestGetAvailableProfiles = {
   type: "getAvailableProfiles";
@@ -70,11 +63,9 @@ export type ApiRequestsFromController =
   | ApiRequestSelectMovie
   | ApiRequestDropFiles
   | ApiRequestSelectOutput
-  | ApiRequestLoad
   | ApiRequestSelectFile
   | ApiRequestGetSetting
   | ApiRequestSetSetting
-  | ApiRequestDownloadMovie
   | ApiRequestGetAvailableProfiles
   | ApiRequestGetNiconicoMovieMetadata
   | ApiRequestInterruptQueue

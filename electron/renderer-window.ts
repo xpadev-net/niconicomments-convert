@@ -18,6 +18,7 @@ const createRendererWindow = (
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
       contextIsolation: true,
+      additionalArguments: ["--ipc-role=renderer"],
       backgroundThrottling: false,
     },
     show: !!(store.get("showRendererWindow") ?? true),

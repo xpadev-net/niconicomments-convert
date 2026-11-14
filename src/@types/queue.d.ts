@@ -87,7 +87,10 @@ export type ConvertQueue = BaseQueue & {
     width: number;
     height: number;
     format: CommentFormat;
-    options: Options;
+    options: Pick<
+      Options,
+      "showCollision" | "showCommentCount" | "keepCA" | "scale" | "mode"
+    >;
   };
   wait?: UUID[];
 };

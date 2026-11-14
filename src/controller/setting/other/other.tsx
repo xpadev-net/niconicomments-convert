@@ -1,11 +1,12 @@
 import { FormControlLabel, Switch } from "@mui/material";
 import type { FC } from "react";
 import { useLayoutEffect, useState } from "react";
+import { runControllerTask } from "@/controller/task";
 
 const OtherSetting: FC = () => {
   const [showRendererWindow, setShowRendererWindow] = useState<boolean>(false);
   useLayoutEffect(() => {
-    void (async () => {
+    void runControllerTask(async () => {
       const value =
         (await window.api.request({
           type: "getSetting",
@@ -13,7 +14,7 @@ const OtherSetting: FC = () => {
           host: "controller",
         })) ?? true;
       setShowRendererWindow(!!value);
-    })();
+    });
   }, []);
   return (
     <div>
@@ -24,12 +25,14 @@ const OtherSetting: FC = () => {
             checked={showRendererWindow}
             onChange={() => {
               setShowRendererWindow((pv) => {
-                void window.api.request({
-                  type: "setSetting",
-                  key: "showRendererWindow",
-                  data: !pv,
-                  host: "controller",
-                });
+                void runControllerTask(() =>
+                  window.api.request({
+                    type: "setSetting",
+                    key: "showRendererWindow",
+                    data: !pv,
+                    host: "controller",
+                  }),
+                );
                 return !pv;
               });
             }}

@@ -112,9 +112,14 @@ const ipcHarness = () => {
     frames = [],
     ends = [];
   let handler;
-  let sender = { id: 1 };
+  const createSender = (id) => ({
+    id,
+    mainFrame: { url: "http://localhost/?renderer" },
+    isDestroyed: () => false,
+  });
+  let sender = createSender(1);
   let onLoad = async () => {};
-  const { typeGuard } = load("electron/type-guard.ts", {});
+  const schema = require("../build/electron/ipc-schema.js");
   const { registerListener } = load("electron/ipc-manager.ts", {
     electron: {
       ipcMain: {
@@ -123,14 +128,15 @@ const ipcHarness = () => {
         },
       },
     },
-    "./controller-window": {},
+    "./context": { baseUrl: "http://localhost/" },
+    "./controller-window": { isControllerSender: () => false },
     "./dialog": {},
     "./lib/cookie": {},
     "./lib/json": {},
     "./lib/log": { getLogger: () => ({ debug() {} }) },
     "./lib/niconico": {},
     "./store": {},
-    "./type-guard": { typeGuard },
+    "./ipc-schema": schema,
     "./queue": {
       failConversion: (rendererId, error) => {
         assert.equal(rendererId, sender.id);
@@ -151,13 +157,16 @@ const ipcHarness = () => {
       return sender;
     },
     set sender(value) {
-      sender = value;
+      sender = { ...createSender(value.id), ...value };
     },
     set onLoad(value) {
       onLoad = value;
     },
     request: (from, request) =>
-      handler({ sender: from }, { data: [{ host: "renderer", ...request }] }),
+      handler(
+        { sender: from, senderFrame: from.mainFrame },
+        { host: "renderer", ...request },
+      ),
   };
 };
 
@@ -170,21 +179,20 @@ test("renderer failure IPC terminates only its current session", async () => {
   });
   assert.equal(harness.failures[0].message, "drawing failed");
   harness.sender = { id: 2 };
-  await harness.request(oldSender, {
-    type: "failure",
-    message: "late failure",
-  });
-  await harness.request(oldSender, {
-    type: "blob",
-    sessionId: "old-session",
-    frameId: 1,
-    data: new Uint8Array([1]),
-  });
-  await harness.request(oldSender, {
-    type: "end",
-    sessionId: "old-session",
-    frameId: 1,
-  });
+  for (const request of [
+    { type: "failure", message: "late failure" },
+    {
+      type: "blob",
+      sessionId: "old-session",
+      frameId: 1,
+      data: new Uint8Array([1]),
+    },
+    { type: "end", sessionId: "old-session", frameId: 1 },
+  ])
+    await assert.rejects(
+      harness.request(oldSender, request),
+      /Unauthorized IPC sender/,
+    );
   assert.equal(harness.failures.length, 1);
   assert.equal(harness.frames.length, 0);
   assert.equal(harness.ends.length, 0);

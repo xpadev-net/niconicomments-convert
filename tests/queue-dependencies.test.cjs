@@ -356,6 +356,9 @@ test("queued and active rows expose a working cancel button; terminal rows do no
       "@mui/material": { IconButton: button },
       "@/controller/queue/convert-item.module.scss": {},
       "@/controller/queue/progress-display": { ProgressDisplay: MockComponent },
+      "@/controller/task": loadModule("src/controller/task.js", {
+        "@/util/log": { getLogger: () => ({ error() {} }) },
+      }),
     },
     { window: { api: { request: (request) => requests.push(request) } } },
   );

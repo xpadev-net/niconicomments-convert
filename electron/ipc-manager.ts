@@ -1,6 +1,13 @@
+import type { IpcMainInvokeEvent } from "electron";
 import { ipcMain } from "electron";
 
-import { sendMessageToController } from "./controller-window";
+import type { RequestHandlers } from "@/@types/ipc";
+
+import { baseUrl } from "./context";
+import {
+  isControllerSender,
+  sendMessageToController,
+} from "./controller-window";
 import {
   handleDropFiles,
   selectComment,
@@ -8,8 +15,9 @@ import {
   selectMovie,
   selectOutput,
 } from "./dialog";
+import { isIpcRequest, validSetting } from "./ipc-schema";
 import { getAvailableProfiles } from "./lib/cookie";
-import { encodeError, encodeJson } from "./lib/json";
+import { encodeError } from "./lib/json";
 import { getLogger } from "./lib/log";
 import { getMetadata } from "./lib/niconico";
 import {
@@ -23,100 +31,103 @@ import {
   sendProgress,
 } from "./queue";
 import { store } from "./store";
-import { typeGuard } from "./type-guard";
 
 const logger = getLogger("[ipcManager]");
+const controllerHandlers: RequestHandlers["controller"] = {
+  selectComment: () => selectComment(),
+  selectMovie: () => selectMovie(),
+  selectOutput: (request) => selectOutput(request.options),
+  selectFile: (request) => selectFile(request.pattern),
+  dropFiles: (request) => handleDropFiles(request.paths),
+  appendQueue: (request) => {
+    appendQueue(request.data);
+  },
+  interruptQueue: (request) => {
+    processOnInterrupt(request.queueId);
+  },
+  getSetting: (request) => {
+    const value = store.get(request.key);
+    if (value === undefined) return undefined;
+    if (!validSetting(request.key, value))
+      throw new Error("Invalid stored setting");
+    return value as import("@/@types/setting").Settings[typeof request.key];
+  },
+  setSetting: (request) => {
+    store.set(request.key, request.data);
+  },
+  getAvailableProfiles: () => getAvailableProfiles(),
+  getNiconicoMovieMetadata: (request) => getMetadata(request.nicoId),
+  getQueue: () => {
+    sendProgress();
+  },
+};
+
+const isTrustedFrame = (
+  event: IpcMainInvokeEvent,
+  host: "controller" | "renderer",
+): boolean => {
+  const frame = event.senderFrame;
+  if (!frame || event.sender.isDestroyed() || frame !== event.sender.mainFrame)
+    return false;
+  const expectedUrl = new URL(
+    host === "renderer" ? `${baseUrl}?renderer` : baseUrl,
+  ).href;
+  return frame.url === expectedUrl;
+};
 
 const registerListener = (): void => {
-  ipcMain.handle("request", async (event, args) => {
-    const value = (args as { data: unknown[] }).data[0];
-    const fromRenderer = isRendererSender(event.sender);
-    if (
-      typeof value === "object" &&
-      value !== null &&
-      "host" in value &&
-      value.host === "renderer" &&
-      !fromRenderer
-    )
-      return;
+  ipcMain.handle("request", async (event, value: unknown) => {
+    // Authenticate the actual WebContents and frame before inspecting its payload.
+    const host = isControllerSender(event.sender)
+      ? "controller"
+      : isRendererSender(event.sender)
+        ? "renderer"
+        : undefined;
+    if (!host || !isTrustedFrame(event, host))
+      throw new Error("Unauthorized IPC sender");
     try {
-      if (typeGuard.renderer.failure(value)) {
-        failConversion(event.sender.id, new Error(value.message));
-        return;
+      if (!isIpcRequest(value) || value.host !== host)
+        throw new Error("Invalid IPC request");
+      if (value.host === "controller") {
+        // The schema establishes the discriminant/payload correlation. The mapped
+        // handler type checks every request's return type when handlers are defined.
+        return await controllerHandlers[value.type](value as never);
       }
-      if (typeGuard.renderer.blob(value)) {
-        appendFrame(
-          event.sender.id,
-          value.sessionId,
-          value.frameId,
-          value.data,
-        );
-        return;
+      switch (value.type) {
+        case "failure":
+          failConversion(event.sender.id, new Error(value.message));
+          return;
+        case "blob":
+          appendFrame(
+            event.sender.id,
+            value.sessionId,
+            value.frameId,
+            value.data,
+          );
+          return;
+        case "end":
+          markAsCompleted(event.sender.id, value.sessionId, value.frameId);
+          return;
+        case "load":
+          return await processOnLoad(event.sender.id);
+        case "message":
+          sendMessageToController(value);
+          return;
       }
-      logger.debug("ipc message received", "ipcMessage:", value);
-      if (typeGuard.renderer.end(value)) {
-        markAsCompleted(event.sender.id, value.sessionId, value.frameId);
-      } else if (typeGuard.controller.selectComment(value)) {
-        return await selectComment();
-      } else if (typeGuard.controller.selectMovie(value)) {
-        return await selectMovie();
-      } else if (typeGuard.controller.selectOutput(value)) {
-        return await selectOutput(value.options);
-      } else if (typeGuard.controller.selectFile(value)) {
-        return await selectFile(value.pattern);
-      } else if (typeGuard.controller.dropFiles(value)) {
-        return await handleDropFiles(value.paths);
-      } else if (typeGuard.controller.appendQueue(value)) {
-        appendQueue(value.data);
-        return;
-      } else if (typeGuard.controller.interruptQueue(value)) {
-        processOnInterrupt(value.queueId);
-        return;
-      } else if (typeGuard.controller.getSetting(value)) {
-        return store.get(value.key);
-      } else if (typeGuard.controller.setSetting(value)) {
-        return store.set(value.key, value.data);
-      } else if (typeGuard.controller.getAvailableProfiles(value)) {
-        return await getAvailableProfiles();
-      } else if (typeGuard.controller.getNiconicoMovieMetadata(value)) {
-        return await getMetadata(value.nicoId);
-      } else if (typeGuard.controller.getQueue(value)) {
-        sendProgress();
-        return;
-      } else if (typeGuard.renderer.load(value)) {
-        return await processOnLoad(event.sender.id);
-      } else if (typeGuard.renderer.message(value)) {
-        sendMessageToController(value);
+    } catch (error: unknown) {
+      if (host === "renderer") {
+        // A pending request may have outlived the session that sent it.
+        if (isRendererSender(event.sender))
+          failConversion(event.sender.id, error);
       } else {
-        logger.error("unknown ipc message", "ipcMessage:", value);
+        logger.error("failed to process ipc message", error);
         sendMessageToController({
           type: "message",
-          title: "未知のエラーが発生しました",
-          message: `未知のIPCメッセージを受信しました\n${encodeJson(
-            value,
-          )}\nipcManager / unknownIpcMessage`,
+          title: "予期しないエラーが発生しました",
+          message: `エラー内容:\n${encodeError(error)}\nipcManager / catchError`,
         });
       }
-    } catch (e: unknown) {
-      // The request may have outlived the renderer that sent it.
-      if (fromRenderer) {
-        if (isRendererSender(event.sender)) failConversion(event.sender.id, e);
-        throw e;
-      }
-      logger.error(
-        "failed to process ipc message",
-        "ipcMessage:",
-        value,
-        "error:",
-        e,
-      );
-      sendMessageToController({
-        type: "message",
-        title: "予期しないエラーが発生しました",
-        message: `IPCメッセージ:\n${encodeJson(
-          args,
-        )}\nエラー内容:\n${encodeError(e)}\nipcManager / catchError`,
-      });
+      throw error;
     }
   });
 };

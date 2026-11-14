@@ -2,10 +2,10 @@ import Button from "@mui/material/Button";
 import { useSetAtom } from "jotai";
 import type { FC } from "react";
 import { useCallback, useState } from "react";
-
 import type { TCommentItemLocal } from "@/@types/queue";
-import { isLoadingAtom, messageAtom } from "@/controller/atoms";
+import { isLoadingAtom } from "@/controller/atoms";
 import Styles from "@/controller/comment-picker/remote/remote-comment-picker.module.scss";
+import { runControllerTask } from "@/controller/task";
 import { typeGuard } from "@/type-guard";
 
 type Props = {
@@ -15,9 +15,8 @@ type Props = {
 const LocalCommentPicker: FC<Props> = ({ onChange }) => {
   const [comment, setComment] = useState<TCommentItemLocal | undefined>();
   const setIsLoading = useSetAtom(isLoadingAtom);
-  const setMessage = useSetAtom(messageAtom);
   const onCommentClick = useCallback(() => {
-    void (async () => {
+    void runControllerTask(async () => {
       setIsLoading(true);
       const data = await window.api.request({
         type: "selectComment",
@@ -26,13 +25,6 @@ const LocalCommentPicker: FC<Props> = ({ onChange }) => {
 
       if (!typeGuard.controller.selectComment(data)) {
         setIsLoading(false);
-        if (typeGuard.controller.message(data)) {
-          setMessage({
-            title: data.title || "未知のエラーが発生しました",
-            content: data.message,
-          });
-          return;
-        }
         if (!data) return;
         throw new Error();
       }
@@ -41,8 +33,8 @@ const LocalCommentPicker: FC<Props> = ({ onChange }) => {
         type: "local",
       });
       setIsLoading(false);
-    })();
-  }, [setMessage, setIsLoading]);
+    }, setIsLoading);
+  }, [setIsLoading]);
 
   const onClick = (): void => {
     onChange(comment);

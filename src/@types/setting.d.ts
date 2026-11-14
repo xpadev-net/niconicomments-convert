@@ -13,3 +13,9 @@ export type AuthByBrowserCookie = {
 export type NoAuth = {
   type: "NoAuth";
 };
+
+export type Settings = {
+  auth: AuthType;
+  ffmpegOptions: import("./ffmpeg").FfmpegOptions;
+  showRendererWindow: boolean;
+};

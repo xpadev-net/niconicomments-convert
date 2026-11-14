@@ -2,10 +2,6 @@ export type ApiRequestFromRenderer = {
   host: "renderer";
 };
 
-export type ApiRequestBuffer = {
-  type: "buffer";
-  data: string[];
-};
 export type ApiRequestBlob = {
   type: "blob";
   sessionId: string;
@@ -33,7 +29,6 @@ export type ApiRequestFailure = {
 
 export type ApiRequestsFromRenderer =
   | ApiRequestFailure
-  | ApiRequestBuffer
   | ApiRequestEnd
   | ApiRequestLoad
   | ApiRequestMessage

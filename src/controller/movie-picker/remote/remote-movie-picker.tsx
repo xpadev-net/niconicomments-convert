@@ -3,7 +3,6 @@ import Button from "@mui/material/Button";
 import { useSetAtom } from "jotai";
 import type { ChangeEvent, FC, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
-
 import type { V3MetadataBody } from "@/@types/niconico";
 import type {
   TMovieItemRemote,
@@ -14,6 +13,7 @@ import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import Styles from "@/controller/movie/movie.module.scss";
 import { DMCMoviePicker } from "@/controller/movie-picker/remote/dmc";
 import { DMSMoviePicker } from "@/controller/movie-picker/remote/dms";
+import { runControllerTask } from "@/controller/task";
 import { typeGuard } from "@/type-guard";
 import { getNicoId, isNicovideoUrl } from "@/util/niconico";
 import { uuid } from "@/util/uuid";
@@ -35,7 +35,7 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
     setUrl(e.target.value);
   };
   const getFormats = (): void => {
-    void (async () => {
+    void runControllerTask(async () => {
       const nicoId = getNicoId(url);
       if (!isNicovideoUrl(url) || metadata || !nicoId) {
         if (!url || lastUrl.current === nicoId) return;
@@ -47,11 +47,11 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
         return;
       }
       setIsLoading(true);
-      const targetMetadata = (await window.api.request({
+      const targetMetadata = await window.api.request({
         type: "getNiconicoMovieMetadata",
         nicoId: nicoId,
         host: "controller",
-      })) as V3MetadataBody;
+      });
       setIsLoading(false);
       if (!targetMetadata) {
         setMessage({
@@ -70,14 +70,14 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
       setMediaServer(targetMetadata.media.domand ? "dms" : "dmc");
       setMetadata(targetMetadata);
       lastUrl.current = nicoId;
-    })();
+    }, setIsLoading);
   };
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
     if (e.key !== "Enter") return;
     getFormats();
   };
   const onClick = (): void => {
-    void (async () => {
+    void runControllerTask(async () => {
       const nicoId = getNicoId(url);
       if (!nicoId) {
         setMessage({
@@ -119,7 +119,7 @@ const RemoteMoviePicker: FC<Props> = ({ onChange }) => {
           progress: { percent: 0, total: 0, processed: 0 },
         },
       });
-    })();
+    }, setIsLoading);
   };
   return (
     <div>

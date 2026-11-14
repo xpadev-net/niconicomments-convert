@@ -1,10 +1,10 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
-
 import type { Queue } from "@/@types/queue";
 import { CommentItem } from "@/controller/queue/comment-item";
 import { ConvertItem } from "@/controller/queue/convert-item";
 import { MovieItem } from "@/controller/queue/movie-item";
+import { runControllerTask } from "@/controller/task";
 import { typeGuard } from "@/type-guard";
 
 import Styles from "./queue.module.scss";
@@ -18,10 +18,12 @@ const QueueDisplay: FC = () => {
       }
     };
     window.api.onResponse(callback);
-    void window.api.request({
-      type: "getQueue",
-      host: "controller",
-    });
+    void runControllerTask(() =>
+      window.api.request({
+        type: "getQueue",
+        host: "controller",
+      }),
+    );
     return () => window.api.remove(callback);
   }, []);
 

@@ -131,10 +131,14 @@ const analyzeMovieFile = async (
       height = stream.height;
     }
     if (stream.duration) {
-      duration = stream.duration;
+      duration = Number(stream.duration);
     }
   }
-  if (!(height && width && duration)) {
+  if (
+    ![height, width, duration].every(
+      (value) => Number.isFinite(value) && value > 0,
+    )
+  ) {
     logger.error("failed to get resolution or duration", "metadata:", metadata);
     return {
       message: {
