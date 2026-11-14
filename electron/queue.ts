@@ -177,9 +177,11 @@ const startConvert = async (): Promise<void> => {
   queue.progress = {
     percent: 0,
     processed: 0,
-    total:
+    // Match the renderer's count of frames before the exclusive end time.
+    total: Math.ceil(
       (queue.option.fps || 30) *
-      ((queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0)),
+        ((queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0)),
+    ),
   };
   let session: ActiveSession | undefined;
   let status: Queue["status"] = "completed";

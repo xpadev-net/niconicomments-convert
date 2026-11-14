@@ -127,12 +127,13 @@ const startRenderer = async (): Promise<void> => {
 
     message.textContent = "";
     let generatedFrames = 0;
-    let offset = Math.ceil((queue.option.ss ?? 0) * 100);
+    const startTime = queue.option.ss ?? 0;
     const targetFrameRate = queue.option.fps || 30;
-    const totalFrames =
-      Math.ceil(
-        (queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0),
-      ) * targetFrameRate;
+    // Include each frame whose start is before the exclusive end time.
+    const totalFrames = Math.ceil(
+      ((queue.option.to ?? queue.movie.duration) - startTime) * targetFrameRate,
+    );
+    const batchSize = Math.ceil(targetFrameRate);
     while (inProgress && generatedFrames < totalFrames) {
       const pendingFrames: Promise<void>[] = [];
       let frameFailed = false;
@@ -140,12 +141,12 @@ const startRenderer = async (): Promise<void> => {
         let i = 0;
         inProgress &&
         !frameFailed &&
-        i < targetFrameRate &&
+        i < batchSize &&
         generatedFrames < totalFrames;
         i++
       ) {
         const frame = generatedFrames++;
-        const vpos = Math.ceil(i * (100 / targetFrameRate)) + offset;
+        const vpos = Math.ceil((startTime + frame / targetFrameRate) * 100);
         const pendingFrame = (async () => {
           // @ts-expect-error
           if ((nico.timeline[vpos]?.length || 0) === 0) {
@@ -162,8 +163,8 @@ const startRenderer = async (): Promise<void> => {
         pendingFrames.push(pendingFrame);
         await sleep(0);
       }
+      // A missing frame is fatal; never shorten the end marker around a gap.
       await Promise.all(pendingFrames);
-      offset += 100;
       while (inProgress && generatedFrames - convertedFrames > 200) {
         await sleep(100);
       }
