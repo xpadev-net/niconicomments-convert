@@ -461,10 +461,19 @@ function loadConversionQueue(Converter) {
   const messages = [];
   const rendererMessages = [];
   const finished = Promise.withResolvers();
+  let conversionSettled = false;
   const converter = loadWithMocks("build/electron/converter.js", {
     "./ffmpeg-stream/stream": { Converter },
     "./store": { store: { get: () => undefined } },
   });
+  const startConverter = converter.startConverter;
+  converter.startConverter = async (...args) => {
+    try {
+      await startConverter(...args);
+    } finally {
+      conversionSettled = true;
+    }
+  };
   const queue = loadWithMocks("build/electron/queue.js", {
     "./converter": converter,
     "./controller-window": {
@@ -472,6 +481,7 @@ function loadConversionQueue(Converter) {
         messages.push(structuredClone(message));
         if (
           message.type === "progress" &&
+          conversionSettled &&
           message.data.some((item) =>
             ["completed", "interrupted", "fail"].includes(item.status),
           )
