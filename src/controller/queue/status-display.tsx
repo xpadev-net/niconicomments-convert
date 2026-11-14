@@ -1,10 +1,10 @@
 import { StopOutlined } from "@mui/icons-material";
 import { IconButton } from "@mui/material";
 import type { FC } from "react";
-
 import type { Queue, Status } from "@/@types/queue";
 import Styles from "@/controller/queue/convert-item.module.scss";
 import { ProgressDisplay } from "@/controller/queue/progress-display";
+import { runControllerTask } from "@/controller/task";
 
 const labels: { [key in Status]: string } = {
   queued: "他のキューの終了を待っています",
@@ -37,11 +37,13 @@ const StatusDisplay: FC<Props> = ({ queue }) => {
           <IconButton
             aria-label="ジョブを中断"
             onClick={() => {
-              void window.api.request({
-                host: "controller",
-                type: "interruptQueue",
-                queueId: queue.id,
-              });
+              void runControllerTask(() =>
+                window.api.request({
+                  host: "controller",
+                  type: "interruptQueue",
+                  queueId: queue.id,
+                }),
+              );
             }}
           >
             <StopOutlined />

@@ -1,10 +1,6 @@
 import type { V1Thread } from "@xpadev-net/niconicomments";
 
 import type {
-  ApiRequestFromRenderer,
-  ApiRequestsFromRenderer,
-} from "@/@types/request.renderer";
-import type {
   ApiResponsesToBinaryDownloader,
   ApiResponseToBinaryDownloader,
 } from "@/@types/response.binary-downloader";
@@ -14,10 +10,6 @@ import type {
 } from "@/@types/response.renderer";
 
 import type {
-  ApiRequestFromController,
-  ApiRequestsFromController,
-} from "./request.controller";
-import type {
   ApiResponsesToController,
   ApiResponseToController,
 } from "./response.controller";
@@ -25,7 +17,7 @@ import type {
 declare global {
   interface Window {
     api: {
-      request: (data: ApiRequestType) => Promise<unknown>;
+      request: import("./ipc").IpcRequest;
       onResponse: (
         callback: (_: unknown, data: ApiResponseType) => void,
       ) => void;
@@ -35,9 +27,7 @@ declare global {
   }
 }
 
-type ApiRequestType =
-  | (ApiRequestsFromController & ApiRequestFromController)
-  | (ApiRequestsFromRenderer & ApiRequestFromRenderer);
+export type ApiRequestType = import("./ipc").Request;
 type ApiResponseType =
   | (ApiResponsesToController & ApiResponseToController)
   | (ApiResponsesToRenderer & ApiResponseToRenderer)

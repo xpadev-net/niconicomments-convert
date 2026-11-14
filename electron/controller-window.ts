@@ -1,4 +1,5 @@
 import * as path from "node:path";
+import type { WebContents } from "electron";
 import { app, BrowserWindow } from "electron";
 
 import type { ApiResponsesToController } from "@/@types/response.controller";
@@ -15,6 +16,7 @@ const createControllerWindow = (): void => {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
       contextIsolation: true,
+      additionalArguments: ["--ipc-role=controller"],
     },
   });
   controllerWindow.removeMenu();
@@ -32,6 +34,11 @@ const createControllerWindow = (): void => {
     controllerWindow.webContents.openDevTools();
   }
 };
+const isControllerSender = (sender: WebContents): boolean =>
+  !!controllerWindow &&
+  !controllerWindow.isDestroyed() &&
+  controllerWindow.webContents === sender;
+
 const sendMessageToController = (value: ApiResponsesToController): void => {
   controllerWindow.webContents.send("response", {
     ...value,
@@ -39,4 +46,4 @@ const sendMessageToController = (value: ApiResponsesToController): void => {
   });
 };
 
-export { createControllerWindow, sendMessageToController };
+export { createControllerWindow, isControllerSender, sendMessageToController };

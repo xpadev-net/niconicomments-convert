@@ -91,6 +91,12 @@ function harness({
     },
     "@/components/select-field": { SelectField: component },
     "@/controller/atoms": atoms,
+    "@/controller/task": require("./helpers/load-typescript.cjs")(
+      "src/controller/task.ts",
+      {
+        "@/util/log": { getLogger: () => ({ error() {} }) },
+      },
+    ),
     "@/controller/comment-picker": { CommentPicker: component },
     "@/controller/movie-picker": { MoviePicker: component },
     "@/domain/conversion": require("../build/src/domain/conversion"),

@@ -3,7 +3,6 @@ import Button from "@mui/material/Button";
 import { useSetAtom } from "jotai";
 import type { ChangeEvent, FC, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
-
 import type {
   TCommentOption,
   TCommentPickerMode,
@@ -12,6 +11,7 @@ import type {
 import type { TCommentItemRemote } from "@/@types/queue";
 import { CommentOption } from "@/components/comment-option";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
+import { runControllerTask } from "@/controller/task";
 import { getNicoId, isNicovideoUrl } from "@/util/niconico";
 import { formatDate } from "@/util/time";
 import { uuid } from "@/util/uuid";
@@ -38,7 +38,7 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
     setUrl(e.target.value);
   };
   const updateMetadata = (): void => {
-    void (async () => {
+    void runControllerTask(async () => {
       const nicoId = getNicoId(url);
       if (!isNicovideoUrl(url) || metadata || !nicoId) {
         if (!url || lastUrl.current === nicoId) return;
@@ -50,11 +50,11 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
         return;
       }
       setIsLoading(true);
-      const targetMetadata = (await window.api.request({
+      const targetMetadata = await window.api.request({
         type: "getNiconicoMovieMetadata",
         nicoId: nicoId,
         host: "controller",
-      })) as V3MetadataBody;
+      });
       setIsLoading(false);
       if (!targetMetadata) {
         setMessage({
@@ -66,14 +66,14 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
       setMetadata(targetMetadata);
       setMode(targetMetadata.viewer === null ? "simple" : "custom");
       lastUrl.current = nicoId;
-    })();
+    }, setIsLoading);
   };
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
     if (e.key !== "Enter") return;
     updateMetadata();
   };
   const onClick = (): void => {
-    void (async () => {
+    void runControllerTask(async () => {
       const nicoId = getNicoId(url);
       if (!nicoId || !commentOption || !metadata) return;
       setIsLoading(true);
@@ -103,7 +103,7 @@ const RemoteCommentPicker: FC<Props> = ({ onChange }) => {
           progress: { percent: 0, total: 0, processed: 0 },
         },
       });
-    })();
+    }, setIsLoading);
   };
 
   return (

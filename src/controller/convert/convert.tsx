@@ -22,6 +22,7 @@ import { SelectField } from "@/components/select-field";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
 import { CommentPicker } from "@/controller/comment-picker";
 import { MoviePicker } from "@/controller/movie-picker";
+import { runControllerTask } from "@/controller/task";
 import { getConversionError } from "@/domain/conversion";
 import { typeGuard } from "@/type-guard";
 import { str2time } from "@/util/time";
@@ -85,17 +86,12 @@ const Convert: FC = () => {
               format: data.comment.format,
             });
           }
-        } else if (typeGuard.controller.message(data)) {
-          setMessage({
-            title: data.title ?? "未知のエラーが発生しました",
-            content: data.message,
-          });
         }
       } finally {
         setIsLoading(false);
       }
     },
-    [setComment, setIsLoading, setMessage, setMovie],
+    [setComment, setIsLoading, setMovie],
   );
 
   const isFileDragEvent = useCallback(
@@ -140,7 +136,7 @@ const Convert: FC = () => {
             .filter((filePath): filePath is string => !!filePath),
         ),
       );
-      void handleDropRequest(paths);
+      void runControllerTask(() => handleDropRequest(paths));
     };
 
     window.addEventListener("dragenter", onWindowDragEnter);

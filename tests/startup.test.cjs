@@ -57,7 +57,7 @@ for (const isPackaged of [true, false]) {
         },
       },
     });
-    assert.equal(context.binPath, "/writable/app-data/bin");
+    assert.equal(context.binPath, path.join("/writable/app-data", "bin"));
   });
 }
 
@@ -117,11 +117,22 @@ const assetHarness = (t, options = {}) => {
   const downloads = [],
     progress = [],
     windows = [];
+  const permissions = [];
   const signal = new AbortController();
   const api = load(
     "assets.js",
     {
       "./context": { binPath },
+      "node:fs": {
+        ...fs,
+        promises: {
+          ...fs.promises,
+          chmod: async (filename, mode) => {
+            permissions.push({ filename, mode });
+            await fs.promises.chmod(filename, mode);
+          },
+        },
+      },
       "./binary-downloader-window": {
         createBinaryDownloaderWindow: async () => {
           windows.push("open");
@@ -142,7 +153,7 @@ const assetHarness = (t, options = {}) => {
           };
         },
       },
-      "node:os": { arch: () => "x64" },
+      "node:os": { arch: () => options.arch ?? "x64" },
       ...(options.imports ?? {}),
       undici: {},
     },
@@ -163,6 +174,7 @@ const assetHarness = (t, options = {}) => {
     binPath,
     signal,
     downloads,
+    permissions,
     progress,
     windows,
     run: () => api.onStartUp(signal.signal),
@@ -193,7 +205,8 @@ for (const platform of ["darwin", "win32"]) {
         fs.readFileSync(harness[`${name}Path`], "utf8"),
         "ffmpeg version 6.1",
       );
-      if (platform === "darwin")
+      // Windows does not expose POSIX execute bits, even for a simulated Mac download.
+      if (platform === "darwin" && process.platform !== "win32")
         assert.equal(fs.statSync(harness[`${name}Path`]).mode & 0o777, 0o755);
       assert.equal(
         harness.progress.filter((message) => message.name === name).at(-1)
@@ -201,11 +214,46 @@ for (const platform of ["darwin", "win32"]) {
         1,
       );
     }
+    assert.deepEqual(
+      harness.permissions.map(({ mode }) => mode),
+      platform === "darwin" ? [0o755, 0o755] : [],
+    );
     assert.ok(
       fs.readdirSync(harness.binPath).every((name) => !name.includes(".part")),
     );
   });
 }
+
+for (const [platform, arch, accepted] of [
+  ["darwin", "x64", true],
+  ["darwin", "arm64", false],
+  ["win32", "x64", false],
+]) {
+  test(`${platform}/${arch}: pinned-release 7.1 binaries match only their known distribution`, async (t) => {
+    const h = assetHarness(t, {
+      platform,
+      arch,
+      fetch: async () => new Response("ffmpeg version 7.1"),
+    });
+    if (accepted) {
+      await h.run();
+      assert.equal(h.downloads.length, 2);
+      assert.equal(fs.readFileSync(h.ffmpegPath, "utf8"), "ffmpeg version 7.1");
+    } else {
+      await assert.rejects(h.run(), /failed version validation/);
+      assert.equal(fs.existsSync(h.ffmpegPath), false);
+    }
+  });
+}
+
+test("the macOS x64 cache accepts the actual pinned 7.1 release", async (t) => {
+  const h = assetHarness(t, { platform: "darwin", arch: "x64" });
+  cache(h, "ffmpeg", "ffmpeg version 7.1");
+  cache(h, "ffprobe", "ffprobe version 7.1");
+  await h.run();
+  assert.deepEqual(h.downloads, []);
+  assert.deepEqual(h.windows, []);
+});
 
 test("retry checks the cache again and downloads only the missing binary", async (t) => {
   let fail = true;

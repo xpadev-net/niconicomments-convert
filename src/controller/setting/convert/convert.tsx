@@ -3,12 +3,12 @@ import { IconButton } from "@mui/material";
 import TextField from "@mui/material/TextField";
 import type { FC } from "react";
 import { useLayoutEffect, useState } from "react";
-
 import type { FfmpegOptions } from "@/@types/ffmpeg";
-
+import { runControllerTask } from "@/controller/task";
 import { getSetting } from "@/util/settings";
 import { uuid } from "@/util/uuid";
 import { defaultOptions } from "../../../../electron/const";
+
 import Styles from "./convert.module.scss";
 
 type OptionsValue = Record<
@@ -40,9 +40,9 @@ const transform = (value: FfmpegOptions): OptionsValue => {
 const ConvertSetting: FC = () => {
   const [option, setOption] = useState<OptionsValue>({});
   useLayoutEffect(() => {
-    void (async () => {
+    void runControllerTask(async () => {
       setOption(transform(await getSetting("ffmpegOptions")));
-    })();
+    });
   }, []);
   const update = (type: "key" | "value", id: string, value: string): void => {
     setOption((pv) => {
@@ -53,12 +53,14 @@ const ConvertSetting: FC = () => {
       } else {
         item.value = value;
       }
-      void window.api.request({
-        type: "setSetting",
-        key: "ffmpegOptions",
-        data: rebuild(data),
-        host: "controller",
-      });
+      void runControllerTask(() =>
+        window.api.request({
+          type: "setSetting",
+          key: "ffmpegOptions",
+          data: rebuild(data),
+          host: "controller",
+        }),
+      );
       return data;
     });
   };
@@ -66,23 +68,27 @@ const ConvertSetting: FC = () => {
     setOption((pv) => {
       const data = { ...pv };
       delete data[id];
-      void window.api.request({
-        type: "setSetting",
-        key: "ffmpegOptions",
-        data: rebuild(data),
-        host: "controller",
-      });
+      void runControllerTask(() =>
+        window.api.request({
+          type: "setSetting",
+          key: "ffmpegOptions",
+          data: rebuild(data),
+          host: "controller",
+        }),
+      );
       return data;
     });
   };
   const onReset = (): void => {
     setOption(transform(defaultOptions));
-    void window.api.request({
-      type: "setSetting",
-      key: "ffmpegOptions",
-      data: defaultOptions,
-      host: "controller",
-    });
+    void runControllerTask(() =>
+      window.api.request({
+        type: "setSetting",
+        key: "ffmpegOptions",
+        data: defaultOptions,
+        host: "controller",
+      }),
+    );
   };
   const addItem = (): void => {
     setOption((pv) => {
@@ -93,12 +99,14 @@ const ConvertSetting: FC = () => {
           value: "",
         },
       };
-      void window.api.request({
-        type: "setSetting",
-        key: "ffmpegOptions",
-        data: rebuild(data),
-        host: "controller",
-      });
+      void runControllerTask(() =>
+        window.api.request({
+          type: "setSetting",
+          key: "ffmpegOptions",
+          data: rebuild(data),
+          host: "controller",
+        }),
+      );
       return data;
     });
   };

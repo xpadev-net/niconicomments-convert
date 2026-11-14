@@ -2,10 +2,10 @@ import Button from "@mui/material/Button";
 import { useSetAtom } from "jotai";
 import type { FC } from "react";
 import { useCallback, useState } from "react";
-
 import type { TMovieItemLocal } from "@/@types/queue";
 import type { Movie } from "@/@types/types";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
+import { runControllerTask } from "@/controller/task";
 import { typeGuard } from "@/type-guard";
 
 type Props = {
@@ -17,7 +17,7 @@ const LocalMoviePicker: FC<Props> = ({ onChange }) => {
   const setMessage = useSetAtom(messageAtom);
   const [movie, setMovie] = useState<Movie | undefined>();
   const onMovieClick = useCallback(() => {
-    void (async () => {
+    void runControllerTask(async () => {
       setIsLoading(true);
       const data = await window.api.request({
         type: "selectMovie",
@@ -37,7 +37,7 @@ const LocalMoviePicker: FC<Props> = ({ onChange }) => {
       }
       setMovie(data.data);
       setIsLoading(false);
-    })();
+    }, setIsLoading);
   }, [setMessage, setIsLoading]);
   const onClick = (): void => {
     if (!movie) return;

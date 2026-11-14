@@ -8,16 +8,16 @@ import {
   RadioGroup,
   Select,
 } from "@mui/material";
-import type { OpenDialogReturnValue } from "electron";
 import { useSetAtom } from "jotai";
 import type { ChangeEvent, FC } from "react";
 import { useLayoutEffect, useState } from "react";
-
 import type { BrowserProfile } from "@/@types/cookies";
 import type { UserData } from "@/@types/niconico";
 import type { AuthType } from "@/@types/setting";
 import { SelectField } from "@/components/select-field";
 import { isLoadingAtom } from "@/controller/atoms";
+import { runControllerTask } from "@/controller/task";
+
 import { getSetting } from "@/util/settings";
 
 import Styles from "./auth.module.scss";
@@ -29,12 +29,12 @@ const AuthSetting: FC = () => {
     { profile: BrowserProfile; user: UserData; key: string }[]
   >([]);
   useLayoutEffect(() => {
-    void (async () => {
+    void runControllerTask(async () => {
       setAuthSetting(await getSetting("auth"));
-      const profiles = (await window.api.request({
+      const profiles = await window.api.request({
         type: "getAvailableProfiles",
         host: "controller",
-      })) as { profile: BrowserProfile; user: UserData }[];
+      });
       setAvailableProfiles(
         profiles.map((item) => {
           return {
@@ -43,7 +43,7 @@ const AuthSetting: FC = () => {
           };
         }),
       );
-    })();
+    });
   }, []);
 
   const onAuthTypeChange = (e: ChangeEvent<HTMLInputElement>): void => {
@@ -57,9 +57,9 @@ const AuthSetting: FC = () => {
     }
   };
   const onSelectCookieFile = (): void => {
-    void (async () => {
+    void runControllerTask(async () => {
       setIsLoading(true);
-      const path = (await window.api.request({
+      const path = await window.api.request({
         type: "selectFile",
         host: "controller",
         pattern: [
@@ -72,7 +72,7 @@ const AuthSetting: FC = () => {
             extensions: ["*"],
           },
         ],
-      })) as OpenDialogReturnValue;
+      });
       const cookiePath = path.filePaths[0];
       if (path.canceled || !cookiePath) {
         setIsLoading(false);
@@ -80,7 +80,7 @@ const AuthSetting: FC = () => {
       }
       setAuthSetting({ type: "cookie", path: cookiePath });
       setIsLoading(false);
-    })();
+    }, setIsLoading);
   };
   const onAuthBrowserChange = (name: string): void => {
     setAuthSetting({
@@ -95,15 +95,15 @@ const AuthSetting: FC = () => {
     });
   };
   const onReset = (): void => {
-    void (async () => {
+    void runControllerTask(async () => {
       setIsLoading(true);
       setAuthSetting(await getSetting("auth"));
       setIsLoading(false);
-    })();
+    }, setIsLoading);
   };
   const onSave = (): void => {
-    if (!authSetting) return;
-    void (async () => {
+    void runControllerTask(async () => {
+      if (!authSetting) return;
       setIsLoading(true);
       await window.api.request({
         type: "setSetting",
@@ -112,7 +112,7 @@ const AuthSetting: FC = () => {
         host: "controller",
       });
       setIsLoading(false);
-    })();
+    }, setIsLoading);
   };
 
   if (!authSetting) return null;

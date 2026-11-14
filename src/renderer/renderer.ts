@@ -1,6 +1,5 @@
 import NiconiComments from "@xpadev-net/niconicomments";
 
-import type { ApiResponseLoad } from "@/@types/response.renderer";
 import type { ApiResponseType } from "@/@types/types";
 import { transformComments } from "@/renderer/comment-utils";
 import { typeGuard } from "@/type-guard";
@@ -85,10 +84,10 @@ const startRenderer = async (): Promise<void> => {
   };
 
   try {
-    const response = (await window.api.request({
+    const response = await window.api.request({
       type: "load",
       host: "renderer",
-    })) as ApiResponseLoad | undefined;
+    });
     if (!response || !inProgress) return;
     const { commentData, queue, sessionId } = response;
     message.textContent = "コメントを処理しています...";
