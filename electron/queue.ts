@@ -1,5 +1,4 @@
 import * as fs from "node:fs";
-import * as Stream from "node:stream";
 import { parseStringPromise } from "@xpadev-net/xml2js";
 
 import type { UUID } from "@/@types/brand";
@@ -23,10 +22,12 @@ const queueLists: QueueLists = {
 };
 let convertQueue = Promise.resolve();
 let processingQueue: ConvertQueue;
+let isConverting = false;
 let movieDownloadController: AbortController | undefined;
 let commentDownloadController: AbortController | undefined;
 let lastFrame = 0;
 let endFrame = -1;
+let inputEndScheduled = false;
 const frameQueue: { [key: number]: Uint8Array } = {};
 const appendQueue = (queue: Queue): void => {
   queueList.push(queue);
@@ -135,52 +136,57 @@ const startCommentDownload = async (): Promise<void> => {
 };
 
 const startConvert = async (): Promise<void> => {
-  let dependencyChanged = false;
-  for (const queue of queueLists.convert) {
-    if (queue.status !== "queued") continue;
-    const dependencies = (queue.wait ?? []).map((id) =>
-      queueList.find((item) => item.id === id),
-    );
-    if (dependencies.some((item) => item?.status === "fail")) {
-      queue.status = "fail";
-      dependencyChanged = true;
-    } else if (dependencies.some((item) => item?.status === "interrupted")) {
-      queue.status = "interrupted";
-      dependencyChanged = true;
+  // Propagate terminal dependency states, including chains of waiting jobs.
+  let changed: boolean;
+  do {
+    changed = false;
+    for (const queue of queueLists.convert) {
+      if (queue.status !== "queued") continue;
+      const dependency = (queue.wait ?? [])
+        .map((id) => queueList.find((item) => item.id === id))
+        .find(
+          (item) => item?.status === "fail" || item?.status === "interrupted",
+        );
+      if (!dependency) continue;
+      queue.status = dependency.status === "fail" ? "fail" : "interrupted";
+      changed = true;
     }
-  }
-  if (dependencyChanged) sendProgress();
-  const queued = queueLists.convert.filter((i) => i.status === "queued");
-  if (
-    queueLists.convert.filter((i) => i.status === "processing").length > 0 ||
-    queued.length === 0 ||
-    !queued[0]
-  )
-    return;
-  for (const queueId of queued[0].wait ?? []) {
-    const queue = queueList.filter((i) => i.id === queueId)[0];
-    if (queue?.status !== "completed") return;
-  }
+    if (changed) sendProgress();
+  } while (changed);
+
+  if (isConverting) return;
+  const targetQueue = queueLists.convert.find(
+    (queue) =>
+      queue.status === "queued" &&
+      (queue.wait ?? []).every(
+        (id) =>
+          queueList.find((item) => item.id === id)?.status === "completed",
+      ),
+  );
+  if (!targetQueue) return;
+  isConverting = true;
   try {
-    processingQueue = queued[0];
+    processingQueue = targetQueue;
     processingQueue.status = "processing";
     processingQueue.progress = {
       percent: 0,
       processed: 0,
       total:
-        (queued[0].option.fps || 30) *
-        ((queued[0].option.to ?? queued[0].movie.duration) -
-          (queued[0].option.ss ?? 0)),
+        (targetQueue.option.fps || 30) *
+        ((targetQueue.option.to ?? targetQueue.movie.duration) -
+          (targetQueue.option.ss ?? 0)),
     };
     lastFrame = 0;
+    endFrame = -1;
+    inputEndScheduled = false;
     createRendererWindow();
     sendProgress();
-    await startConverter(queued[0]);
+    await startConverter(targetQueue);
     if (processingQueue.status === "processing")
       processingQueue.status = "completed";
   } catch (e) {
+    logger.error("failed to convert", e);
     if (processingQueue.status === "processing") {
-      logger.error("failed to convert", e);
       processingQueue.status = "fail";
       sendMessageToController({
         type: "message",
@@ -193,6 +199,7 @@ const startConvert = async (): Promise<void> => {
     type: "end",
   });
   sendProgress();
+  isConverting = false;
   void startConvert();
 };
 
@@ -206,28 +213,27 @@ const appendFrame = (frameId: number, data: Uint8Array): void => {
     processFrame(frameQueue[lastFrame]);
     delete frameQueue[lastFrame];
   }
-  if (lastFrame === endFrame) {
-    void convertQueue.then(() => inputStream.end());
-  }
+  completeConversionIfReady();
+};
+
+const completeConversionIfReady = (): void => {
+  if (lastFrame !== endFrame || inputEndScheduled) return;
+  inputEndScheduled = true;
+  void convertQueue.then(() => inputStream.end());
 };
 
 const processFrame = (data: Uint8Array): void => {
   if (processingQueue.status !== "processing") return;
   convertQueue = convertQueue.then(() =>
     new Promise<void>((fulfill, reject) => {
-      const myStream = new Stream.Readable();
-      myStream._read = () => {
-        myStream.push(data);
-        myStream.push(null);
-      };
       processingQueue.progress.processed++;
       processingQueue.progress.percent =
         processingQueue.progress.processed / processingQueue.progress.total;
       sendProgress();
-      return myStream
-        .on("end", () => fulfill())
-        .on("error", (err) => reject(err))
-        .pipe(inputStream, { end: false });
+      inputStream.write(data, (err) => {
+        if (err) reject(err);
+        else fulfill();
+      });
     }).catch((e) => {
       console.warn(e);
     }),
@@ -235,6 +241,7 @@ const processFrame = (data: Uint8Array): void => {
 };
 const markAsCompleted = (frameId: number): void => {
   endFrame = frameId;
+  completeConversionIfReady();
 };
 const sendProgress = (): void => {
   sendMessageToController({
@@ -266,8 +273,14 @@ const processOnLoad = async (): Promise<ApiResponseLoad> => {
 
 const processOnInterrupt = (queueId: UUID): void => {
   const queue = queueList.filter((i) => i.id === queueId)[0];
-  if (queue?.status !== "processing") return;
+  if (queue?.status !== "processing" && queue?.status !== "queued") return;
+  const wasQueued = queue.status === "queued";
   queue.status = "interrupted";
+  sendProgress();
+  if (wasQueued) {
+    void startConvert();
+    return;
+  }
   if (queue.type === "convert") {
     void convertQueue
       .then(() => inputStream.end())
@@ -282,7 +295,7 @@ const processOnInterrupt = (queueId: UUID): void => {
   } else if (queue.type === "comment") {
     commentDownloadController?.abort();
   }
-  sendProgress();
+  void startConvert();
 };
 
 export {

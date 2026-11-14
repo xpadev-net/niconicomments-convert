@@ -11,7 +11,7 @@ import type { UserData } from "@/@types/niconico";
 
 import { typeGuard } from "../../type-guard";
 import { convertToEncodedCookie } from "../cookie";
-import { fetchAll, openClonedDB } from "../db";
+import { fetchAll, withClonedDB } from "../db";
 import { getUserInfo } from "../niconico";
 
 /*
@@ -117,24 +117,26 @@ const getUser = async (
 };
 
 const getFirefoxCookies = async (profile: FirefoxProfile): Promise<Cookies> => {
-  const db = openClonedDB(path.join(profile.path, "cookies.sqlite"));
   const cookies: Cookies = {};
-  const rows = (await (async () => {
-    if (profile.type === "firefoxBasicProfile") {
+  const rows = (await withClonedDB(
+    path.join(profile.path, "cookies.sqlite"),
+    async (db) => {
+      if (profile.type === "firefoxBasicProfile") {
+        return await fetchAll(
+          db,
+          `SELECT host, name, value, path, expiry, isSecure FROM moz_cookies WHERE NOT INSTR(originAttributes,"userContextId=")`,
+        );
+      }
       return await fetchAll(
         db,
-        `SELECT host, name, value, path, expiry, isSecure FROM moz_cookies WHERE NOT INSTR(originAttributes,"userContextId=")`,
+        "SELECT host, name, value, path, expiry, isSecure FROM moz_cookies WHERE originAttributes LIKE ? OR originAttributes LIKE ?",
+        [
+          `%userContextId=${profile.contextId}`,
+          `%userContextId=${profile.contextId}&%`,
+        ],
       );
-    }
-    return await fetchAll(
-      db,
-      "SELECT host, name, value, path, expiry, isSecure FROM moz_cookies WHERE originAttributes LIKE ? OR originAttributes LIKE ?",
-      [
-        `%userContextId=${profile.contextId}`,
-        `%userContextId=${profile.contextId}&%`,
-      ],
-    );
-  })()) as moz_cookies;
+    },
+  )) as moz_cookies;
 
   for (const row of rows) {
     if (row.host.match(/\.nicovideo\.jp/)) {

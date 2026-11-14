@@ -15,7 +15,7 @@ import type { winProtect } from "@/@types/win-protect";
 
 import { typeGuard } from "../../type-guard";
 import { convertToEncodedCookie } from "../cookie";
-import { fetchAll, openClonedDB } from "../db";
+import { fetchAll, withClonedDB } from "../db";
 import { getUserInfo } from "../niconico";
 import { spawn } from "../spawn";
 
@@ -188,21 +188,22 @@ const getChromiumCookies = async (
     }
     return path.join(profile.path, "Network", "Cookies");
   })();
-  const db = openClonedDB(cookiesPath);
-  const columns = (await fetchAll(
-    db,
-    "PRAGMA table_info(`cookies`)",
-  )) as columnInfo;
-  const secureColumn = columns.reduce(
-    (pv, val) => val.name === "is_secure" || pv,
-    false,
-  )
-    ? "is_secure"
-    : "secure";
-  const rows = (await fetchAll(
-    db,
-    `SELECT host_key, name, value, encrypted_value, path, expires_utc, ${secureColumn} FROM cookies`,
-  )) as chromiumCookies[];
+  const rows = (await withClonedDB(cookiesPath, async (db) => {
+    const columns = (await fetchAll(
+      db,
+      "PRAGMA table_info(`cookies`)",
+    )) as columnInfo;
+    const secureColumn = columns.reduce(
+      (pv, val) => val.name === "is_secure" || pv,
+      false,
+    )
+      ? "is_secure"
+      : "secure";
+    return await fetchAll(
+      db,
+      `SELECT host_key, name, value, encrypted_value, path, expires_utc, ${secureColumn} FROM cookies`,
+    );
+  })) as chromiumCookies[];
   const decryptor = await (process.platform === "win32"
     ? getWindowsDecryptor
     : getMacDecryptor)(profile);

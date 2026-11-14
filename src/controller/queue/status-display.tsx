@@ -23,26 +23,29 @@ const StatusDisplay: FC<Props> = ({ queue }) => {
     if (queue.status !== "processing") return undefined;
     return queue.progress.percent;
   })();
-  if (queue.status === "processing") {
+  if (queue.status === "processing" || queue.status === "queued") {
     return (
       <div className={Styles.col}>
         <div className={Styles.row}>
-          <div className={Styles.progressWrapper}>
-            <ProgressDisplay progress={progress} />
-          </div>
-          {queue.status === "processing" && (
-            <IconButton
-              onClick={() => {
-                void window.api.request({
-                  host: "controller",
-                  type: "interruptQueue",
-                  queueId: queue.id,
-                });
-              }}
-            >
-              <StopOutlined />
-            </IconButton>
+          {queue.status === "processing" ? (
+            <div className={Styles.progressWrapper}>
+              <ProgressDisplay progress={progress} />
+            </div>
+          ) : (
+            <span>{labels[queue.status]}</span>
           )}
+          <IconButton
+            aria-label="ジョブを中断"
+            onClick={() => {
+              void window.api.request({
+                host: "controller",
+                type: "interruptQueue",
+                queueId: queue.id,
+              });
+            }}
+          >
+            <StopOutlined />
+          </IconButton>
         </div>
         {queue.progress.message && <div>{queue.progress.message}</div>}
       </div>
