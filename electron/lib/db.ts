@@ -6,14 +6,41 @@ import * as sqlite3 from "sqlite3";
 
 import { appPrefix } from "../context";
 
-const openClonedDB = (filepath: string): Database => {
-  const filename = path.basename(filepath);
-  const tmpDir = path.join(os.tmpdir(), appPrefix);
-  fs.mkdirSync(tmpDir, { recursive: true });
-  const tmpFile = path.join(tmpDir, filename);
-  fs.mkdtempSync(tmpDir);
-  fs.copyFileSync(filepath, tmpFile);
-  return new sqlite3.Database(tmpFile, sqlite3.OPEN_READONLY);
+const withClonedDB = async <T>(
+  filepath: string,
+  callback: (db: Database) => Promise<T>,
+): Promise<T> => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), `${appPrefix}-`));
+  let db: Database | undefined;
+  try {
+    const tmpFile = path.join(tmpDir, path.basename(filepath));
+    fs.copyFileSync(filepath, tmpFile);
+    db = await new Promise<Database>((resolve, reject) => {
+      const database = new sqlite3.Database(
+        tmpFile,
+        sqlite3.OPEN_READONLY,
+        (error) => {
+          if (error) reject(error);
+          else resolve(database);
+        },
+      );
+    });
+    return await callback(db);
+  } finally {
+    try {
+      const database = db;
+      if (database) {
+        await new Promise<void>((resolve, reject) => {
+          database.close((error) => {
+            if (error) reject(error);
+            else resolve();
+          });
+        });
+      }
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  }
 };
 
 type sqliteParam =
@@ -38,4 +65,4 @@ const fetchAll = (
   });
 };
 
-export { fetchAll, openClonedDB };
+export { fetchAll, withClonedDB };
