@@ -266,6 +266,43 @@ test("an empty conversion closes input when end arrives without any frames", asy
   await finished;
 });
 
+for (const [name, duration, options, total] of [
+  ["fractional duration", 1.1, { fps: 30 }, 33],
+  ["partial final frame", 1.11, { fps: 30 }, 34],
+  ["fractional FPS", 3.1, { fps: 29.97 }, 93],
+  ["fractional trim", 10, { fps: 30, ss: 0.005, to: 1.105 }, 33],
+  ["trim boundary roundoff", 10, { fps: 30, ss: 0.1, to: 0.4 }, 9],
+  [
+    "long trim boundary roundoff",
+    10001,
+    { fps: 30, ss: 10000.1, to: 10000.2 },
+    3,
+  ],
+  ["genuine partial final frame", 0.300001, { fps: 30 }, 10],
+]) {
+  test(`conversion progress counts whole frames for ${name}`, async () => {
+    const { api, backends } = harness();
+    const job = queue("timing");
+    job.movie.duration = duration;
+    Object.assign(job.option, options);
+    api.appendQueue(job);
+    assert.equal(job.progress.total, total);
+    const { sessionId } = await api.processOnLoad(1);
+    for (let frame = 1; frame <= total; frame++) {
+      api.appendFrame(1, sessionId, frame, Uint8Array.of(frame));
+    }
+    api.markAsCompleted(1, sessionId, total);
+    await tick();
+    assert.equal(backends[0].chunks.length, total);
+    assert.equal(job.progress.processed, total);
+    assert.equal(job.progress.percent, 1);
+    assert.equal(backends[0].inputStream.writableEnded, true);
+    backends[0].complete();
+    await tick();
+    assert.equal(job.status, "completed");
+  });
+}
+
 function loadProcessConverter(child, onSpawn = () => {}) {
   child.pid = 12345;
   child.exitCode = null;

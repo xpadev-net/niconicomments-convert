@@ -111,6 +111,7 @@ function harness() {
   });
   let rendererId = 0;
   const queue = loadModule("electron/queue.js", {
+    "../src/util/frame-timing": loadModule("src/util/frame-timing.js", {}),
     "./controller-window": {
       sendMessageToController: (message) => {
         if (message.type === "progress") {

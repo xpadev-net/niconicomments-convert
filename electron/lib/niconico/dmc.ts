@@ -1,9 +1,14 @@
-import type { CreateSessionRequest, V3MetadataBody } from "@/@types/niconico";
+import type {
+  CreateSessionRequest,
+  CreateSessionResponse,
+  V3MetadataBody,
+} from "@/@types/niconico";
 import type { TDMCFormat } from "@/@types/queue";
 import type { SpawnResult } from "@/@types/spawn";
 
 import { typeGuard } from "../../type-guard";
 import { DownloadM3U8 } from "../../utils/ffmpeg";
+import { withRequestTimeout } from "./request";
 
 const downloadDMC = async (
   metadata: V3MetadataBody,
@@ -23,119 +28,148 @@ const downloadDMC = async (
       "動画情報の取得に失敗しました。未購入の有料動画などの可能性があります",
     );
   }
-  if (metadata.media.delivery.trackingId) {
-    const trackingReq = await fetch(
-      `https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?${new URLSearchParams({
-        t: metadata.media.delivery.trackingId,
-      }).toString()}`,
-      {
-        signal,
-        method: "GET",
-        headers: {
-          "X-Frontend-Id": "6",
-          "X-Frontend-Version": "0",
-        },
-      },
-    );
-    if (trackingReq.status !== 200) {
-      console.warn("動画のダウンロードに失敗する可能性があります");
-    }
-  }
-  const requestBody = createSessionCreateRequestBody(metadata, format);
-  const req = await fetch("https://api.dmc.nico/api/sessions?_format=json", {
-    signal,
-    method: "POST",
-    headers: {
-      Origin: "https://www.nicovideo.jp",
-      Referer: "https://www.nicovideo.jp",
-      "Content-Type": "text/plain;charset=UTF-8",
-    },
-    body: JSON.stringify(requestBody),
-  });
-  const res = (await req.json()) as unknown;
-  if (!typeGuard.niconico.CreateSessionResponse(res)) {
-    throw new Error(
-      "セッションの作成に失敗しました。時間をおいて再度試してみてください",
-    );
-  }
-  signal.throwIfAborted();
-  let lastSession = res.data;
-  const { stop, promise } = DownloadM3U8(
-    ["-i", lastSession.session.content_uri, "-c", "copy", path, "-y"],
-    progress,
-  );
-  signal.addEventListener("abort", stop, { once: true });
+  let lastSession: CreateSessionResponse["data"] | undefined;
+  let downloader: ReturnType<typeof DownloadM3U8> | undefined;
   const heartbeatController = new AbortController();
   const heartbeatSignal = AbortSignal.any([signal, heartbeatController.signal]);
   let heartbeatInterval: ReturnType<typeof setInterval> | undefined;
-  let heartbeatPending = false;
-  const heartbeatFailure = new Promise<never>((_resolve, reject) => {
-    heartbeatInterval = setInterval(() => {
-      if (heartbeatPending || heartbeatSignal.aborted) return;
-      heartbeatPending = true;
-      void (async () => {
-        const req = await fetch(
-          `https://api.dmc.nico/api/sessions/${lastSession.session.id}?_format=json&_method=PUT`,
+  let heartbeatTask: Promise<void> | undefined;
+  let result: SpawnResult;
+  try {
+    if (metadata.media.delivery.trackingId) {
+      await withRequestTimeout(signal, async (requestSignal) => {
+        const trackingReq = await fetch(
+          `https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?${new URLSearchParams({
+            t: metadata.media.delivery.trackingId,
+          }).toString()}`,
           {
-            signal: heartbeatSignal,
-            method: "POST",
+            signal: requestSignal,
+            method: "GET",
             headers: {
-              Origin: "https://www.nicovideo.jp",
-              Referer: "https://www.nicovideo.jp",
-              "Content-Type": "text/plain;charset=UTF-8",
+              "X-Frontend-Id": "6",
+              "X-Frontend-Version": "0",
             },
-            body: JSON.stringify(lastSession),
           },
         );
-        const res = (await req.json()) as unknown;
-        heartbeatSignal.throwIfAborted();
-        if (!typeGuard.niconico.CreateSessionResponse(res)) {
-          throw new Error("セッションの更新に失敗しました");
+        // Tracking only needs the status; release its unused response body.
+        await trackingReq.body?.cancel();
+        if (trackingReq.status !== 200) {
+          console.warn("動画のダウンロードに失敗する可能性があります");
         }
-        lastSession = res.data;
-      })()
-        .catch(reject)
-        .finally(() => {
-          heartbeatPending = false;
-        });
-    }, 30 * 1000);
-  });
-  try {
-    const result = await Promise.race([promise, heartbeatFailure]);
-    signal.throwIfAborted();
-    clearInterval(heartbeatInterval);
-    heartbeatController.abort();
-    try {
-      const delReq = await fetch(
-        `https://api.dmc.nico/api/sessions/${lastSession.session.id}?_format=json&_method=DELETE`,
+      });
+    }
+    const requestBody = createSessionCreateRequestBody(metadata, format);
+    const res = await withRequestTimeout(signal, async (requestSignal) => {
+      const req = await fetch(
+        "https://api.dmc.nico/api/sessions?_format=json",
         {
-          signal,
+          signal: requestSignal,
           method: "POST",
           headers: {
             Origin: "https://www.nicovideo.jp",
             Referer: "https://www.nicovideo.jp",
             "Content-Type": "text/plain;charset=UTF-8",
           },
-          body: JSON.stringify(lastSession),
+          body: JSON.stringify(requestBody),
         },
       );
-      await delReq.json();
-    } catch (error) {
-      signal.throwIfAborted();
-      console.warn("failed to delete DMC session", error);
+      return (await req.json()) as unknown;
+    });
+    if (!typeGuard.niconico.CreateSessionResponse(res)) {
+      throw new Error(
+        "セッションの作成に失敗しました。時間をおいて再度試してみてください",
+      );
     }
+    lastSession = res.data;
     signal.throwIfAborted();
-    return result;
+    downloader = DownloadM3U8(
+      ["-i", lastSession.session.content_uri, "-c", "copy", path, "-y"],
+      progress,
+    );
+    signal.addEventListener("abort", downloader.stop, { once: true });
+    signal.throwIfAborted();
+    const heartbeatFailure = new Promise<never>((_resolve, reject) => {
+      heartbeatInterval = setInterval(() => {
+        if (heartbeatTask || heartbeatSignal.aborted) return;
+        heartbeatTask = (async () => {
+          const session = lastSession;
+          if (!session) return;
+          const res = await withRequestTimeout(
+            heartbeatSignal,
+            async (requestSignal) => {
+              const req = await fetch(
+                `https://api.dmc.nico/api/sessions/${session.session.id}?_format=json&_method=PUT`,
+                {
+                  signal: requestSignal,
+                  method: "POST",
+                  headers: {
+                    Origin: "https://www.nicovideo.jp",
+                    Referer: "https://www.nicovideo.jp",
+                    "Content-Type": "text/plain;charset=UTF-8",
+                  },
+                  body: JSON.stringify(session),
+                },
+              );
+              return (await req.json()) as unknown;
+            },
+          );
+          heartbeatSignal.throwIfAborted();
+          if (!typeGuard.niconico.CreateSessionResponse(res)) {
+            throw new Error("セッションの更新に失敗しました");
+          }
+          lastSession = res.data;
+        })()
+          .catch(reject)
+          .finally(() => {
+            heartbeatTask = undefined;
+          });
+      }, 30 * 1000);
+    });
+    result = await Promise.race([downloader.promise, heartbeatFailure]);
+    signal.throwIfAborted();
   } catch (error) {
-    stop();
-    // Wait for ffmpeg to exit before the queue starts the next movie download.
-    await promise.catch(() => {});
+    downloader?.stop();
     throw error;
   } finally {
     clearInterval(heartbeatInterval);
     heartbeatController.abort();
-    signal.removeEventListener("abort", stop);
+    // Drain the aborted heartbeat before deleting the session it was updating.
+    await heartbeatTask;
+    // Wait for ffmpeg to exit before the queue starts the next movie download.
+    await downloader?.promise.catch(() => {});
+    if (downloader) signal.removeEventListener("abort", downloader.stop);
+    if (lastSession) {
+      const session = lastSession;
+      try {
+        await withRequestTimeout(
+          // An already cancelled job still needs a bounded cleanup attempt.
+          signal.aborted ? undefined : signal,
+          async (requestSignal) => {
+            const req = await fetch(
+              `https://api.dmc.nico/api/sessions/${session.session.id}?_format=json&_method=DELETE`,
+              {
+                signal: requestSignal,
+                method: "POST",
+                headers: {
+                  Origin: "https://www.nicovideo.jp",
+                  Referer: "https://www.nicovideo.jp",
+                  "Content-Type": "text/plain;charset=UTF-8",
+                },
+                body: JSON.stringify(session),
+              },
+            );
+            await req.json();
+          },
+          5_000,
+        );
+      } catch (error) {
+        if (!signal.aborted)
+          console.warn("failed to delete DMC session", error);
+      }
+    }
   }
+  signal.throwIfAborted();
+  return result;
 };
 
 const createSessionCreateRequestBody = (

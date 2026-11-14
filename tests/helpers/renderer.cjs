@@ -20,14 +20,31 @@ module.exports = (options = {}) => {
             sessionId: "test-session",
             queue: {
               comment: { format: "formatted" },
-              option: { fps: options.fps ?? 1, width: 1920, height: 1080 },
+              option: {
+                fps: options.fps ?? 1,
+                ss: options.ss,
+                to: options.to,
+                width: 1920,
+                height: 1080,
+              },
               movie: { duration: options.duration ?? 2 },
             },
             commentData: "[]",
           };
         }
-        if (request.type === "blob" && options.sendError)
+        if (
+          request.type === "blob" &&
+          (options.sendError || request.frameId === options.sendErrorAt)
+        )
           throw new Error("send failed");
+        if (request.type === "blob") {
+          await options.onSend?.(request);
+          listener(null, {
+            target: "renderer",
+            type: "reportProgress",
+            progress: { processed: request.frameId },
+          });
+        }
         if (request.type === "end")
           listener(null, { target: "renderer", type: "end" });
       },
@@ -55,9 +72,9 @@ module.exports = (options = {}) => {
         ? new Proxy({}, { get: () => [1] })
         : { 0: [1], 100: [1] };
     }
-    drawCanvas() {
+    drawCanvas(vpos) {
       draws++;
-      options.onDraw?.(draws);
+      options.onDraw?.(draws, vpos);
       if (draws === options.drawErrorAt) throw new Error("draw failed");
     }
   }
@@ -74,6 +91,7 @@ module.exports = (options = {}) => {
         ...load("src/type-guard.ts", {}),
       },
       "@/util/log": { getLogger: () => logger },
+      "@/util/frame-timing": load("src/util/frame-timing.ts", {}),
       "@/util/sleep": {
         sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
       },

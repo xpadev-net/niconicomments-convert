@@ -56,6 +56,7 @@ function harness(rendererOptions = {}) {
       messages.push(structuredClone(message)),
   };
   const queue = load("electron/queue.ts", {
+    "../src/util/frame-timing": load("src/util/frame-timing.ts", {}),
     "node:fs": { readFileSync: () => "[]" },
     "@xpadev-net/xml2js": {},
     "./conversion-session": { ConversionSession },

@@ -13,6 +13,11 @@ for (const [name, options, message] of [
     "canvas.toBlob returned null",
   ],
   ["frame IPC rejection", { sendError: true }, "send failed"],
+  [
+    "middle frame IPC rejection",
+    { fps: 30, duration: 1.1, allFrames: true, sendErrorAt: 15 },
+    "send failed",
+  ],
 ]) {
   test(`renderer reports ${name} as fatal and does not send end`, async () => {
     const requests = await runRenderer(options);
@@ -21,6 +26,136 @@ for (const [name, options, message] of [
     assert.ok(failures[0].message.includes(message));
     assert.equal(
       requests.some((request) => request.type === "end"),
+      false,
+    );
+  });
+}
+
+for (const [name, options, count, samples] of [
+  [
+    "fractional duration",
+    { fps: 30, duration: 1.1 },
+    33,
+    [
+      [0, 0],
+      [30, 100],
+      [32, 107],
+    ],
+  ],
+  ["partial final frame", { fps: 30, duration: 1.11 }, 34, [[33, 110]]],
+  [
+    "25 FPS boundaries",
+    { fps: 25, duration: 1.1 },
+    28,
+    [
+      [7, 28],
+      [14, 56],
+      [27, 108],
+    ],
+  ],
+  [
+    "fractional FPS",
+    { fps: 29.97, duration: 3.1 },
+    93,
+    [
+      [0, 0],
+      [29, 97],
+      [30, 101],
+      [60, 201],
+      [92, 307],
+    ],
+  ],
+  [
+    "sub-one FPS",
+    { fps: 0.5, duration: 5 },
+    3,
+    [
+      [0, 0],
+      [1, 200],
+      [2, 400],
+    ],
+  ],
+  [
+    "fractional trim",
+    { fps: 30, duration: 10, ss: 0.005, to: 1.105 },
+    33,
+    [
+      [0, 1],
+      [1, 4],
+      [2, 8],
+      [30, 101],
+    ],
+  ],
+  [
+    "trim boundary roundoff",
+    { fps: 30, duration: 10, ss: 0.1, to: 0.4 },
+    9,
+    [
+      [0, 10],
+      [3, 20],
+      [8, 37],
+    ],
+  ],
+  [
+    "start time roundoff",
+    { fps: 25, duration: 10, ss: 1.1, to: 1.4 },
+    8,
+    [
+      [0, 110],
+      [1, 114],
+      [7, 138],
+    ],
+  ],
+  [
+    "long trim boundary roundoff",
+    { fps: 30, duration: 10001, ss: 10000.1, to: 10000.2 },
+    3,
+    [
+      [0, 1000010],
+      [1, 1000014],
+      [2, 1000017],
+    ],
+  ],
+  [
+    "genuine partial final frame",
+    { fps: 30, duration: 0.300001 },
+    10,
+    [[9, 30]],
+  ],
+  ["empty range", { fps: 30, duration: 0 }, 0, []],
+  [
+    "default FPS",
+    { fps: 0, duration: 1.1 },
+    33,
+    [
+      [0, 0],
+      [30, 100],
+      [32, 107],
+    ],
+  ],
+]) {
+  test(`renderer uses consecutive IDs and absolute timestamps for ${name}`, async () => {
+    const timestamps = [];
+    const requests = await runRenderer({
+      ...options,
+      allFrames: true,
+      onDraw: (_count, vpos) => timestamps.push(vpos),
+    });
+    assert.deepEqual(
+      requests
+        .filter((request) => request.type === "blob")
+        .map((request) => request.frameId),
+      Array.from({ length: count }, (_, frame) => frame + 1),
+    );
+    assert.equal(timestamps.length, count);
+    for (const [frame, expected] of samples)
+      assert.equal(timestamps[frame], expected, `timestamp at frame ${frame}`);
+    assert.equal(
+      requests.find((request) => request.type === "end").frameId,
+      count,
+    );
+    assert.equal(
+      requests.some((request) => request.type === "failure"),
       false,
     );
   });
@@ -42,6 +177,36 @@ test("renderer sends all frame IDs and then the final frame count", async () => 
   );
   assert.equal(
     requests.some((request) => request.type === "failure"),
+    false,
+  );
+});
+
+test("a late middle-frame rejection fails the job after later frames were sent", {
+  timeout: 2000,
+}, async () => {
+  let rejectFrame;
+  const pending = new Promise((_, reject) => {
+    rejectFrame = reject;
+  });
+  const requests = await runRenderer({
+    fps: 30,
+    duration: 1.1,
+    allFrames: true,
+    onSend({ frameId }) {
+      if (frameId === 15) return pending;
+      if (frameId === 16) rejectFrame(new Error("middle frame lost"));
+    },
+  });
+  assert.ok(
+    requests.some(
+      (request) => request.type === "blob" && request.frameId === 16,
+    ),
+  );
+  const failures = requests.filter((request) => request.type === "failure");
+  assert.equal(failures.length, 1);
+  assert.ok(failures[0].message.includes("middle frame lost"));
+  assert.equal(
+    requests.some((request) => request.type === "end"),
     false,
   );
 });
