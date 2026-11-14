@@ -52,7 +52,11 @@ const assetsBaseUrl = {
     "https://github.com/descriptinc/ffmpeg-ffprobe-static/releases/download/b6.1.2-rc.1/",
 };
 const version = {
-  ffmpeg: "6.1",
+  // The pinned release ships 7.1 for macOS x64. Keep existing 6.1 caches valid.
+  ffmpeg:
+    process.platform === "darwin" && os.arch() === "x64"
+      ? ["6.1", "7.1"]
+      : ["6.1"],
 };
 const getDistro = (): string => {
   const arch = os.arch();
@@ -71,7 +75,7 @@ const getDistro = (): string => {
 
 const isValidBinary = async (
   path: string,
-  version: string,
+  versions: readonly string[],
   signal: AbortSignal,
 ): Promise<boolean> => {
   signal.throwIfAborted();
@@ -83,7 +87,7 @@ const isValidBinary = async (
       signal,
       timeout: 10_000,
     }).promise;
-    return result.stdout.includes(version);
+    return versions.some((version) => result.stdout.includes(version));
   } catch (e) {
     signal.throwIfAborted();
     console.warn(e);

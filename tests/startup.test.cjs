@@ -153,7 +153,7 @@ const assetHarness = (t, options = {}) => {
           };
         },
       },
-      "node:os": { arch: () => "x64" },
+      "node:os": { arch: () => options.arch ?? "x64" },
       ...(options.imports ?? {}),
       undici: {},
     },
@@ -223,6 +223,37 @@ for (const platform of ["darwin", "win32"]) {
     );
   });
 }
+
+for (const [platform, arch, accepted] of [
+  ["darwin", "x64", true],
+  ["darwin", "arm64", false],
+  ["win32", "x64", false],
+]) {
+  test(`${platform}/${arch}: pinned-release 7.1 binaries match only their known distribution`, async (t) => {
+    const h = assetHarness(t, {
+      platform,
+      arch,
+      fetch: async () => new Response("ffmpeg version 7.1"),
+    });
+    if (accepted) {
+      await h.run();
+      assert.equal(h.downloads.length, 2);
+      assert.equal(fs.readFileSync(h.ffmpegPath, "utf8"), "ffmpeg version 7.1");
+    } else {
+      await assert.rejects(h.run(), /failed version validation/);
+      assert.equal(fs.existsSync(h.ffmpegPath), false);
+    }
+  });
+}
+
+test("the macOS x64 cache accepts the actual pinned 7.1 release", async (t) => {
+  const h = assetHarness(t, { platform: "darwin", arch: "x64" });
+  cache(h, "ffmpeg", "ffmpeg version 7.1");
+  cache(h, "ffprobe", "ffprobe version 7.1");
+  await h.run();
+  assert.deepEqual(h.downloads, []);
+  assert.deepEqual(h.windows, []);
+});
 
 test("retry checks the cache again and downloads only the missing binary", async (t) => {
   let fail = true;
