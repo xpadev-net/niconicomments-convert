@@ -34,7 +34,7 @@ jobs:
         run: pnpm check-types
 
       - name: Run regression tests
-        run: node --test tests/*.test.cjs
+        run: pnpm test
 
   build-test:
     runs-on: ubuntu-latest

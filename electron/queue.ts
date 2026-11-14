@@ -79,15 +79,17 @@ const startMovieDownload = async (): Promise<void> => {
         sendProgress();
       },
     );
-    targetQueue.status = "completed";
+    if (targetQueue.status === "processing") targetQueue.status = "completed";
   } catch (e) {
     logger.error("failed to download movie", e);
-    targetQueue.status = "fail";
-    sendMessageToController({
-      type: "message",
-      title: "動画のダウンロード中にエラーが発生しました",
-      message: `エラー内容:\n${encodeError(e)}`,
-    });
+    if (targetQueue.status === "processing") {
+      targetQueue.status = "fail";
+      sendMessageToController({
+        type: "message",
+        title: "動画のダウンロード中にエラーが発生しました",
+        message: `エラー内容:\n${encodeError(e)}`,
+      });
+    }
   }
   sendProgress();
   void startMovieDownload();
@@ -116,15 +118,17 @@ const startCommentDownload = async (): Promise<void> => {
       };
       sendProgress();
     });
-    targetQueue.status = "completed";
+    if (targetQueue.status === "processing") targetQueue.status = "completed";
   } catch (e) {
     logger.error("failed to download comment", e);
-    targetQueue.status = "fail";
-    sendMessageToController({
-      type: "message",
-      title: "コメントのダウンロード中にエラーが発生しました",
-      message: `エラー内容:\n${encodeError(e)}`,
-    });
+    if (targetQueue.status === "processing") {
+      targetQueue.status = "fail";
+      sendMessageToController({
+        type: "message",
+        title: "コメントのダウンロード中にエラーが発生しました",
+        message: `エラー内容:\n${encodeError(e)}`,
+      });
+    }
   }
   sendProgress();
   void startCommentDownload();
@@ -132,13 +136,39 @@ const startCommentDownload = async (): Promise<void> => {
 };
 
 const startConvert = async (): Promise<void> => {
-  const queued = queueLists.convert.filter((i) => i.status === "queued");
-  if (activeSession || queued.length === 0 || !queued[0]) return;
-  for (const queueId of queued[0].wait ?? []) {
-    const queue = queueList.filter((i) => i.id === queueId)[0];
-    if (queue?.status !== "completed") return;
-  }
-  const queue = queued[0];
+  // Propagate terminal dependency states, including chains of waiting jobs.
+  let changed: boolean;
+  do {
+    changed = false;
+    for (const queue of queueLists.convert) {
+      if (queue.status !== "queued") continue;
+      const dependency = (queue.wait ?? [])
+        .map((id) => queueList.find((item) => item.id === id))
+        .find(
+          (item) =>
+            item?.status === "fail" ||
+            item?.status === "interrupted" ||
+            (item === activeSession?.conversion.queue &&
+              activeSession?.conversion.interrupted),
+        );
+      if (!dependency) continue;
+      queue.status = dependency.status === "fail" ? "fail" : "interrupted";
+      changed = true;
+    }
+    if (changed) sendProgress();
+  } while (changed);
+
+  if (activeSession) return;
+  const queue = queueLists.convert.find(
+    (item) =>
+      item.status === "queued" &&
+      (item.wait ?? []).every(
+        (id) =>
+          queueList.find((dependency) => dependency.id === id)?.status ===
+          "completed",
+      ),
+  );
+  if (!queue) return;
   queue.status = "processing";
   queue.progress = {
     percent: 0,
@@ -248,7 +278,13 @@ const processOnLoad = async (
 
 const processOnInterrupt = (queueId: UUID): void => {
   const queue = queueList.filter((i) => i.id === queueId)[0];
-  if (queue?.status !== "processing") return;
+  if (queue?.status !== "processing" && queue?.status !== "queued") return;
+  if (queue.status === "queued") {
+    queue.status = "interrupted";
+    sendProgress();
+    void startConvert();
+    return;
+  }
   if (queue.type === "convert") {
     const session = activeSession;
     if (session?.conversion.queue !== queue) return;
@@ -264,6 +300,8 @@ const processOnInterrupt = (queueId: UUID): void => {
     queue.status = "interrupted";
     interruptCommentDownload();
   }
+  sendProgress();
+  void startConvert();
 };
 
 export {
