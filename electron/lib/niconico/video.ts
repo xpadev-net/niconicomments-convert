@@ -3,6 +3,7 @@ import type { SpawnResult } from "@/@types/spawn";
 
 import { downloadDMC } from "./dmc";
 import { downloadDMS } from "./dms";
+import { withRequestTimeout } from "./request";
 import { getMetadata } from "./utils";
 
 const download = async (
@@ -12,7 +13,9 @@ const download = async (
   progress: (total: number, downloaded: number, eta: number) => void,
   signal: AbortSignal,
 ): Promise<SpawnResult> => {
-  const metadata = await getMetadata(nicoId, signal);
+  const metadata = await withRequestTimeout(signal, (requestSignal) =>
+    getMetadata(nicoId, requestSignal),
+  );
   signal.throwIfAborted();
   if (!metadata) {
     throw new Error(
