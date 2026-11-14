@@ -5,12 +5,10 @@ import type { ApiResponsesToBinaryDownloader } from "@/@types/response.binary-do
 
 import { baseUrl } from "./context";
 
-let binaryDownloaderWindow: BrowserWindow;
-
-let blockClose = false;
+let binaryDownloaderWindow: BrowserWindow | undefined;
 
 const createBinaryDownloaderWindow = async (): Promise<void> => {
-  binaryDownloaderWindow = new BrowserWindow({
+  const window = new BrowserWindow({
     width: 400,
     height: 200,
     resizable: false,
@@ -21,33 +19,35 @@ const createBinaryDownloaderWindow = async (): Promise<void> => {
       additionalArguments: ["--ipc-role=downloader"],
     },
   });
-  binaryDownloaderWindow.removeMenu();
+  binaryDownloaderWindow = window;
+  window.removeMenu();
+  window.on("closed", () => {
+    if (binaryDownloaderWindow !== window) return;
+    binaryDownloaderWindow = undefined;
+    app.quit();
+  });
 
   const appURL = `${baseUrl}?binary-downloader`;
 
-  await binaryDownloaderWindow.loadURL(appURL);
-  blockClose = true;
-  binaryDownloaderWindow.on("close", (e) => {
-    if (blockClose) {
-      e.preventDefault();
-    }
-  });
+  await window.loadURL(appURL);
 
-  if (!app.isPackaged) {
-    binaryDownloaderWindow.webContents.openDevTools();
+  if (!app.isPackaged && !window.isDestroyed()) {
+    window.webContents.openDevTools();
   }
 };
 const sendMessageToBinaryDownloader = (
   value: ApiResponsesToBinaryDownloader,
 ): void => {
+  if (!binaryDownloaderWindow || binaryDownloaderWindow.isDestroyed()) return;
   binaryDownloaderWindow.webContents.send("response", {
     ...value,
     target: "downloader",
   });
 };
 const closeBinaryDownloaderWindow = (): void => {
-  blockClose = false;
-  binaryDownloaderWindow.close();
+  const window = binaryDownloaderWindow;
+  binaryDownloaderWindow = undefined;
+  if (window && !window.isDestroyed()) window.close();
 };
 
 export {

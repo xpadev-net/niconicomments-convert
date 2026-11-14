@@ -1,5 +1,4 @@
 import type { NicoId, UUID } from "@/@types/brand";
-import type { BrowserProfile } from "@/@types/cookies";
 import type { Request } from "@/@types/ipc";
 import type {
   TCommentOption,
@@ -18,7 +17,9 @@ import type {
   TMovieItem,
   TRemoteMovieItemFormat,
 } from "@/@types/queue";
-import type { AuthType, Settings } from "@/@types/setting";
+import type { AppSettings } from "@/@types/setting";
+
+import { isSettingKey, parseSetting } from "../src/domain/settings";
 
 // Each object schema must cover every declared field, including optional fields.
 // IPC structured cloning removes accessors and custom prototypes before validation.
@@ -239,41 +240,18 @@ const convertQueue = object<ConvertQueue>({
 });
 const queue: Schema<Queue> = (value): value is Queue =>
   convertQueue(value) || movieQueue(value) || commentQueue(value);
-const profileBase = { name: string, path: string };
-const profile: Schema<BrowserProfile> = (value): value is BrowserProfile =>
-  object<Extract<BrowserProfile, { type: "chromiumProfile" }>>({
-    ...profileBase,
-    type: choices("chromiumProfile"),
-    browser: choices("brave", "chrome", "chromium", "edge", "opera", "vivaldi"),
-    profileName: string,
-  })(value) ||
-  object<Extract<BrowserProfile, { type: "firefoxBasicProfile" }>>({
-    ...profileBase,
-    type: choices("firefoxBasicProfile"),
-    browser: choices("firefox"),
-  })(value) ||
-  object<Extract<BrowserProfile, { type: "firefoxContainer" }>>({
-    ...profileBase,
-    type: choices("firefoxContainer"),
-    browser: choices("firefox"),
-    profileName: string,
-    containerName: string,
-    contextId: integer,
-  })(value);
-const auth: Schema<AuthType> = (value): value is AuthType =>
-  object({ type: choices("NoAuth") }, true)(value) ||
-  object({ type: choices("cookie"), path: string }, true)(value) ||
-  object({ type: choices("browser"), profile: optional(profile) }, true)(value);
-const settingSchemas: { [K in keyof Settings]: Schema<Settings[K]> } = {
-  auth,
-  ffmpegOptions: (value): value is Settings["ffmpegOptions"] =>
-    record(value) && Object.values(value).every(string),
-  showRendererWindow: boolean,
+const settingKey = isSettingKey;
+const validSetting = <K extends keyof AppSettings>(
+  key: K,
+  value: unknown,
+): value is AppSettings[K] => {
+  try {
+    parseSetting(key, value);
+    return true;
+  } catch {
+    return false;
+  }
 };
-const settingKey = (value: unknown): value is keyof Settings =>
-  string(value) && Object.hasOwn(settingSchemas, value);
-const validSetting = (key: keyof Settings, value: unknown): boolean =>
-  settingSchemas[key](value);
 
 type RequestSchemas = {
   [H in Request["host"]]: {

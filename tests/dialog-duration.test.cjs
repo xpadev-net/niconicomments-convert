@@ -13,6 +13,7 @@ const harness = (duration) =>
         }),
       },
     },
+    "../src/domain/validation": require("../build/src/domain/validation"),
     "./assets": { ffprobePath: "ffprobe" },
     "./controller-window": { sendMessageToController() {} },
     "./lib/json": { encodeError: String },

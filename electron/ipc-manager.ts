@@ -2,7 +2,7 @@ import type { IpcMainInvokeEvent } from "electron";
 import { ipcMain } from "electron";
 
 import type { RequestHandlers } from "@/@types/ipc";
-
+import { ValidationError } from "../src/domain/validation";
 import { baseUrl } from "./context";
 import {
   isControllerSender,
@@ -15,7 +15,7 @@ import {
   selectMovie,
   selectOutput,
 } from "./dialog";
-import { isIpcRequest, validSetting } from "./ipc-schema";
+import { isIpcRequest } from "./ipc-schema";
 import { getAvailableProfiles } from "./lib/cookie";
 import { encodeError } from "./lib/json";
 import { getLogger } from "./lib/log";
@@ -41,17 +41,12 @@ const controllerHandlers: RequestHandlers["controller"] = {
   dropFiles: (request) => handleDropFiles(request.paths),
   appendQueue: (request) => {
     appendQueue(request.data);
+    return true;
   },
   interruptQueue: (request) => {
     processOnInterrupt(request.queueId);
   },
-  getSetting: (request) => {
-    const value = store.get(request.key);
-    if (value === undefined) return undefined;
-    if (!validSetting(request.key, value))
-      throw new Error("Invalid stored setting");
-    return value as import("@/@types/setting").Settings[typeof request.key];
-  },
+  getSetting: (request) => store.get(request.key),
   setSetting: (request) => {
     store.set(request.key, request.data);
   },
@@ -123,8 +118,14 @@ const registerListener = (): void => {
         logger.error("failed to process ipc message", error);
         sendMessageToController({
           type: "message",
-          title: "予期しないエラーが発生しました",
-          message: `エラー内容:\n${encodeError(error)}\nipcManager / catchError`,
+          title:
+            error instanceof ValidationError
+              ? "入力内容を確認してください"
+              : "予期しないエラーが発生しました",
+          message:
+            error instanceof ValidationError
+              ? error.message
+              : `エラー内容:\n${encodeError(error)}\nipcManager / catchError`,
         });
       }
       throw error;

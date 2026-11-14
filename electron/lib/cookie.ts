@@ -6,7 +6,6 @@ import type {
   ParsedCookie,
 } from "@/@types/cookies";
 import type { UserData } from "@/@types/niconico";
-import type { AuthType } from "@/@types/setting";
 import { store } from "../store";
 import { typeGuard } from "../type-guard";
 import {
@@ -33,10 +32,7 @@ const getAvailableProfiles = async (): Promise<
 };
 
 const getCookies = async (): Promise<Cookies | undefined> => {
-  const authSetting = store.get("auth") as AuthType | undefined;
-  if (!authSetting) {
-    return undefined;
-  }
+  const authSetting = store.get("auth");
   switch (authSetting.type) {
     case "browser": {
       if (!authSetting.profile) {

@@ -18,6 +18,8 @@ import { SelectField } from "@/components/select-field";
 import { isLoadingAtom } from "@/controller/atoms";
 import { runControllerTask } from "@/controller/task";
 
+import { getSetting } from "@/util/settings";
+
 import Styles from "./auth.module.scss";
 
 const AuthSetting: FC = () => {
@@ -28,12 +30,7 @@ const AuthSetting: FC = () => {
   >([]);
   useLayoutEffect(() => {
     void runControllerTask(async () => {
-      const data = await window.api.request({
-        type: "getSetting",
-        key: "auth",
-        host: "controller",
-      });
-      setAuthSetting(data ?? { type: "NoAuth" });
+      setAuthSetting(await getSetting("auth"));
       const profiles = await window.api.request({
         type: "getAvailableProfiles",
         host: "controller",
@@ -100,12 +97,7 @@ const AuthSetting: FC = () => {
   const onReset = (): void => {
     void runControllerTask(async () => {
       setIsLoading(true);
-      const data = await window.api.request({
-        type: "getSetting",
-        key: "auth",
-        host: "controller",
-      });
-      setAuthSetting(data ?? { type: "NoAuth" });
+      setAuthSetting(await getSetting("auth"));
       setIsLoading(false);
     }, setIsLoading);
   };

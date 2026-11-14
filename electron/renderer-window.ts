@@ -21,7 +21,7 @@ const createRendererWindow = (
       additionalArguments: ["--ipc-role=renderer"],
       backgroundThrottling: false,
     },
-    show: !!(store.get("showRendererWindow") ?? true),
+    show: store.get("showRendererWindow"),
   });
   try {
     rendererWindow.removeMenu();

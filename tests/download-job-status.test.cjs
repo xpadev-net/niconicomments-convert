@@ -99,7 +99,7 @@ const conversion = (dependency, id = "convert") => ({
     dependency?.type === "movie"
       ? { type: "remote", ref: dependency, duration: 1 }
       : { type: "local", duration: 1 },
-  option: { fps: 30 },
+  option: { fps: 30, width: 1920, height: 1080, options: {} },
   wait: dependency ? [dependency.id] : [],
 });
 const setupQueue = (downloads = {}, mocks = {}, globals = {}) => {
@@ -545,6 +545,317 @@ test("dmc: a slow heartbeat blocks overlapping ticks and the next PUT uses the u
   tick();
   assert.equal(requests.length, 2);
 });
+
+// Control only production timers, so deadline tests do not wait in real time.
+const requestTimers = () => {
+  const deadlines = new Map();
+  const intervals = new Map();
+  return {
+    globals: {
+      setTimeout: (callback, delay) => {
+        const timer = { callback, delay };
+        deadlines.set(timer, timer);
+        return timer;
+      },
+      clearTimeout: (timer) => deadlines.delete(timer),
+      setInterval: (callback) => {
+        intervals.set(callback, callback);
+        return callback;
+      },
+      clearInterval: (timer) => intervals.delete(timer),
+    },
+    tick: () => {
+      for (const callback of intervals.values()) callback();
+    },
+    expire: (delay) => {
+      const pending = [...deadlines.values()].filter((i) => i.delay === delay);
+      assert.equal(pending.length, 1);
+      pending[0].callback();
+    },
+    assertEmpty: () => {
+      assert.equal(deadlines.size, 0);
+      assert.equal(intervals.size, 0);
+    },
+  };
+};
+const untilAborted = (signal) =>
+  new Promise((_, reject) => {
+    if (signal.aborted) reject(signal.reason);
+    else
+      signal.addEventListener("abort", () => reject(signal.reason), {
+        once: true,
+      });
+  });
+
+for (const outcome of [
+  "ffmpeg failure",
+  "launch failure",
+  "abort after creation",
+]) {
+  test(`dmc: ${outcome} deletes the session and clears all timers`, async () => {
+    const controller = new AbortController();
+    const timers = requestTimers();
+    const failure = new Error(outcome);
+    const deleted = [];
+    let spawns = 0;
+    const spawnDownload = () => {
+      spawns++;
+      if (outcome === "launch failure") throw failure;
+      return { stop() {}, promise: Promise.reject(failure) };
+    };
+    const load = loadModules(
+      { "electron/utils/ffmpeg": { DownloadM3U8: spawnDownload } },
+      {
+        ...timers.globals,
+        fetch: async (url, init) => {
+          if (url.includes("_method=DELETE")) {
+            deleted.push({ signal: init.signal, body: JSON.parse(init.body) });
+            return response(session);
+          }
+          return {
+            json: async () => {
+              if (outcome === "abort after creation") controller.abort();
+              return session;
+            },
+          };
+        },
+      },
+    );
+    await assert.rejects(
+      load("electron/lib/niconico/dmc").downloadDMC(
+        ...movieArgs("dmc", controller.signal),
+      ),
+      outcome === "abort after creation"
+        ? { name: "AbortError" }
+        : (error) => error === failure,
+    );
+    assert.equal(spawns, outcome === "abort after creation" ? 0 : 1);
+    assert.equal(deleted.length, 1);
+    assert.equal(deleted[0].signal.aborted, false);
+    assert.deepEqual(deleted[0].body, session.data);
+    timers.assertEmpty();
+  });
+}
+
+for (const stage of [
+  "metadata",
+  "tracking",
+  "session",
+  "heartbeat",
+  "cleanup",
+]) {
+  for (const reason of ["abort", "timeout"]) {
+    // Tracking ignores the response body; the other requests parse JSON.
+    for (const stalledAt of stage === "tracking"
+      ? ["fetch"]
+      : ["fetch", "body"]) {
+      test(`dmc: ${reason} during ${stage} ${stalledAt} reaches the request and clears timers`, async () => {
+        const controller = new AbortController();
+        const timers = requestTimers();
+        const ffmpeg = deferred();
+        const warnings = [];
+        let requestSignal;
+        let stops = 0;
+        const spawnDownload = () => ({
+          promise:
+            stage === "cleanup" ? Promise.resolve(result) : ffmpeg.promise,
+          stop: () => {
+            stops++;
+            ffmpeg.reject(new DOMException("stopped", "AbortError"));
+          },
+        });
+        const load = loadModules(
+          {
+            "electron/lib/cookie": cookieMock,
+            "electron/utils/ffmpeg": { DownloadM3U8: spawnDownload },
+          },
+          {
+            ...timers.globals,
+            console: { warn: (...args) => warnings.push(args) },
+            fetch: async (url, init) => {
+              const current = url.includes("nicovideo.jp/watch/")
+                ? "metadata"
+                : url.includes("2ab0cbaa")
+                  ? "tracking"
+                  : url.includes("_method=PUT")
+                    ? "heartbeat"
+                    : url.includes("_method=DELETE")
+                      ? "cleanup"
+                      : "session";
+              if (current !== stage) return response(session);
+              requestSignal = init.signal;
+              if (stalledAt === "fetch") return untilAborted(init.signal);
+              return { json: () => untilAborted(init.signal) };
+            },
+          },
+        );
+        const args = movieArgs("dmc", controller.signal);
+        if (stage === "tracking") {
+          args[0] = structuredClone(metadataDMC);
+          args[0].media.delivery.trackingId = "tracking";
+        }
+        const task =
+          stage === "metadata"
+            ? load("electron/lib/niconico/video").download(
+                "sm9",
+                args[1],
+                args[2],
+                args[3],
+                args[4],
+              )
+            : load("electron/lib/niconico/dmc").downloadDMC(...args);
+        const checked =
+          stage === "cleanup" && reason === "timeout"
+            ? task.then((value) => assert.equal(value, result))
+            : assert.rejects(task, {
+                name: reason === "abort" ? "AbortError" : "TimeoutError",
+              });
+        await flush();
+        if (stage === "heartbeat") {
+          timers.tick();
+          await flush();
+        }
+        assert.ok(requestSignal);
+        assert.equal(requestSignal.aborted, false);
+        if (reason === "abort") controller.abort();
+        else timers.expire(stage === "cleanup" ? 5_000 : 30_000);
+        await checked;
+        assert.equal(requestSignal.aborted, true);
+        assert.equal(
+          warnings.length,
+          stage === "cleanup" && reason === "timeout" ? 1 : 0,
+        );
+        if (stage === "heartbeat") assert.ok(stops >= 1);
+        timers.assertEmpty();
+      });
+    }
+  }
+}
+
+test("dmc: completion drains an in-flight heartbeat before deleting the latest session", async () => {
+  const timers = requestTimers();
+  const ffmpeg = deferred();
+  const controller = new AbortController();
+  let heartbeatSignal;
+  let heartbeatDrained = false;
+  let deletes = 0;
+  let stops = 0;
+  const spawnDownload = () => ({
+    promise: ffmpeg.promise,
+    stop: () => {
+      stops++;
+    },
+  });
+  const load = loadModules(
+    { "electron/utils/ffmpeg": { DownloadM3U8: spawnDownload } },
+    {
+      ...timers.globals,
+      fetch: async (url, init) => {
+        if (url.includes("_method=PUT")) {
+          heartbeatSignal = init.signal;
+          return {
+            json: () =>
+              untilAborted(init.signal).finally(() => {
+                heartbeatDrained = true;
+              }),
+          };
+        }
+        if (url.includes("_method=DELETE")) {
+          assert.equal(heartbeatDrained, true);
+          assert.deepEqual(JSON.parse(init.body), session.data);
+          deletes++;
+        }
+        return response(session);
+      },
+    },
+  );
+  const task = load("electron/lib/niconico/dmc").downloadDMC(
+    ...movieArgs("dmc", controller.signal),
+  );
+  await flush();
+  timers.tick();
+  await flush();
+  ffmpeg.resolve(result);
+  assert.equal(await task, result);
+  assert.equal(heartbeatSignal.aborted, true);
+  assert.equal(deletes, 1);
+  controller.abort();
+  assert.equal(stops, 0);
+  timers.assertEmpty();
+});
+
+for (const interrupted of [false, true]) {
+  test(`dmc: ${interrupted ? "interrupted" : "failed"} job waits for process exit and session cleanup before starting the next job`, async () => {
+    const ffmpeg = deferred();
+    const cleanup = deferred();
+    const timers = requestTimers();
+    const failure = new Error("download failed");
+    let deleting = false;
+    let nextStarted = false;
+    let stopRequested = false;
+    let heartbeatSignal;
+    const spawnDownload = () => ({
+      promise: ffmpeg.promise,
+      stop: () => {
+        stopRequested = true;
+      },
+    });
+    const load = loadModules(
+      { "electron/utils/ffmpeg": { DownloadM3U8: spawnDownload } },
+      {
+        ...timers.globals,
+        fetch: async (url, init) => {
+          if (url.includes("_method=PUT")) {
+            heartbeatSignal = init.signal;
+            if (!interrupted) throw failure;
+            return untilAborted(init.signal);
+          }
+          if (url.includes("_method=DELETE")) {
+            deleting = true;
+            assert.equal(init.signal.aborted, false);
+            return cleanup.promise;
+          }
+          return response(session);
+        },
+      },
+    );
+    const queue = setupQueue({
+      download: (...args) => {
+        if (args[0] === "next") {
+          nextStarted = true;
+          return Promise.resolve(result);
+        }
+        return load("electron/lib/niconico/dmc").downloadDMC(
+          ...movieArgs("dmc", args.at(-1)),
+        );
+      },
+    });
+    const first = movie();
+    const next = movie("next");
+    next.url = "next";
+    queue.appendQueue(first);
+    queue.appendQueue(next);
+    await flush();
+    timers.tick();
+    await flush();
+    if (interrupted) queue.processOnInterrupt(first.id);
+    await flush();
+    assert.equal(stopRequested, true);
+    assert.equal(heartbeatSignal.aborted, true);
+    assert.equal(deleting, false);
+    assert.equal(nextStarted, false);
+    ffmpeg.reject(new Error("process exited"));
+    await flush();
+    assert.equal(deleting, true);
+    assert.equal(nextStarted, false);
+    cleanup.resolve(response(session));
+    await flush();
+    assert.equal(first.status, interrupted ? "interrupted" : "fail");
+    assert.equal(next.status, "completed");
+    assert.equal(nextStarted, true);
+    timers.assertEmpty();
+  });
+}
 
 test("movie metadata failure is handled by the queue with a single notification", async () => {
   const load = loadModules({

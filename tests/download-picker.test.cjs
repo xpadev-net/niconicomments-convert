@@ -146,7 +146,7 @@ for (const type of ["comment", "movie"]) {
     h.render().props.onChange({ type: "remote", ref: corrected });
     assert.equal(h.requests[1].request.data, corrected);
     assert.equal(h.render().key, original.key);
-    h.requests[1].resolve();
+    h.requests[1].resolve(true);
     await flush();
     assert.notEqual(
       h.render().key,

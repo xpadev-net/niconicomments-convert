@@ -39,6 +39,7 @@ const windowHarness = (options = {}) => {
   }
   const api = load("electron/renderer-window.ts", {
     electron: { app: { isPackaged: true }, BrowserWindow },
+    "../src/domain/validation": require("../build/src/domain/validation"),
     "./context": { baseUrl: "http://localhost" },
     "./queue": { processingQueue: { status: "processing" } },
     "./store": { store: { get: () => false } },
@@ -128,6 +129,7 @@ const ipcHarness = () => {
         },
       },
     },
+    "../src/domain/validation": require("../build/src/domain/validation"),
     "./context": { baseUrl: "http://localhost/" },
     "./controller-window": { isControllerSender: () => false },
     "./dialog": {},

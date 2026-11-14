@@ -10,7 +10,7 @@ import type {
   ApiResponseSelectMovie,
 } from "./response.controller";
 import type { ApiResponseLoad } from "./response.renderer";
-import type { Settings } from "./setting";
+import type { AppSettings } from "./setting";
 
 export type ControllerRequest = ApiRequestsFromController & {
   host: "controller";
@@ -24,7 +24,7 @@ type ControllerResults = {
   selectOutput: string | undefined;
   selectFile: OpenDialogReturnValue;
   dropFiles: ApiResponseDropFiles;
-  appendQueue: undefined;
+  appendQueue: true;
   interruptQueue: undefined;
   setSetting: undefined;
   getAvailableProfiles: { profile: BrowserProfile; user: UserData }[];
@@ -42,9 +42,9 @@ type RendererResults = {
 export type Result<R extends Request> = R extends {
   host: "controller";
   type: "getSetting";
-  key: infer K extends keyof Settings;
+  key: infer K extends keyof AppSettings;
 }
-  ? Settings[K] | undefined
+  ? AppSettings[K]
   : R extends {
         host: "controller";
         type: infer T extends keyof ControllerResults;

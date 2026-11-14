@@ -1,4 +1,12 @@
 import type { BrowserProfile } from "@/@types/cookies";
+import type { FfmpegOptions } from "@/@types/ffmpeg";
+
+export type AppSettings = {
+  auth: AuthType;
+  ffmpegOptions: FfmpegOptions;
+  showRendererWindow: boolean;
+  commentFileExt: string;
+};
 
 export type AuthType = AuthByBrowserCookie | AuthByCookieFile | NoAuth;
 
@@ -12,10 +20,4 @@ export type AuthByBrowserCookie = {
 };
 export type NoAuth = {
   type: "NoAuth";
-};
-
-export type Settings = {
-  auth: AuthType;
-  ffmpegOptions: import("./ffmpeg").FfmpegOptions;
-  showRendererWindow: boolean;
 };

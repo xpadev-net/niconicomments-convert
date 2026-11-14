@@ -8,15 +8,20 @@ const output: Promise<string | undefined> = request({
   type: "selectOutput",
   options: {},
 });
-const auth: Promise<AuthType | undefined> = request({
+const auth: Promise<AuthType> = request({
   host: "controller",
   type: "getSetting",
   key: "auth",
 });
-const show: Promise<boolean | undefined> = request({
+const show: Promise<boolean> = request({
   host: "controller",
   type: "getSetting",
   key: "showRendererWindow",
+});
+const extension: Promise<string> = request({
+  host: "controller",
+  type: "getSetting",
+  key: "commentFileExt",
 });
 const load: Promise<ApiResponseLoad | undefined> = request({
   host: "renderer",
@@ -43,4 +48,4 @@ const wrongResult: Promise<boolean> = request({
 });
 // @ts-expect-error Main handlers must return the declared response.
 const wrongHandler: RequestHandlers["controller"]["selectOutput"] = () => true;
-void [output, auth, show, load, wrongResult, wrongHandler];
+void [output, auth, show, extension, load, wrongResult, wrongHandler];

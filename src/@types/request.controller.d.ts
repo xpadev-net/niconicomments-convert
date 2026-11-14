@@ -2,7 +2,7 @@ import type { SaveDialogOptions } from "electron";
 
 import type { UUID } from "@/@types/brand";
 import type { Queue } from "@/@types/queue";
-import type { Settings } from "@/@types/setting";
+import type { AppSettings } from "@/@types/setting";
 
 export type ApiRequestFromController = {
   host: "controller";
@@ -33,11 +33,15 @@ export type ApiRequestAppendQueue = {
   data: Queue;
 };
 export type ApiRequestGetSetting = {
-  [K in keyof Settings]: { type: "getSetting"; key: K };
-}[keyof Settings];
+  [K in keyof AppSettings]: { type: "getSetting"; key: K };
+}[keyof AppSettings];
 export type ApiRequestSetSetting = {
-  [K in keyof Settings]: { type: "setSetting"; key: K; data: Settings[K] };
-}[keyof Settings];
+  [K in keyof AppSettings]: {
+    type: "setSetting";
+    key: K;
+    data: AppSettings[K];
+  };
+}[keyof AppSettings];
 
 export type ApiRequestGetAvailableProfiles = {
   type: "getAvailableProfiles";

@@ -3,17 +3,13 @@ import type { FC } from "react";
 import { useLayoutEffect, useState } from "react";
 import { runControllerTask } from "@/controller/task";
 
+import { getSetting } from "@/util/settings";
+
 const OtherSetting: FC = () => {
   const [showRendererWindow, setShowRendererWindow] = useState<boolean>(false);
   useLayoutEffect(() => {
     void runControllerTask(async () => {
-      const value =
-        (await window.api.request({
-          type: "getSetting",
-          key: "showRendererWindow",
-          host: "controller",
-        })) ?? true;
-      setShowRendererWindow(!!value);
+      setShowRendererWindow(await getSetting("showRendererWindow"));
     });
   }, []);
   return (

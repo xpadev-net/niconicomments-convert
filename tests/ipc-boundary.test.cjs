@@ -280,7 +280,7 @@ test("nested queue payloads cannot pass using only queue discriminants", () => {
   }
 });
 
-const ipcHarness = () => {
+const ipcHarness = ({ appendError } = {}) => {
   const calls = [];
   const makeSender = (id, url) => ({
     id,
@@ -306,6 +306,7 @@ const ipcHarness = () => {
         },
       },
     },
+    "../src/domain/validation": require("../build/src/domain/validation"),
     "./context": { baseUrl: "http://localhost:5173" },
     "./controller-window": {
       isControllerSender: (s) => s === control,
@@ -324,7 +325,10 @@ const ipcHarness = () => {
     "./lib/log": { getLogger: () => ({ error() {} }) },
     "./queue": {
       isRendererSender: (s) => s === render,
-      appendQueue: recordCall("appendQueue"),
+      appendQueue: (queue) => {
+        if (appendError) throw appendError;
+        calls.push(["appendQueue", queue]);
+      },
       failConversion: recordCall("failConversion"),
       appendFrame: recordCall("appendFrame"),
       processOnLoad: recordCall("load", { type: "load", sessionId: "s" }),
@@ -374,7 +378,7 @@ test("authenticated requests reach their handler and return the appropriate resu
     ),
     undefined,
   );
-  await h.request(h.control, append(convert));
+  assert.equal(await h.request(h.control, append(convert)), true);
   await h.request(
     h.render,
     renderer({
@@ -547,4 +551,50 @@ test("legacy non-IPC guards do not throw on null and incomplete objects", () => 
       ])
         assert.doesNotThrow(() => guard(value));
     }
+});
+
+test("shared settings validation applies to IPC and rejects invalid migrated-setting writes", () => {
+  for (const [key, data, valid] of [
+    ["commentFileExt", ".xml", true],
+    ["commentFileExt", "xml", false],
+    ["auth", { type: "cookie", path: "" }, false],
+    ["auth", { type: "cookie", path: "/cookies.txt" }, true],
+    [
+      "auth",
+      {
+        type: "browser",
+        profile: {
+          type: "firefoxContainer",
+          browser: "firefox",
+          name: "user",
+          path: "/profile",
+          profileName: "default",
+          containerName: "personal",
+          contextId: 0,
+        },
+      },
+      false,
+    ],
+  ]) {
+    assert.equal(isIpcRequest(controller({ type: "getSetting", key })), true);
+    assert.equal(
+      isIpcRequest(controller({ type: "setSetting", key, data })),
+      valid,
+    );
+  }
+});
+
+test("domain validation errors reject queue admission and retain the controller's input message", async () => {
+  const { ValidationError } = require("../build/src/domain/validation");
+  const error = new ValidationError(
+    "終了位置は開始位置より後に指定してください。",
+  );
+  const h = ipcHarness({ appendError: error });
+  await assert.rejects(
+    h.request(h.control, append(convert)),
+    (value) => value === error,
+  );
+  const message = h.calls.find(([name]) => name === "message")[1];
+  assert.equal(message.title, "入力内容を確認してください");
+  assert.equal(message.message, error.message);
 });
