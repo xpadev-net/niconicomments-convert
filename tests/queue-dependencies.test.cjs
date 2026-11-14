@@ -117,6 +117,7 @@ function harness() {
   });
   let rendererId = 0;
   const queue = loadModule("electron/queue.js", {
+    "../src/util/frame-timing": loadModule("src/util/frame-timing.js", {}),
     "./controller-window": {
       sendMessageToController: (message) => {
         if (message.type === "progress") {
@@ -428,5 +429,5 @@ test("invalid conversions are rejected before queue mutation, downloads or rende
   valid.option.fps = 29.97;
   h.appendQueue(valid);
   assert.equal(h.conversions[0].job, valid);
-  assert.equal(valid.progress.total, 29.97);
+  assert.equal(valid.progress.total, 30);
 });

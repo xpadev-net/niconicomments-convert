@@ -8,6 +8,7 @@ import type { ApiResponseLoad } from "@/@types/response.renderer";
 import { getConversionError } from "../src/domain/conversion";
 import { ValidationError } from "../src/domain/validation";
 
+import { getFrameCount } from "../src/util/frame-timing";
 import { sendMessageToController } from "./controller-window";
 import { ConversionSession } from "./conversion-session";
 import { encodeError } from "./lib/json";
@@ -183,9 +184,12 @@ const startConvert = async (): Promise<void> => {
   queue.progress = {
     percent: 0,
     processed: 0,
-    total:
-      queue.option.fps *
-      ((queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0)),
+    // Match the renderer's count of frames before the exclusive end time.
+    total: getFrameCount(
+      queue.option.ss ?? 0,
+      queue.option.to ?? queue.movie.duration,
+      queue.option.fps,
+    ),
   };
   let session: ActiveSession | undefined;
   let status: Queue["status"] = "completed";

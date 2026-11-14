@@ -48,6 +48,7 @@ function setup() {
   const mocks = {
     "../src/domain/conversion": require("../build/src/domain/conversion"),
     "../src/domain/validation": require("../build/src/domain/validation"),
+    "../src/util/frame-timing": require("../build/src/util/frame-timing.js"),
     "node:fs": require("node:fs"),
     "node:stream": require("node:stream"),
     "@xpadev-net/xml2js": {},
