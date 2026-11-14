@@ -4,13 +4,18 @@ const { EventEmitter } = require("node:events");
 const { mkdtempSync, readFileSync, rmSync } = require("node:fs");
 const Module = require("node:module");
 const { tmpdir } = require("node:os");
-const { join, resolve } = require("node:path");
+const { dirname, join } = require("node:path");
 const { Writable } = require("node:stream");
 const { after, test } = require("node:test");
 
 const build = mkdtempSync(join(tmpdir(), "conversion-session-test-"));
 after(() => rmSync(build, { recursive: true, force: true }));
-execFileSync(resolve("node_modules/.bin/tsc"), [
+const tsc = join(
+  dirname(require.resolve("typescript/package.json")),
+  "bin/tsc",
+);
+execFileSync(process.execPath, [
+  tsc,
   "-p",
   "electron",
   "--outDir",
