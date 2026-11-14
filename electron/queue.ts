@@ -17,6 +17,7 @@ import {
 } from "./lib/niconico";
 import { interruptDMC } from "./lib/niconico/dmc";
 import { interruptDMS } from "./lib/niconico/dms";
+import { ProcessError } from "./lib/spawn";
 import { createRendererWindow, sendMessageToRenderer } from "./renderer-window";
 
 const logger = getLogger("[queue]");
@@ -161,13 +162,19 @@ const startConvert = async (): Promise<void> => {
     if (processingQueue.status === "processing")
       processingQueue.status = "completed";
   } catch (e) {
-    logger.error("failed to convert", e);
-    processingQueue.status = "fail";
-    sendMessageToController({
-      type: "message",
-      title: "書き出し中にエラーが発生しました",
-      message: `エラー内容:\n${encodeError(e)}`,
-    });
+    const cancelled =
+      processingQueue.status === "interrupted" &&
+      e instanceof ProcessError &&
+      e.cancelled;
+    if (!cancelled) {
+      logger.error("failed to convert", e);
+      processingQueue.status = "fail";
+      sendMessageToController({
+        type: "message",
+        title: "書き出し中にエラーが発生しました",
+        message: `エラー内容:\n${encodeError(e)}`,
+      });
+    }
   }
   sendMessageToRenderer({
     type: "end",

@@ -406,10 +406,10 @@ processTest("Converter cancellation before run prevents spawning", async () => {
   });
 });
 
-function loadScriptConverter(script) {
+function loadScriptConverter(script, onLog = () => {}) {
   return loadWithMocks("build/electron/ffmpeg-stream/stream.js", {
     "../assets": { ffmpegPath: "fake-ffmpeg" },
-    "../lib/log": { getLogger: () => ({ debug() {}, log() {}, error() {} }) },
+    "../lib/log": { getLogger: () => ({ debug() {}, log: onLog, error() {} }) },
     "../lib/spawn": {
       spawn: (_command, _args, options, ...callbacks) =>
         spawn(process.execPath, ["-e", script], options, ...callbacks),
@@ -456,3 +456,122 @@ processTest("Converter reports active cancellation as a failure", async () => {
     cancelled: true,
   });
 });
+
+function loadConversionQueue(Converter) {
+  const messages = [];
+  const rendererMessages = [];
+  const finished = Promise.withResolvers();
+  const converter = loadWithMocks("build/electron/converter.js", {
+    "./ffmpeg-stream/stream": { Converter },
+    "./store": { store: { get: () => undefined } },
+  });
+  const queue = loadWithMocks("build/electron/queue.js", {
+    "./converter": converter,
+    "./controller-window": {
+      sendMessageToController: (message) => {
+        messages.push(structuredClone(message));
+        if (
+          message.type === "progress" &&
+          message.data.some((item) =>
+            ["completed", "interrupted", "fail"].includes(item.status),
+          )
+        ) {
+          finished.resolve();
+        }
+      },
+    },
+    "./renderer-window": {
+      createRendererWindow() {},
+      sendMessageToRenderer: (message) => {
+        rendererMessages.push(message);
+      },
+    },
+    "./lib/log": { getLogger: () => ({ error() {} }) },
+    "./lib/niconico": {},
+    "./lib/niconico/dmc": {},
+    "./lib/niconico/dms": {},
+  });
+  const job = {
+    id: "conversion-under-test",
+    type: "convert",
+    status: "queued",
+    progress: { percent: 0, processed: 0, total: 0 },
+    movie: { type: "local", path: "input.mp4", duration: 1 },
+    comment: { type: "local", path: "comments.json", format: "formatted" },
+    output: { path: "output.mp4" },
+    option: { fps: 30, width: 1920, height: 1080 },
+  };
+  return {
+    ...queue,
+    converter,
+    job,
+    messages,
+    rendererMessages,
+    finished: finished.promise,
+  };
+}
+
+processTest(
+  "interrupting a queued conversion preserves interrupted without an error dialog",
+  async (t) => {
+    const ready = Promise.withResolvers();
+    const Converter = loadScriptConverter(
+      `
+    process.stderr.write('header\\nready\\n');
+    setInterval(() => {}, 1000);
+  `,
+      (_tag, line) => {
+        if (line === "ready") ready.resolve();
+      },
+    );
+    const queue = loadConversionQueue(Converter);
+    t.after(() => queue.converter.interruptConverter());
+    queue.appendQueue(queue.job);
+    await ready.promise;
+    assert.equal(queue.job.status, "processing");
+    queue.processOnInterrupt(queue.job.id);
+    assert.equal(queue.job.status, "interrupted");
+    await queue.finished;
+    assert.equal(queue.job.status, "interrupted");
+    assert.equal(
+      queue.messages.filter((message) => message.type === "message").length,
+      0,
+    );
+    assert.equal(queue.messages.at(-1).data[0].status, "interrupted");
+    assert.ok(queue.rendererMessages.some((message) => message.type === "end"));
+  },
+);
+
+for (const [name, createConverter] of [
+  ["a nonzero process exit", () => loadScriptConverter("process.exitCode = 7")],
+  [
+    "a callback failure that also stops the child",
+    () =>
+      loadScriptConverter(
+        `
+      process.stderr.write('header\\nerror\\n');
+      setInterval(() => {}, 1000);
+    `,
+        (_tag, line) => {
+          if (line === "error") throw new Error("log callback failed");
+        },
+      ),
+  ],
+  [
+    "an executable startup failure",
+    () =>
+      loadConverter(join(tmpdir(), "missing-queue-process-runner", "binary")),
+  ],
+]) {
+  processTest(`the conversion queue reports ${name} as failure`, async () => {
+    const queue = loadConversionQueue(createConverter());
+    queue.appendQueue(queue.job);
+    await queue.finished;
+    assert.equal(queue.job.status, "fail");
+    const errors = queue.messages.filter(
+      (message) => message.type === "message",
+    );
+    assert.equal(errors.length, 1);
+    assert.equal(errors[0].title, "書き出し中にエラーが発生しました");
+  });
+}
