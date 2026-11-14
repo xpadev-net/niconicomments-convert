@@ -1,5 +1,4 @@
 import * as fs from "node:fs";
-import * as Stream from "node:stream";
 import { parseStringPromise } from "@xpadev-net/xml2js";
 
 import type { UUID } from "@/@types/brand";
@@ -31,6 +30,7 @@ let convertQueue = Promise.resolve();
 let processingQueue: ConvertQueue;
 let lastFrame = 0;
 let endFrame = -1;
+let inputEndScheduled = false;
 const frameQueue: { [key: number]: Uint8Array } = {};
 const appendQueue = (queue: Queue): void => {
   queueList.push(queue);
@@ -155,6 +155,8 @@ const startConvert = async (): Promise<void> => {
           (queued[0].option.ss ?? 0)),
     };
     lastFrame = 0;
+    endFrame = -1;
+    inputEndScheduled = false;
     createRendererWindow();
     sendProgress();
     await startConverter(queued[0]);
@@ -186,28 +188,27 @@ const appendFrame = (frameId: number, data: Uint8Array): void => {
     processFrame(frameQueue[lastFrame]);
     delete frameQueue[lastFrame];
   }
-  if (lastFrame === endFrame) {
-    void convertQueue.then(() => inputStream.end());
-  }
+  completeConversionIfReady();
+};
+
+const completeConversionIfReady = (): void => {
+  if (lastFrame !== endFrame || inputEndScheduled) return;
+  inputEndScheduled = true;
+  void convertQueue.then(() => inputStream.end());
 };
 
 const processFrame = (data: Uint8Array): void => {
   if (processingQueue.status !== "processing") return;
   convertQueue = convertQueue.then(() =>
     new Promise<void>((fulfill, reject) => {
-      const myStream = new Stream.Readable();
-      myStream._read = () => {
-        myStream.push(data);
-        myStream.push(null);
-      };
       processingQueue.progress.processed++;
       processingQueue.progress.percent =
         processingQueue.progress.processed / processingQueue.progress.total;
       sendProgress();
-      return myStream
-        .on("end", () => fulfill())
-        .on("error", (err) => reject(err))
-        .pipe(inputStream, { end: false });
+      inputStream.write(data, (err) => {
+        if (err) reject(err);
+        else fulfill();
+      });
     }).catch((e) => {
       console.warn(e);
     }),
@@ -215,6 +216,7 @@ const processFrame = (data: Uint8Array): void => {
 };
 const markAsCompleted = (frameId: number): void => {
   endFrame = frameId;
+  completeConversionIfReady();
 };
 const sendProgress = (): void => {
   sendMessageToController({
