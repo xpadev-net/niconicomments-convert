@@ -3,6 +3,7 @@ const { execFileSync } = require("node:child_process");
 const fs = require("node:fs");
 const { tmpdir } = require("node:os");
 const path = require("node:path");
+const { Writable } = require("node:stream");
 const { after, test } = require("node:test");
 
 // Exercise compiled production code with only network, ffmpeg, and Electron
@@ -104,6 +105,7 @@ const conversion = (dependency, id = "convert") => ({
 const setupQueue = (downloads = {}, mocks = {}, globals = {}) => {
   const notifications = [];
   const converted = [];
+  let rendererId = 0;
   const load = loadModules(
     {
       "electron/controller-window": {
@@ -111,15 +113,21 @@ const setupQueue = (downloads = {}, mocks = {}, globals = {}) => {
           notifications.push(structuredClone(message)),
       },
       "electron/renderer-window": {
-        createRendererWindow() {},
+        createRendererWindow: () => ({
+          webContents: { id: ++rendererId },
+          isDestroyed: () => false,
+          destroy() {},
+        }),
         sendMessageToRenderer() {},
       },
       "electron/converter": {
-        inputStream: { end() {} },
-        interruptConverter() {},
-        startConverter: async (queue) => {
-          converted.push(queue.id);
-        },
+        createConverter: (queue) => ({
+          inputStream: new Writable({ write: (_, __, done) => done() }),
+          run: async () => {
+            converted.push(queue.id);
+          },
+          stop() {},
+        }),
       },
       "electron/lib/log": { getLogger: () => ({ error() {} }) },
       "electron/lib/niconico/index": {
@@ -686,9 +694,11 @@ test("conversion interruption is preserved when the converter rejects", async ()
     {},
     {
       "electron/converter": {
-        inputStream: { end() {} },
-        interruptConverter() {},
-        startConverter: () => pending.promise,
+        createConverter: () => ({
+          inputStream: new Writable({ write: (_, __, done) => done() }),
+          run: () => pending.promise,
+          stop() {},
+        }),
       },
     },
   );

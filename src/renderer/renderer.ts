@@ -59,10 +59,12 @@ const startRenderer = async (): Promise<void> => {
   let inProgress = false;
   let convertedFrames = 0;
 
-  const { commentData, queue } = (await window.api.request({
+  const response = (await window.api.request({
     type: "load",
     host: "renderer",
-  })) as ApiResponseLoad;
+  })) as ApiResponseLoad | undefined;
+  if (!response) return;
+  const { commentData, queue, sessionId } = response;
   inProgress = true;
   message.textContent = "コメントを処理しています...";
   const { format, data } = transformComments(queue.comment.format, commentData);
@@ -83,9 +85,12 @@ const startRenderer = async (): Promise<void> => {
   }
 
   const sendBlob = async (frameId: number, blob: Blob): Promise<void> => {
+    if (!inProgress) return;
     const buffer = await blob.arrayBuffer();
+    if (!inProgress) return;
     await window.api.request({
       type: "blob",
+      sessionId,
       host: "renderer",
       frameId: frameId + 1,
       data: new Uint8Array(buffer),
@@ -130,11 +135,13 @@ const startRenderer = async (): Promise<void> => {
       (queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0),
     ) * targetFrameRate;
   const process = async (): Promise<void> => {
+    if (!inProgress) return;
     await Promise.allSettled(pendingBlobs);
     pendingBlobs.length = 0;
     await Promise.allSettled(pendingSends);
     pendingSends.length = 0;
     for (let i = 0; i < targetFrameRate; i++) {
+      if (!inProgress) return;
       const frame = generatedFrames;
       try {
         const vpos = Math.ceil(i * (100 / targetFrameRate)) + offset;
@@ -169,6 +176,7 @@ const startRenderer = async (): Promise<void> => {
         pendingSends.length = 0;
         await window.api.request({
           type: "end",
+          sessionId,
           host: "renderer",
           frameId: generatedFrames - droppedFrames,
         });
@@ -178,7 +186,7 @@ const startRenderer = async (): Promise<void> => {
       await sleep(0);
     }
     offset += 100;
-    while (generatedFrames - convertedFrames > 200) {
+    while (inProgress && generatedFrames - convertedFrames > 200) {
       logger.debug(`waiting... ${generatedFrames - convertedFrames}`);
       await sleep(100);
     }
