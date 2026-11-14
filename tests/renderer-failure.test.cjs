@@ -94,6 +94,7 @@ const runRenderer = async (options = {}) => {
         },
       },
       "@/util/log": { getLogger: () => logger },
+      "@/util/frame-timing": load("src/util/frame-timing.ts", {}),
       "@/util/sleep": {
         sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
       },
@@ -140,14 +141,108 @@ for (const [name, options, message] of [
   });
 }
 
-for (const [name, options, count] of [
-  ["fractional duration", { fps: 30, duration: 1.1 }, 33],
-  ["partial final frame", { fps: 30, duration: 1.11 }, 34],
-  ["fractional FPS", { fps: 29.97, duration: 3.1 }, 93],
-  ["sub-one FPS", { fps: 0.5, duration: 5 }, 3],
-  ["fractional trim", { fps: 30, duration: 10, ss: 0.005, to: 1.105 }, 33],
-  ["empty range", { fps: 30, duration: 0 }, 0],
-  ["default FPS", { fps: 0, duration: 1.1 }, 33],
+for (const [name, options, count, samples] of [
+  [
+    "fractional duration",
+    { fps: 30, duration: 1.1 },
+    33,
+    [
+      [0, 0],
+      [30, 100],
+      [32, 107],
+    ],
+  ],
+  ["partial final frame", { fps: 30, duration: 1.11 }, 34, [[33, 110]]],
+  [
+    "25 FPS boundaries",
+    { fps: 25, duration: 1.1 },
+    28,
+    [
+      [7, 28],
+      [14, 56],
+      [27, 108],
+    ],
+  ],
+  [
+    "fractional FPS",
+    { fps: 29.97, duration: 3.1 },
+    93,
+    [
+      [0, 0],
+      [29, 97],
+      [30, 101],
+      [60, 201],
+      [92, 307],
+    ],
+  ],
+  [
+    "sub-one FPS",
+    { fps: 0.5, duration: 5 },
+    3,
+    [
+      [0, 0],
+      [1, 200],
+      [2, 400],
+    ],
+  ],
+  [
+    "fractional trim",
+    { fps: 30, duration: 10, ss: 0.005, to: 1.105 },
+    33,
+    [
+      [0, 1],
+      [1, 4],
+      [2, 8],
+      [30, 101],
+    ],
+  ],
+  [
+    "trim boundary roundoff",
+    { fps: 30, duration: 10, ss: 0.1, to: 0.4 },
+    9,
+    [
+      [0, 10],
+      [3, 20],
+      [8, 37],
+    ],
+  ],
+  [
+    "start time roundoff",
+    { fps: 25, duration: 10, ss: 1.1, to: 1.4 },
+    8,
+    [
+      [0, 110],
+      [1, 114],
+      [7, 138],
+    ],
+  ],
+  [
+    "long trim boundary roundoff",
+    { fps: 30, duration: 10001, ss: 10000.1, to: 10000.2 },
+    3,
+    [
+      [0, 1000010],
+      [1, 1000014],
+      [2, 1000017],
+    ],
+  ],
+  [
+    "genuine partial final frame",
+    { fps: 30, duration: 0.300001 },
+    10,
+    [[9, 30]],
+  ],
+  ["empty range", { fps: 30, duration: 0 }, 0, []],
+  [
+    "default FPS",
+    { fps: 0, duration: 1.1 },
+    33,
+    [
+      [0, 0],
+      [30, 100],
+      [32, 107],
+    ],
+  ],
 ]) {
   test(`renderer uses consecutive IDs and absolute timestamps for ${name}`, async () => {
     const timestamps = [];
@@ -162,12 +257,9 @@ for (const [name, options, count] of [
         .map((request) => request.frameId),
       Array.from({ length: count }, (_, frame) => frame + 1),
     );
-    assert.deepEqual(
-      timestamps,
-      Array.from({ length: count }, (_, frame) =>
-        Math.ceil(((options.ss ?? 0) + frame / (options.fps || 30)) * 100),
-      ),
-    );
+    assert.equal(timestamps.length, count);
+    for (const [frame, expected] of samples)
+      assert.equal(timestamps[frame], expected, `timestamp at frame ${frame}`);
     assert.equal(
       requests.find((request) => request.type === "end").frameId,
       count,

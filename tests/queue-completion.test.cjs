@@ -46,6 +46,7 @@ function setup() {
   let rendererId = 0;
   const noop = () => {};
   const mocks = {
+    "../src/util/frame-timing": require("../build/src/util/frame-timing.js"),
     "node:fs": require("node:fs"),
     "node:stream": require("node:stream"),
     "@xpadev-net/xml2js": {},

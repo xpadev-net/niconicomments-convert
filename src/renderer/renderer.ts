@@ -4,6 +4,7 @@ import type { ApiResponseLoad } from "@/@types/response.renderer";
 import type { ApiResponseType } from "@/@types/types";
 import { transformComments } from "@/renderer/comment-utils";
 import { typeGuard } from "@/type-guard";
+import { getFrameCount, getFrameVpos } from "@/util/frame-timing";
 import { getLogger } from "@/util/log";
 import { sleep } from "@/util/sleep";
 
@@ -130,8 +131,10 @@ const startRenderer = async (): Promise<void> => {
     const startTime = queue.option.ss ?? 0;
     const targetFrameRate = queue.option.fps || 30;
     // Include each frame whose start is before the exclusive end time.
-    const totalFrames = Math.ceil(
-      ((queue.option.to ?? queue.movie.duration) - startTime) * targetFrameRate,
+    const totalFrames = getFrameCount(
+      startTime,
+      queue.option.to ?? queue.movie.duration,
+      targetFrameRate,
     );
     const batchSize = Math.ceil(targetFrameRate);
     while (inProgress && generatedFrames < totalFrames) {
@@ -146,7 +149,7 @@ const startRenderer = async (): Promise<void> => {
         i++
       ) {
         const frame = generatedFrames++;
-        const vpos = Math.ceil((startTime + frame / targetFrameRate) * 100);
+        const vpos = getFrameVpos(frame, startTime, targetFrameRate);
         const pendingFrame = (async () => {
           // @ts-expect-error
           if ((nico.timeline[vpos]?.length || 0) === 0) {

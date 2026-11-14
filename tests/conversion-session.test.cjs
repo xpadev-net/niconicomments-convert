@@ -271,6 +271,14 @@ for (const [name, duration, options, total] of [
   ["partial final frame", 1.11, { fps: 30 }, 34],
   ["fractional FPS", 3.1, { fps: 29.97 }, 93],
   ["fractional trim", 10, { fps: 30, ss: 0.005, to: 1.105 }, 33],
+  ["trim boundary roundoff", 10, { fps: 30, ss: 0.1, to: 0.4 }, 9],
+  [
+    "long trim boundary roundoff",
+    10001,
+    { fps: 30, ss: 10000.1, to: 10000.2 },
+    3,
+  ],
+  ["genuine partial final frame", 0.300001, { fps: 30 }, 10],
 ]) {
   test(`conversion progress counts whole frames for ${name}`, async () => {
     const { api, backends } = harness();
