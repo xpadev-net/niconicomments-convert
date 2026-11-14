@@ -96,9 +96,9 @@ async function smoke(executable) {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
         if (typeof window.api?.request !== 'function') throw new Error('preload API missing');
-        await window.api.request({ host: 'controller', type: 'setSetting', key: 'startupSmoke', data: 'ok' });
-        const setting = await window.api.request({ host: 'controller', type: 'getSetting', key: 'startupSmoke' });
-        if (setting !== 'ok') throw new Error('settings IPC failed');
+        await window.api.request({ host: 'controller', type: 'setSetting', key: 'showRendererWindow', data: false });
+        const setting = await window.api.request({ host: 'controller', type: 'getSetting', key: 'showRendererWindow' });
+        if (setting !== false) throw new Error('settings IPC failed');
         const queue = await new Promise(async (resolve, reject) => {
           const listener = (_event, message) => {
             if (message.type !== 'progress') return;

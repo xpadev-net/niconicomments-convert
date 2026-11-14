@@ -52,10 +52,13 @@ function harness(rendererOptions = {}) {
   sessionModule._compile(readFileSync(filename, "utf8"), filename);
   const { ConversionSession } = sessionModule.exports;
   const controller = {
+    isControllerSender: () => false,
     sendMessageToController: (message) =>
       messages.push(structuredClone(message)),
   };
   const queue = load("electron/queue.ts", {
+    "../src/domain/conversion": require("../build/src/domain/conversion"),
+    "../src/domain/validation": require("../build/src/domain/validation"),
     "../src/util/frame-timing": load("src/util/frame-timing.ts", {}),
     "node:fs": { readFileSync: () => "[]" },
     "@xpadev-net/xml2js": {},
@@ -66,10 +69,15 @@ function harness(rendererOptions = {}) {
     "./lib/niconico": {},
     "./renderer-window": {
       createRendererWindow() {
-        const sender = { id: windows.length + 1 };
+        const sender = {
+          id: windows.length + 1,
+          mainFrame: { url: "http://localhost/?renderer" },
+          isDestroyed: () => window.destroyed,
+        };
         const renderer = rendererHarness({
           ...rendererOptions[sender.id],
-          request: (request) => handler({ sender }, { data: [request] }),
+          request: (request) =>
+            handler({ sender, senderFrame: sender.mainFrame }, request),
         });
         const window = {
           webContents: sender,
@@ -92,6 +100,9 @@ function harness(rendererOptions = {}) {
     },
   });
   load("electron/ipc-manager.ts", {
+    "../src/domain/validation": require("../build/src/domain/validation"),
+    "./context": { baseUrl: "http://localhost/" },
+    "./ipc-schema": require("../build/electron/ipc-schema"),
     electron: {
       ipcMain: {
         handle: (_name, callback) => {
@@ -106,7 +117,6 @@ function harness(rendererOptions = {}) {
     "./lib/log": { getLogger: () => logger },
     "./lib/niconico": {},
     "./store": {},
-    "./type-guard": load("electron/type-guard.ts", {}),
     "./queue": queue,
   }).registerListener();
   return { queue, backends, windows, messages };
@@ -121,7 +131,7 @@ function job(id) {
     movie: { type: "local", path: "movie.mp4", duration: 2 },
     comment: { type: "local", path: "comments.json", format: "formatted" },
     output: { path: `${id}.mp4` },
-    option: { fps: 1, width: 640, height: 360 },
+    option: { fps: 1, width: 640, height: 360, options: {} },
   };
 }
 
