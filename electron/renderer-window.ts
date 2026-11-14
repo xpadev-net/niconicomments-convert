@@ -1,5 +1,5 @@
 import * as path from "node:path";
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, type WebContents } from "electron";
 
 import type { ApiResponsesToRenderer } from "@/@types/response.renderer";
 
@@ -7,10 +7,9 @@ import { baseUrl } from "./context";
 import { processingQueue } from "./queue";
 import { store } from "./store";
 
-let rendererWindow: BrowserWindow;
-let isOpen = false;
-const createRendererWindow = (): void => {
-  rendererWindow = new BrowserWindow({
+let rendererWindow: BrowserWindow | undefined;
+const createRendererWindow = (onFailure: (error: Error) => void): void => {
+  const window = new BrowserWindow({
     width: 640,
     height: 360,
     webPreferences: {
@@ -21,28 +20,55 @@ const createRendererWindow = (): void => {
     },
     show: !!(store.get("showRendererWindow") ?? true),
   });
-  isOpen = true;
-  rendererWindow.removeMenu();
-  rendererWindow.on("close", (e) => {
-    if (processingQueue?.status === "processing") {
-      e.preventDefault();
-      return;
-    }
-    isOpen = false;
+  rendererWindow = window;
+  const fail = (error: Error): void => {
+    if (rendererWindow === window) onFailure(error);
+  };
+  window.removeMenu();
+  window.on("close", (e) => {
+    if (processingQueue?.status === "processing") e.preventDefault();
   });
-  void rendererWindow.loadURL(`${baseUrl}?renderer`);
+  window.on("closed", () =>
+    fail(new Error("Renderer window closed unexpectedly")),
+  );
+  window.on("unresponsive", () => fail(new Error("Renderer is unresponsive")));
+  window.webContents.on("render-process-gone", (_, details) => {
+    fail(
+      new Error(
+        `Renderer process gone: ${details.reason} (${details.exitCode})`,
+      ),
+    );
+  });
+  void window.loadURL(`${baseUrl}?renderer`).catch(fail);
 
   if (!app.isPackaged) {
-    rendererWindow.webContents.openDevTools();
+    window.webContents.openDevTools();
   }
 };
 
+const closeRendererWindow = (): void => {
+  const window = rendererWindow;
+  // Ignore lifecycle events and late IPC from a session being torn down.
+  rendererWindow = undefined;
+  if (window && !window.isDestroyed()) window.destroy();
+};
+
+const isRendererSender = (sender: WebContents): boolean =>
+  !!rendererWindow &&
+  !rendererWindow.isDestroyed() &&
+  rendererWindow.webContents === sender;
+
 const sendMessageToRenderer = (value: ApiResponsesToRenderer): void => {
-  if (!isOpen) return;
-  rendererWindow?.webContents.send("response", {
+  if (!rendererWindow || rendererWindow.isDestroyed()) return;
+  rendererWindow.webContents.send("response", {
     ...value,
     target: "renderer",
   });
 };
 
-export { createRendererWindow, sendMessageToRenderer };
+export {
+  closeRendererWindow,
+  createRendererWindow,
+  isRendererSender,
+  sendMessageToRenderer,
+};

@@ -32,6 +32,7 @@ import type {
   ApiRequestBlob,
   ApiRequestBuffer,
   ApiRequestEnd,
+  ApiRequestFailure,
   ApiRequestFromRenderer,
   ApiRequestLoad,
   ApiRequestMessage,
@@ -104,6 +105,12 @@ const typeGuard = {
       (i as ApiRequestGetQueue).type === "getQueue",
   },
   renderer: {
+    failure: (i: unknown): i is ApiRequestFailure =>
+      typeof i === "object" &&
+      i !== null &&
+      (i as ApiRequestFromRenderer).host === "renderer" &&
+      (i as ApiRequestFailure).type === "failure" &&
+      typeof (i as ApiRequestFailure).message === "string",
     buffer: (i: unknown): i is ApiRequestBuffer =>
       typeof i === "object" &&
       (i as ApiRequestFromRenderer).host === "renderer" &&

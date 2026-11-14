@@ -24,7 +24,13 @@ export type ApiRequestMessage = {
   title?: string;
   message: string;
 };
+export type ApiRequestFailure = {
+  type: "failure";
+  message: string;
+};
+
 export type ApiRequestsFromRenderer =
+  | ApiRequestFailure
   | ApiRequestBuffer
   | ApiRequestEnd
   | ApiRequestLoad

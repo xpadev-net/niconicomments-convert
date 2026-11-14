@@ -1,5 +1,4 @@
 import * as fs from "node:fs";
-import * as Stream from "node:stream";
 import { parseStringPromise } from "@xpadev-net/xml2js";
 
 import type { UUID } from "@/@types/brand";
@@ -7,7 +6,7 @@ import type { ConvertQueue, Queue, QueueLists } from "@/@types/queue";
 import type { ApiResponseLoad } from "@/@types/response.renderer";
 
 import { sendMessageToController } from "./controller-window";
-import { inputStream, interruptConverter, startConverter } from "./converter";
+import { startConverter } from "./converter";
 import { encodeError } from "./lib/json";
 import { getLogger } from "./lib/log";
 import {
@@ -17,7 +16,11 @@ import {
 } from "./lib/niconico";
 import { interruptDMC } from "./lib/niconico/dmc";
 import { interruptDMS } from "./lib/niconico/dms";
-import { createRendererWindow, sendMessageToRenderer } from "./renderer-window";
+import {
+  closeRendererWindow,
+  createRendererWindow,
+  sendMessageToRenderer,
+} from "./renderer-window";
 
 const logger = getLogger("[queue]");
 
@@ -27,11 +30,16 @@ const queueLists: QueueLists = {
   movie: [],
   comment: [],
 };
-let convertQueue = Promise.resolve();
 let processingQueue: ConvertQueue;
-let lastFrame = 0;
-let endFrame = -1;
-const frameQueue: { [key: number]: Uint8Array } = {};
+type ConversionSession = ReturnType<typeof startConverter> & {
+  queue: ConvertQueue;
+  lastFrame: number;
+  endFrame: number;
+  frames: Map<number, Uint8Array>;
+  writes: Promise<void>;
+};
+let activeSession: ConversionSession | undefined;
+
 const appendQueue = (queue: Queue): void => {
   queueList.push(queue);
   if (queue.type === "convert") {
@@ -134,6 +142,7 @@ const startCommentDownload = async (): Promise<void> => {
 const startConvert = async (): Promise<void> => {
   const queued = queueLists.convert.filter((i) => i.status === "queued");
   if (
+    activeSession ||
     queueLists.convert.filter((i) => i.status === "processing").length > 0 ||
     queued.length === 0 ||
     !queued[0]
@@ -143,78 +152,120 @@ const startConvert = async (): Promise<void> => {
     const queue = queueList.filter((i) => i.id === queueId)[0];
     if (queue?.status !== "completed") return;
   }
+  const queue = queued[0];
+  processingQueue = queue;
+  queue.status = "processing";
+  queue.progress = {
+    percent: 0,
+    processed: 0,
+    total:
+      (queue.option.fps || 30) *
+      ((queue.option.to ?? queue.movie.duration) - (queue.option.ss ?? 0)),
+  };
   try {
-    processingQueue = queued[0];
-    processingQueue.status = "processing";
-    processingQueue.progress = {
-      percent: 0,
-      processed: 0,
-      total:
-        (queued[0].option.fps || 30) *
-        ((queued[0].option.to ?? queued[0].movie.duration) -
-          (queued[0].option.ss ?? 0)),
+    const session: ConversionSession = {
+      ...startConverter(queue),
+      queue,
+      lastFrame: 0,
+      endFrame: -1,
+      frames: new Map(),
+      writes: Promise.resolve(),
     };
-    lastFrame = 0;
-    createRendererWindow();
-    sendProgress();
-    await startConverter(queued[0]);
-    if (processingQueue.status === "processing")
-      processingQueue.status = "completed";
+    activeSession = session;
+    session.inputStream.once("error", (error) =>
+      failConversion(error, session),
+    );
+    // Observe FFmpeg immediately, including failures during window creation.
+    const finished = session.promise.catch((error: unknown) =>
+      failConversion(error, session),
+    );
+    try {
+      createRendererWindow((error) => failConversion(error, session));
+      sendProgress();
+      await finished;
+      if (queue.status === "processing") queue.status = "completed";
+    } catch (error) {
+      failConversion(error, session);
+    } finally {
+      session.stop();
+      session.frames.clear();
+      closeRendererWindow();
+      // Wait for FFmpeg to exit before starting the next conversion.
+      await finished;
+    }
   } catch (e) {
-    logger.error("failed to convert", e);
-    processingQueue.status = "fail";
-    sendMessageToController({
-      type: "message",
-      title: "書き出し中にエラーが発生しました",
-      message: `エラー内容:\n${encodeError(e)}`,
-    });
+    failConversion(e);
+  } finally {
+    activeSession = undefined;
   }
-  sendMessageToRenderer({
-    type: "end",
-  });
   sendProgress();
   void startConvert();
 };
 
-const appendFrame = (frameId: number, data: Uint8Array): void => {
-  frameQueue[frameId] = data;
-  if (frameId !== lastFrame + 1) {
+const failConversion = (error: unknown, session = activeSession): void => {
+  if (session !== activeSession || processingQueue?.status !== "processing")
     return;
-  }
-  while (frameQueue[lastFrame + 1]) {
-    lastFrame++;
-    processFrame(frameQueue[lastFrame]);
-    delete frameQueue[lastFrame];
-  }
-  if (lastFrame === endFrame) {
-    void convertQueue.then(() => inputStream.end());
-  }
+  logger.error("failed to convert", error);
+  processingQueue.status = "fail";
+  session?.frames.clear();
+  session?.stop();
+  closeRendererWindow();
+  sendMessageToController({
+    type: "message",
+    title: "書き出し中にエラーが発生しました",
+    message: `エラー内容:\n${encodeError(error instanceof Error ? error : new Error(String(error)))}`,
+  });
+  sendProgress();
 };
 
-const processFrame = (data: Uint8Array): void => {
-  if (processingQueue.status !== "processing") return;
-  convertQueue = convertQueue.then(() =>
-    new Promise<void>((fulfill, reject) => {
-      const myStream = new Stream.Readable();
-      myStream._read = () => {
-        myStream.push(data);
-        myStream.push(null);
-      };
-      processingQueue.progress.processed++;
-      processingQueue.progress.percent =
-        processingQueue.progress.processed / processingQueue.progress.total;
-      sendProgress();
-      return myStream
-        .on("end", () => fulfill())
-        .on("error", (err) => reject(err))
-        .pipe(inputStream, { end: false });
-    }).catch((e) => {
-      console.warn(e);
-    }),
-  );
+const finishInput = (session: ConversionSession): void => {
+  if (session.lastFrame !== session.endFrame) return;
+  void session.writes
+    .then(() => {
+      if (session === activeSession && session.queue.status === "processing")
+        session.inputStream.end();
+    })
+    .catch((error: unknown) => failConversion(error, session));
 };
+
+const appendFrame = (frameId: number, data: Uint8Array): void => {
+  const session = activeSession;
+  if (session?.queue.status !== "processing") return;
+  session.frames.set(frameId, data);
+  while (session.frames.has(session.lastFrame + 1)) {
+    session.lastFrame++;
+    const frame = session.frames.get(session.lastFrame);
+    if (frame) processFrame(session, frame);
+    session.frames.delete(session.lastFrame);
+  }
+  finishInput(session);
+};
+
+const processFrame = (session: ConversionSession, data: Uint8Array): void => {
+  session.writes = session.writes
+    .then(async () => {
+      if (session !== activeSession || session.queue.status !== "processing")
+        return;
+      await new Promise<void>((resolve, reject) => {
+        session.inputStream.write(data, (error) =>
+          error ? reject(error) : resolve(),
+        );
+      });
+      if (session !== activeSession || session.queue.status !== "processing")
+        return;
+      session.queue.progress.processed++;
+      session.queue.progress.percent =
+        session.queue.progress.processed / session.queue.progress.total;
+      sendProgress();
+    })
+    .catch((error: unknown) => failConversion(error, session));
+};
+
 const markAsCompleted = (frameId: number): void => {
-  endFrame = frameId;
+  const session = activeSession;
+  if (session?.queue.status !== "processing") return;
+  session.endFrame = frameId;
+  finishInput(session);
 };
 const sendProgress = (): void => {
   sendMessageToController({
@@ -249,14 +300,9 @@ const processOnInterrupt = (queueId: UUID): void => {
   if (queue?.status !== "processing") return;
   queue.status = "interrupted";
   if (queue.type === "convert") {
-    void convertQueue
-      .then(() => inputStream.end())
-      .then(() => {
-        interruptConverter();
-        sendMessageToRenderer({
-          type: "end",
-        });
-      });
+    activeSession?.frames.clear();
+    activeSession?.stop();
+    closeRendererWindow();
   } else if (queue.type === "movie") {
     if (queue.format.type === "dmc") interruptDMC();
     if (queue.format.type === "dms") interruptDMS();
@@ -268,6 +314,7 @@ const processOnInterrupt = (queueId: UUID): void => {
 export {
   appendFrame,
   appendQueue,
+  failConversion,
   markAsCompleted,
   processingQueue,
   processOnInterrupt,

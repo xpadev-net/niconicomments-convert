@@ -154,6 +154,7 @@ export class Converter {
         if (stdio == null) throw Error(`input ${fd} is null`);
         debugStream(stream, `input ${fd}`);
         if (!("write" in stdio)) throw Error(`input ${fd} is not writable`);
+        stdio.on("error", (error) => stream.destroy(error));
         stream.pipe(stdio);
       },
     });
@@ -347,7 +348,12 @@ export class Converter {
         logger.log(
           `exit: code=${code ?? "unknown"} sig=${signal ?? "unknown"}`,
         );
-        if (code == null) return resolve();
+        if (code == null) {
+          reject(
+            Error(`FFmpeg terminated unexpectedly: ${signal ?? "unknown"}`),
+          );
+          return;
+        }
         if (EXIT_CODES.includes(code)) return resolve();
         reject(Error("Converting failed"));
       });

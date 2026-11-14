@@ -15,20 +15,35 @@ import { getMetadata } from "./lib/niconico";
 import {
   appendFrame,
   appendQueue,
+  failConversion,
   markAsCompleted,
   processOnInterrupt,
   processOnLoad,
   sendProgress,
 } from "./queue";
+import { isRendererSender } from "./renderer-window";
 import { store } from "./store";
 import { typeGuard } from "./type-guard";
 
 const logger = getLogger("[ipcManager]");
 
 const registerListener = (): void => {
-  ipcMain.handle("request", async (_, args) => {
+  ipcMain.handle("request", async (event, args) => {
     const value = (args as { data: unknown[] }).data[0];
+    const fromRenderer = isRendererSender(event.sender);
+    if (
+      typeof value === "object" &&
+      value !== null &&
+      "host" in value &&
+      value.host === "renderer" &&
+      !fromRenderer
+    )
+      return;
     try {
+      if (typeGuard.renderer.failure(value)) {
+        failConversion(new Error(value.message));
+        return;
+      }
       if (typeGuard.renderer.blob(value)) {
         appendFrame(value.frameId, value.data);
         return;
@@ -78,6 +93,11 @@ const registerListener = (): void => {
         });
       }
     } catch (e: unknown) {
+      // The request may have outlived the renderer that sent it.
+      if (fromRenderer) {
+        if (isRendererSender(event.sender)) failConversion(e);
+        throw e;
+      }
       logger.error(
         "failed to process ipc message",
         "ipcMessage:",
