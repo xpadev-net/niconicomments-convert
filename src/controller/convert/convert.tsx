@@ -11,12 +11,12 @@ import {
 } from "@mui/material";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import { useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import type { FC, DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { UUID } from "@/@types/brand";
-import type { NiconicommentsOptions, Options } from "@/@types/options";
+import type { NiconicommentsOptions } from "@/@types/options";
 import type { TCommentItem, TMovieItem } from "@/@types/queue";
 import { SelectField } from "@/components/select-field";
 import { isLoadingAtom, messageAtom } from "@/controller/atoms";
@@ -27,6 +27,7 @@ import { typeGuard } from "@/type-guard";
 import { str2time, time2str } from "@/util/time";
 import { uuid } from "@/util/uuid";
 
+import { commentAtom, movieAtom, optionsAtom, rawClipAtom } from "./atoms";
 import Styles from "./convert.module.scss";
 
 const resolution = [
@@ -37,49 +38,11 @@ const resolution = [
   { width: 320, height: 180, label: "320x180" },
 ] as const satisfies { width: number; height: number; label: string }[];
 
-const initialConfig: Options = {
-  nico: {
-    showCollision: {
-      value: false,
-      name: "当たり判定表示",
-      type: "boolean",
-    },
-    showCommentCount: {
-      value: false,
-      name: "コメント描画数表示",
-      type: "boolean",
-    },
-    keepCA: {
-      value: false,
-      name: "CA衝突抑制",
-      type: "boolean",
-    },
-    scale: {
-      value: 1,
-      name: "スケール",
-      type: "number",
-    },
-    mode: {
-      value: "default",
-      name: "変換モード",
-      type: "string",
-    },
-  },
-  video: {
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-};
-
 const Convert: FC = () => {
-  const [movie, setMovie] = useState<TMovieItem | undefined>();
-  const [comment, setComment] = useState<TCommentItem | undefined>();
-  const [rawClip, setRawClip] = useState<{ start: string; end: string }>({
-    start: "",
-    end: "",
-  });
-  const [options, setOptions] = useState<Options>(initialConfig);
+  const [movie, setMovie] = useAtom(movieAtom);
+  const [comment, setComment] = useAtom(commentAtom);
+  const [rawClip, setRawClip] = useAtom(rawClipAtom);
+  const [options, setOptions] = useAtom(optionsAtom);
   const [modal, setModal] = useState<"movie" | "comment" | undefined>();
   const [isDragging, setIsDragging] = useState(false);
   const dragCounter = useRef(0);
@@ -132,7 +95,7 @@ const Convert: FC = () => {
         setIsLoading(false);
       }
     },
-    [setIsLoading, setMessage],
+    [setComment, setIsLoading, setMessage, setMovie],
   );
 
   const isFileDragEvent = useCallback(

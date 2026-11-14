@@ -72,6 +72,7 @@ const Controller: FC = () => {
   const [tab, setTab] = useState<string>("convert");
   const [message, setMessage] = useAtom(messageAtom);
   const isLoading = useAtomValue(isLoadingAtom);
+
   useEffect(() => {
     const eventHandler = (_: unknown, data: ApiResponseType): void => {
       if (data.target !== "controller") return;
@@ -87,7 +88,6 @@ const Controller: FC = () => {
       window.api.remove(eventHandler);
     };
   }, [setMessage]);
-
   return (
     <>
       <div className={Styles.wrapper}>

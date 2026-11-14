@@ -48,31 +48,42 @@ function harness({
     requests = [];
   const atoms = { isLoadingAtom: {}, messageAtom: {} };
   const component = () => null;
+  const conversionAtoms = {};
+  vm.runInNewContext(
+    readFileSync(
+      path.join(temporary, "src/controller/convert/atoms.js"),
+      "utf8",
+    ),
+    { exports: conversionAtoms, require },
+  );
+  const mockState = (initial) => {
+    const index = cursor++;
+    if (!Object.hasOwn(states, index)) states[index] = initial;
+    if (index === 3 && states[index].video.fps === 30)
+      states[index] = {
+        ...states[index],
+        video: { ...states[index].video, fps },
+      };
+    return [
+      states[index],
+      (value) => {
+        states[index] =
+          typeof value === "function" ? value(states[index]) : value;
+      },
+    ];
+  };
   const mocks = {
     "@mui/material": new Proxy({}, { get: () => component }),
     "@mui/material/Button": { default: component },
     "@mui/material/TextField": { default: component },
+    "./atoms": conversionAtoms,
     jotai: {
+      useAtom: (atom) => mockState(atom.init),
       useSetAtom: (atom) => (value) =>
         (atom === atoms.messageAtom ? messages : loading).push(value),
     },
     react: {
-      useState: (initial) => {
-        const index = cursor++;
-        if (!Object.hasOwn(states, index)) states[index] = initial;
-        if (index === 3 && states[index].video.fps === 30)
-          states[index] = {
-            ...states[index],
-            video: { ...states[index].video, fps },
-          };
-        return [
-          states[index],
-          (value) => {
-            states[index] =
-              typeof value === "function" ? value(states[index]) : value;
-          },
-        ];
-      },
+      useState: mockState,
       useCallback: (fn) => fn,
       useEffect: () => {},
       useRef: (current) => ({ current }),
