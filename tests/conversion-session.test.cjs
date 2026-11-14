@@ -266,39 +266,38 @@ test("an empty conversion closes input when end arrives without any frames", asy
   await finished;
 });
 
-test("FFmpeg stop before spawn is retained, and exit alone does not release the session", async () => {
-  const child = new EventEmitter();
-  const signals = [];
-  child.kill = (signal) => signals.push(signal);
-  const pipe = new Writable({
-    write(_, __, callback) {
-      callback();
+function loadProcessConverter(child, onSpawn = () => {}) {
+  child.pid = 12345;
+  child.exitCode = null;
+  child.signalCode = null;
+  const runner = load("lib/spawn.js", {
+    "node:child_process": {
+      spawn: () => {
+        onSpawn();
+        return child;
+      },
     },
   });
-  child.stdio = [null, null, null, pipe];
-  const { Converter } = load("ffmpeg-stream/stream.js", {
-    "node:child_process": { spawn: () => child },
+  return load("ffmpeg-stream/stream.js", {
+    "../lib/spawn": runner,
     "../assets": { ffmpegPath: "ffmpeg" },
     "../lib/log": { getLogger: () => logger },
+  }).Converter;
+}
+
+test("FFmpeg stop before spawn prevents process creation", async () => {
+  let spawned = false;
+  const Converter = loadProcessConverter(new EventEmitter(), () => {
+    spawned = true;
   });
   const converter = new Converter();
   converter.createInputFromFile("movie.mp4", {});
   const input = converter.createInputStream({});
-  let completed = false;
-  const finished = converter.run().then(() => {
-    completed = true;
-  });
+  const finished = converter.run();
   input.destroy();
   converter.stop();
-  await tick();
-  assert.deepEqual(signals, ["SIGINT"]);
-  assert.equal(pipe.closed, true);
-  child.emit("exit", 255, null);
-  await tick();
-  assert.equal(completed, false);
-  child.emit("close", 255, null);
-  await finished;
-  assert.equal(completed, true);
+  await assert.rejects(finished, { name: "AbortError", cancelled: true });
+  assert.equal(spawned, false);
 });
 
 test("interrupt discards buffered frames and end markers before the next conversion", async () => {
@@ -336,16 +335,16 @@ test("destroying input closes the FFmpeg pipe while waiting for process close", 
     },
   });
   child.stdio = [null, null, null, pipe];
-  const { Converter } = load("ffmpeg-stream/stream.js", {
-    "node:child_process": { spawn: () => child },
-    "../assets": { ffmpegPath: "ffmpeg" },
-    "../lib/log": { getLogger: () => logger },
-  });
+  const Converter = loadProcessConverter(child);
   const converter = new Converter();
   const input = converter.createInputStream({});
   let settled = false;
   const finished = converter.run().finally(() => {
     settled = true;
+  });
+  const rejected = assert.rejects(finished, {
+    name: "AbortError",
+    cancelled: true,
   });
   await tick();
   input.destroy();
@@ -353,8 +352,11 @@ test("destroying input closes the FFmpeg pipe while waiting for process close", 
   await tick();
   assert.equal(pipe.closed, true);
   assert.equal(settled, false);
+  child.emit("exit", 255, null);
+  await tick();
+  assert.equal(settled, false);
   child.emit("close", 255, null);
-  await finished;
+  await rejected;
 });
 
 test("normal input completion drains the last frame before closing the FFmpeg pipe", async () => {
@@ -367,11 +369,7 @@ test("normal input completion drains the last frame before closing the FFmpeg pi
     },
   });
   child.stdio = [null, null, null, pipe];
-  const { Converter } = load("ffmpeg-stream/stream.js", {
-    "node:child_process": { spawn: () => child },
-    "../assets": { ffmpegPath: "ffmpeg" },
-    "../lib/log": { getLogger: () => logger },
-  });
+  const Converter = loadProcessConverter(child);
   const converter = new Converter();
   const input = converter.createInputStream({});
   const finished = converter.run();
@@ -486,7 +484,7 @@ test("window creation failure stops the converter and preserves the original err
   );
 });
 
-test("FFmpeg pipe errors stop the converter and unexpected signals reject", async () => {
+test("FFmpeg pipe errors reach the session input and stop the converter", async () => {
   const child = new EventEmitter();
   child.kill = () => queueMicrotask(() => child.emit("close", null, "SIGTERM"));
   const pipe = new Writable({
@@ -495,20 +493,39 @@ test("FFmpeg pipe errors stop the converter and unexpected signals reject", asyn
     },
   });
   child.stdio = [null, null, null, pipe];
-  const { Converter } = load("ffmpeg-stream/stream.js", {
-    "node:child_process": { spawn: () => child },
-    "../assets": { ffmpegPath: "ffmpeg" },
-    "../lib/log": { getLogger: () => logger },
-  });
+  const Converter = loadProcessConverter(child);
   const converter = new Converter();
   const input = converter.createInputStream({});
-  input.on("error", () => {
+  let inputError;
+  input.on("error", (error) => {
+    inputError = error;
     input.destroy();
     converter.stop();
   });
   const finished = converter.run();
   await tick();
   pipe.emit("error", new Error("EPIPE"));
-  await assert.rejects(finished, /FFmpeg terminated unexpectedly: SIGTERM/);
+  await assert.rejects(finished, {
+    name: "AbortError",
+    cancelled: true,
+    signal: "SIGTERM",
+  });
+  assert.equal(inputError.message, "EPIPE");
   assert.equal(input.destroyed, true);
+});
+
+test("FFmpeg unexpected signal termination rejects the conversion", async () => {
+  const child = new EventEmitter();
+  child.kill = () => true;
+  child.stdio = [null, null, null];
+  const Converter = loadProcessConverter(child);
+  const converter = new Converter();
+  const finished = converter.run();
+  await tick();
+  child.emit("close", null, "SIGTERM");
+  await assert.rejects(finished, {
+    name: "ProcessError",
+    cancelled: false,
+    signal: "SIGTERM",
+  });
 });

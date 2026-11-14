@@ -684,9 +684,10 @@ test("custom comments reject interruption between threads without saving partial
 
 test("process launch failure rejects instead of emitting an unhandled error", async () => {
   const { spawn } = loadModules()("electron/lib/spawn");
-  await assert.rejects(spawn(path.join(build, "missing-ffmpeg")).promise, {
-    code: "ENOENT",
-  });
+  await assert.rejects(
+    spawn(path.join(build, "missing-ffmpeg")).promise,
+    (error) => error.cause?.code === "ENOENT",
+  );
 });
 
 test("conversion interruption is preserved when the converter rejects", async () => {
