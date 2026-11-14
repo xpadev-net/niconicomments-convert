@@ -224,6 +224,47 @@ test("malformed IPC values are rejected without validation throwing", () => {
     assert.equal(isIpcRequest(value), false, JSON.stringify(value));
 });
 
+const validFrame = renderer({
+  type: "blob",
+  sessionId: "session",
+  frameId: 1,
+  data: new Uint8Array([1]),
+});
+const validEnd = renderer({ type: "end", sessionId: "session", frameId: 0 });
+const malformedFrames = [
+  null,
+  ...["sessionId", "frameId", "data"].map((key) => {
+    const value = clone(validFrame);
+    delete value[key];
+    return value;
+  }),
+  ...["sessionId", "frameId"].map((key) => {
+    const value = clone(validEnd);
+    delete value[key];
+    return value;
+  }),
+  ...["", " ", "\t\n", null, 1].flatMap((sessionId) => [
+    { ...validFrame, sessionId },
+    { ...validEnd, sessionId },
+  ]),
+  ...[0, -1, 0.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1].map(
+    (frameId) => ({ ...validFrame, frameId }),
+  ),
+  ...[null, [], new ArrayBuffer(1), new Uint16Array([1]), new Uint8Array()].map(
+    (data) => ({ ...validFrame, data }),
+  ),
+];
+
+test("frame schemas reject incomplete or unusable frames and preserve empty completion", () => {
+  for (const value of malformedFrames) assert.equal(isIpcRequest(value), false);
+  for (const value of [
+    validFrame,
+    validEnd,
+    { ...validFrame, data: Buffer.from([1]) },
+  ])
+    assert.equal(isIpcRequest(value), true);
+});
+
 test("nested queue payloads cannot pass using only queue discriminants", () => {
   for (const mutate of [
     (q) => {
@@ -456,6 +497,34 @@ test("bad envelopes reject safely before privileged handlers execute", async () 
     /Invalid IPC request/,
   );
   assert.equal(h.calls.at(-1)[0], "failConversion");
+});
+
+test("invalid frame requests fail their session before reaching frame handlers", async () => {
+  const h = ipcHarness();
+  for (const value of malformedFrames) {
+    await assert.rejects(h.request(h.render, value), /Invalid IPC request/);
+    assert.equal(h.calls.at(-1)[0], "failConversion");
+    assert.equal(h.calls.at(-1)[1], h.render.id);
+  }
+  assert.equal(h.calls.length, malformedFrames.length);
+  assert.ok(h.calls.every(([name]) => name === "failConversion"));
+});
+
+test("a renderer cannot change settings by claiming the controller role", async () => {
+  const h = ipcHarness();
+  const value = controller({
+    type: "setSetting",
+    key: "showRendererWindow",
+    data: false,
+  });
+  await assert.rejects(h.request(h.render, value), /Invalid IPC request/);
+  await assert.rejects(h.request(h.unknown, value), /Unauthorized IPC sender/);
+  assert.equal(
+    h.calls.some(([name]) => name === "set"),
+    false,
+  );
+  await h.request(h.control, value);
+  assert.deepEqual(h.calls.at(-1), ["set", "showRendererWindow", false]);
 });
 
 const preloadHarness = (role) => {
