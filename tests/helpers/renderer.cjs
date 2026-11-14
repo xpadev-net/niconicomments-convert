@@ -45,7 +45,7 @@ module.exports = (options = {}) => {
       blobs++;
       if (blobs === options.stallBlobAt) return;
       if (blobs === options.nullBlobAt) callback(null);
-      else callback(new Blob(["frame"]));
+      else callback(new Blob([options.blobData?.(blobs) ?? "frame"]));
     },
   };
   class NiconiComments {
@@ -88,6 +88,9 @@ module.exports = (options = {}) => {
   );
   return {
     requests,
+    get blobCount() {
+      return blobs;
+    },
     respond: (message) => listener?.(null, { target: "renderer", ...message }),
     async run() {
       await setupRenderer();

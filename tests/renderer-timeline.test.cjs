@@ -46,6 +46,8 @@ test("renderer draws populated frames with the real library and reuses empty fra
   const harness = rendererHarness({
     fps: 1,
     duration: 101,
+    // Give each Canvas snapshot different bytes to detect stale-image reuse.
+    blobData: (count) => Uint8Array.of(count),
     NiconiComments: class extends NiconiComments {
       constructor(_canvas, _data, options) {
         // Keep the real timeline and rendering library; replace only Canvas I/O.
@@ -64,6 +66,20 @@ test("renderer draws populated frames with the real library and reuses empty fra
     requests.filter((request) => request.type === "blob").length,
     101,
   );
+  assert.equal(
+    harness.blobCount,
+    draws.length + 1,
+    "only the initial blank image and populated frames should be encoded",
+  );
+  const snapshots = new Map(draws.map((vpos, index) => [vpos, index + 2]));
+  for (const request of requests.filter(({ type }) => type === "blob")) {
+    const vpos = (request.frameId - 1) * 100;
+    assert.deepEqual(
+      [...request.data],
+      [snapshots.get(vpos) ?? 1],
+      `frame at ${vpos} must carry its own drawing or the original blank image`,
+    );
+  }
   assert.equal(requests.at(-1).type, "end");
   assert.equal(requests.at(-1).frameId, 101);
   assert.equal(
