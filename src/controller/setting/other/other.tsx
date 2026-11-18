@@ -7,9 +7,11 @@ import { getSetting } from "@/util/settings";
 
 const OtherSetting: FC = () => {
   const [showRendererWindow, setShowRendererWindow] = useState<boolean>(false);
+  const [updateCheck, setAutoUpdate] = useState<boolean>(false);
   useLayoutEffect(() => {
     void runControllerTask(async () => {
       setShowRendererWindow(await getSetting("showRendererWindow"));
+      setAutoUpdate((await getSetting("updateCheck")) === "enabled");
     });
   }, []);
   return (
@@ -35,6 +37,25 @@ const OtherSetting: FC = () => {
           />
         }
         label={"書き出し時にレンダラウィンドウを表示する"}
+      />
+      <FormControlLabel
+        control={
+          <Switch
+            checked={updateCheck}
+            onChange={(_, checked) => {
+              setAutoUpdate(checked);
+              void runControllerTask(() =>
+                window.api.request({
+                  type: "setSetting",
+                  key: "updateCheck",
+                  data: checked ? "enabled" : "disabled",
+                  host: "controller",
+                }),
+              );
+            }}
+          />
+        }
+        label={"起動時に更新を確認して通知する"}
       />
     </div>
   );
