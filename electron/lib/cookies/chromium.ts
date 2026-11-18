@@ -1,5 +1,6 @@
 import * as crypto from "node:crypto";
 import * as fs from "node:fs";
+import { createRequire } from "node:module";
 import * as path from "node:path";
 
 import type {
@@ -9,15 +10,15 @@ import type {
   chromiumCookies,
   chromiumLocalState,
   columnInfo,
-} from "@/@types/cookies";
-import type { UserData } from "@/@types/niconico";
-import type { winProtect } from "@/@types/win-protect";
+} from "@/@types/cookies.js";
+import type { UserData } from "@/@types/niconico.js";
+import type { winProtect } from "@/@types/win-protect.js";
 
-import { typeGuard } from "../../type-guard";
-import { convertToEncodedCookie } from "../cookie";
-import { fetchAll, withClonedDB } from "../db";
-import { getUserInfo } from "../niconico";
-import { spawn } from "../spawn";
+import { typeGuard } from "../../type-guard.js";
+import { convertToEncodedCookie } from "../cookie.js";
+import { fetchAll, withClonedDB } from "../db.js";
+import { getUserInfo } from "../niconico/index.js";
+import { spawn } from "../spawn.js";
 
 /*
 reference source:
@@ -258,7 +259,7 @@ const getWindowsDecryptor = (
   const base64_key = localState.os_crypt.encrypted_key;
   const encryptedKey = Buffer.from(base64_key, "base64");
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const wp = require("win-protect") as winProtect;
+  const wp = createRequire(import.meta.url)("win-protect") as winProtect;
   return (_value: Buffer) => {
     let value = _value;
     if (value[0] === 0x76 && value[1] === 0x31 && value[2] === 0x30) {

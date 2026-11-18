@@ -1,6 +1,6 @@
 import * as child_process from "node:child_process";
 
-import type { SpawnResult } from "@/@types/spawn";
+import type { SpawnResult } from "@/@types/spawn.js";
 
 export type ProcessOptions = child_process.SpawnOptions & {
   /** Maximum retained bytes per stream. Callbacks still receive all output. */

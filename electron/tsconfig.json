@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "Node16",
+    "module": "NodeNext",
     "sourceMap": true,
     "strict": true,
     "outDir": "../build",
     "rootDir": "../",
-    "moduleResolution": "node16",
+    "moduleResolution": "nodenext",
     "paths": {
       "@/*": ["../src/*"]
     }

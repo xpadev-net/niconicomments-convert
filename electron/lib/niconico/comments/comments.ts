@@ -1,22 +1,22 @@
 import * as fs from "node:fs";
 import type { FormattedComment } from "@xpadev-net/niconicomments";
-import NiconiComments from "@xpadev-net/niconicomments";
+import niconicomments from "@xpadev-net/niconicomments";
 import { Builder } from "@xpadev-net/xml2js";
 
 import type {
   TCommentOptionCustom,
   TCommentOptionSimple,
   V3MetadataComment,
-} from "@/@types/niconico";
-import type { CommentQueue } from "@/@types/queue";
-import type { V1Raw } from "@/@types/types";
+} from "@/@types/niconico.js";
+import type { CommentQueue } from "@/@types/queue.js";
+import type { V1Raw } from "@/@types/types.js";
 
-import { sleep } from "../../../utils";
+import { sleep } from "../../../utils.js";
 import {
   type BaseData,
   downloadCustomComment,
-} from "./custom-comment-downloader";
-import { convertV3ToFormatted } from "./utils";
+} from "./custom-comment-downloader.js";
+import { convertV3ToFormatted } from "./utils.js";
 
 const downloadComment = async (
   queue: CommentQueue,
@@ -102,7 +102,7 @@ const downloadV3V1SimpleComment = async (
   });
   const res = (await req.json()) as unknown;
   const threads = (res as V1Raw)?.data?.threads;
-  if (!NiconiComments.typeGuard.v1.threads(threads))
+  if (!niconicomments.default.typeGuard.v1.threads(threads))
     throw new Error("failed to get comments");
   updateProgress(1, 1);
   return convertV3ToFormatted(threads, userList);

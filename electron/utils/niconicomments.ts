@@ -1,9 +1,9 @@
 import * as fs from "node:fs";
-import NiconiComments from "@xpadev-net/niconicomments";
+import niconicomments from "@xpadev-net/niconicomments";
 import { parseStringPromise } from "@xpadev-net/xml2js";
 
-import type { CommentFormat } from "@/@types/niconicomments";
-import type { V1Raw } from "@/@types/types";
+import type { CommentFormat } from "@/@types/niconicomments.js";
+import type { V1Raw } from "@/@types/types.js";
 
 const identifyCommentFormat = async (
   input: string,
@@ -13,7 +13,7 @@ const identifyCommentFormat = async (
     const json = (await parseStringPromise(fileData, {
       includeWhiteChars: true,
     })) as unknown;
-    if (NiconiComments.typeGuard.xml2js.packet(json)) {
+    if (niconicomments.default.typeGuard.xml2js.packet(json)) {
       return "xml2js";
     }
     return;
@@ -22,22 +22,24 @@ const identifyCommentFormat = async (
     const json = JSON.parse(fileData) as unknown;
     if (
       (json as V1Raw)?.meta?.status === 200 &&
-      NiconiComments.typeGuard.v1.threads((json as V1Raw)?.data?.threads)
+      niconicomments.default.typeGuard.v1.threads(
+        (json as V1Raw)?.data?.threads,
+      )
     ) {
       return "rawV1";
     }
-    if (NiconiComments.typeGuard.v1.threads(json)) {
+    if (niconicomments.default.typeGuard.v1.threads(json)) {
       return "v1";
     }
-    if (NiconiComments.typeGuard.legacy.rawApiResponses(json)) {
+    if (niconicomments.default.typeGuard.legacy.rawApiResponses(json)) {
       return "legacy";
     }
-    if (NiconiComments.typeGuard.owner.comments(json)) {
+    if (niconicomments.default.typeGuard.owner.comments(json)) {
       return "owner";
     }
     if (
-      NiconiComments.typeGuard.formatted.comments(json) ||
-      NiconiComments.typeGuard.formatted.legacyComments(json)
+      niconicomments.default.typeGuard.formatted.comments(json) ||
+      niconicomments.default.typeGuard.formatted.legacyComments(json)
     ) {
       return "formatted";
     }

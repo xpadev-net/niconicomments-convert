@@ -1,25 +1,25 @@
 import type { IpcMainInvokeEvent } from "electron";
 import { ipcMain } from "electron";
 
-import type { RequestHandlers } from "@/@types/ipc";
-import { ValidationError } from "../src/domain/validation";
-import { baseUrl } from "./context";
+import type { RequestHandlers } from "@/@types/ipc.js";
+import { ValidationError } from "../src/domain/validation.js";
+import { baseUrl } from "./context.js";
 import {
   isControllerSender,
   sendMessageToController,
-} from "./controller-window";
+} from "./controller-window.js";
 import {
   handleDropFiles,
   selectComment,
   selectFile,
   selectMovie,
   selectOutput,
-} from "./dialog";
-import { isIpcRequest } from "./ipc-schema";
-import { getAvailableProfiles } from "./lib/cookie";
-import { encodeError } from "./lib/json";
-import { getLogger } from "./lib/log";
-import { getMetadata } from "./lib/niconico";
+} from "./dialog.js";
+import { isIpcRequest } from "./ipc-schema.js";
+import { getAvailableProfiles } from "./lib/cookie.js";
+import { encodeError } from "./lib/json.js";
+import { getLogger } from "./lib/log.js";
+import { getMetadata } from "./lib/niconico/index.js";
 import {
   appendFrame,
   appendQueue,
@@ -29,8 +29,8 @@ import {
   processOnInterrupt,
   processOnLoad,
   sendProgress,
-} from "./queue";
-import { store } from "./store";
+} from "./queue.js";
+import { store } from "./store.js";
 
 const logger = getLogger("[ipcManager]");
 const controllerHandlers: RequestHandlers["controller"] = {

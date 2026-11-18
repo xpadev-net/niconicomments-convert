@@ -2,9 +2,9 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { Database } from "sqlite3";
-import * as sqlite3 from "sqlite3";
+import sqlite3 from "sqlite3";
 
-import { appPrefix } from "../context";
+import { appPrefix } from "../context.js";
 
 const withClonedDB = async <T>(
   filepath: string,

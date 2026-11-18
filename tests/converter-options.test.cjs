@@ -33,9 +33,9 @@ for (const saved of [false, true]) {
       resolve(specifier, context, nextResolve) {
         if (context.parentURL === entryUrl) {
           const url = {
-            "./const": constUrl.href,
-            "./store": storeUrl,
-            "./ffmpeg-stream/stream": streamUrl,
+            "./const.js": constUrl.href,
+            "./store.js": storeUrl,
+            "./ffmpeg-stream/stream.js": streamUrl,
           }[specifier];
           if (url) return { url, shortCircuit: true };
         }

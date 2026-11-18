@@ -1,8 +1,8 @@
-import type { UserData, V3MetadataBody } from "@/@types/niconico";
+import type { UserData, V3MetadataBody } from "@/@types/niconico.js";
 
-import { typeGuard } from "../../type-guard";
-import { convertToEncodedCookie, getCookies } from "../cookie";
-import { encodeJson } from "../json";
+import { typeGuard } from "../../type-guard.js";
+import { convertToEncodedCookie, getCookies } from "../cookie.js";
+import { encodeJson } from "../json.js";
 
 const userInfoCache: { [key: string]: UserData | undefined } = {};
 const getUserInfo = async (cookies: string): Promise<UserData | undefined> => {

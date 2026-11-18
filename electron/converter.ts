@@ -1,8 +1,8 @@
-import type { FfmpegOptions } from "@/@types/ffmpeg";
-import type { ConvertQueue } from "@/@types/queue";
+import type { FfmpegOptions } from "@/@types/ffmpeg.js";
+import type { ConvertQueue } from "@/@types/queue.js";
 
-import { Converter } from "./ffmpeg-stream/stream";
-import { store } from "./store";
+import { Converter } from "./ffmpeg-stream/stream.js";
+import { store } from "./store.js";
 
 const createConverter = (queue: ConvertQueue) => {
   const converter = new Converter();

@@ -1,12 +1,12 @@
 import ElectronStore from "electron-store";
 
-import type { AppSettings } from "../src/@types/setting";
+import type { AppSettings } from "../src/@types/setting.js";
 import {
   isSettingKey,
   migrateSettings,
   parseSetting,
-} from "../src/domain/settings";
-import { ValidationError } from "../src/domain/validation";
+} from "../src/domain/settings.js";
+import { ValidationError } from "../src/domain/validation.js";
 
 const persisted = new ElectronStore<AppSettings & { settingsVersion: number }>({
   // A syntactically broken JSON file cannot be recovered per setting.

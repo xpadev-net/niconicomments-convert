@@ -14,7 +14,13 @@ writeFileSync(
   config,
   JSON.stringify({
     extends: path.join(root, "electron/tsconfig.json"),
-    compilerOptions: { outDir: temporary, jsx: "react-jsx", noCheck: true },
+    compilerOptions: {
+      outDir: temporary,
+      module: "CommonJS",
+      moduleResolution: "bundler",
+      jsx: "react-jsx",
+      noCheck: true,
+    },
     include: [path.join(root, "src/controller/convert/convert.tsx")],
   }),
 );

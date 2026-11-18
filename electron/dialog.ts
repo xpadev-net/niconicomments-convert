@@ -2,23 +2,23 @@ import * as path from "node:path";
 import type { OpenDialogReturnValue, SaveDialogOptions } from "electron";
 import { dialog } from "electron";
 
-import type { FfprobeOutput } from "@/@types/ffmpeg";
+import type { FfprobeOutput } from "@/@types/ffmpeg.js";
 import type {
   ApiResponseDropFiles,
   ApiResponseMessage,
   ApiResponseSelectComment,
   ApiResponseSelectMovie,
-} from "@/@types/response.controller";
-import type { SpawnResult } from "@/@types/spawn";
-import { isPositiveFinite } from "../src/domain/validation";
+} from "@/@types/response.controller.js";
+import type { SpawnResult } from "@/@types/spawn.js";
+import { isPositiveFinite } from "../src/domain/validation.js";
 
-import { ffprobePath } from "./assets";
-import { sendMessageToController } from "./controller-window";
-import { encodeError } from "./lib/json";
-import { getLogger } from "./lib/log";
-import { ProcessError, spawn } from "./lib/spawn";
-import { store } from "./store";
-import { identifyCommentFormat } from "./utils/niconicomments";
+import { ffprobePath } from "./assets.js";
+import { sendMessageToController } from "./controller-window.js";
+import { encodeError } from "./lib/json.js";
+import { getLogger } from "./lib/log.js";
+import { ProcessError, spawn } from "./lib/spawn.js";
+import { store } from "./store.js";
+import { identifyCommentFormat } from "./utils/niconicomments.js";
 
 const logger = getLogger("[dialog]");
 

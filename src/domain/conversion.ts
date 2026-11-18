@@ -1,4 +1,4 @@
-import { isPositiveFinite, isRecord } from "./validation";
+import { isPositiveFinite, isRecord } from "./validation.js";
 
 // Shared by the form and queue admission so FFmpeg and the renderer receive
 // the same validated values. An omitted clip boundary means 0 / movie duration.

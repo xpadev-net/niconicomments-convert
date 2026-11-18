@@ -1,16 +1,16 @@
 import type { OpenDialogReturnValue } from "electron";
-import type { BrowserProfile } from "./cookies";
-import type { UserData, V3MetadataBody } from "./niconico";
-import type { ApiRequestsFromController } from "./request.controller";
-import type { ApiRequestsFromRenderer } from "./request.renderer";
+import type { BrowserProfile } from "./cookies.js";
+import type { UserData, V3MetadataBody } from "./niconico.js";
+import type { ApiRequestsFromController } from "./request.controller.js";
+import type { ApiRequestsFromRenderer } from "./request.renderer.js";
 import type {
   ApiResponseDropFiles,
   ApiResponseMessage,
   ApiResponseSelectComment,
   ApiResponseSelectMovie,
-} from "./response.controller";
-import type { ApiResponseLoad } from "./response.renderer";
-import type { AppSettings } from "./setting";
+} from "./response.controller.js";
+import type { ApiResponseLoad } from "./response.renderer.js";
+import type { AppSettings } from "./setting.js";
 
 export type ControllerRequest = ApiRequestsFromController & {
   host: "controller";

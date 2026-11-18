@@ -1,4 +1,4 @@
-const builder = require("electron-builder");
+import builder from "electron-builder";
 
 builder.build({
   config: {

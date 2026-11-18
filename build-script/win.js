@@ -1,4 +1,4 @@
-const builder = require("electron-builder");
+import builder from "electron-builder";
 
 process.env.CSC_IDENTITY_AUTO_DISCOVERY = "false";
 

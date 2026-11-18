@@ -4,18 +4,18 @@ import type {
   Cookies,
   FirefoxProfile,
   ParsedCookie,
-} from "@/@types/cookies";
-import type { UserData } from "@/@types/niconico";
-import { store } from "../store";
-import { typeGuard } from "../type-guard";
+} from "@/@types/cookies.js";
+import type { UserData } from "@/@types/niconico.js";
+import { store } from "../store.js";
+import { typeGuard } from "../type-guard.js";
 import {
   getAvailableChromiumProfiles,
   getChromiumCookies,
-} from "./cookies/chromium";
+} from "./cookies/chromium.js";
 import {
   getAvailableFirefoxProfiles,
   getFirefoxCookies,
-} from "./cookies/firefox";
+} from "./cookies/firefox.js";
 
 const getAvailableProfiles = async (): Promise<
   { profile: FirefoxProfile | ChromiumProfile; user: UserData }[]

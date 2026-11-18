@@ -1,15 +1,15 @@
-import type { V3MetadataBody } from "@/@types/niconico";
-import type { TDMSFormat } from "@/@types/queue";
-import type { SpawnResult } from "@/@types/spawn";
+import type { V3MetadataBody } from "@/@types/niconico.js";
+import type { TDMSFormat } from "@/@types/queue.js";
+import type { SpawnResult } from "@/@types/spawn.js";
 
-import { typeGuard } from "../../type-guard";
-import { DownloadM3U8 } from "../../utils/ffmpeg";
+import { typeGuard } from "../../type-guard.js";
+import { DownloadM3U8 } from "../../utils/ffmpeg.js";
 import {
   convertToEncodedCookie,
   formatCookies,
   getCookies,
   parseCookie,
-} from "../cookie";
+} from "../cookie.js";
 
 const downloadDMS = async (
   metadata: V3MetadataBody,

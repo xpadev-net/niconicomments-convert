@@ -1,8 +1,8 @@
-import type { SpawnResult } from "@/@types/spawn";
+import type { SpawnResult } from "@/@types/spawn.js";
 
-import { ffmpegPath } from "../assets";
-import { spawn } from "../lib/spawn";
-import { time2num } from "./time";
+import { ffmpegPath } from "../assets.js";
+import { spawn } from "../lib/spawn.js";
+import { time2num } from "./time.js";
 
 const DownloadM3U8 = (
   args: string[],

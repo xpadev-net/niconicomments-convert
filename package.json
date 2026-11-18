@@ -3,7 +3,7 @@
   "private": false,
   "version": "0.0.34",
   "packageManager": "pnpm@12.19.0",
-  "type": "commonjs",
+  "type": "module",
   "license": "MIT",
   "main": "build/electron/electron.js",
   "author": "xpadev(xpadev.net)",
