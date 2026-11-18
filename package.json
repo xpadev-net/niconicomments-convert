@@ -11,8 +11,8 @@
   "scripts": {
     "test": "pnpm exec tsc -p electron && node --test tests/*.test.cjs",
     "test:smoke": "node tests/smoke/packaged-app.cjs",
-    "build:win": "tsc -p electron && pnpm run copy-files && node build-script/win.cjs",
-    "build:mac": "tsc -p electron && pnpm run copy-files && node build-script/mac.cjs",
+    "build:win": "tsc -p electron && pnpm run copy-files && node build-script/win.js",
+    "build:mac": "tsc -p electron && pnpm run copy-files && node build-script/mac.js",
     "build": "pnpm run build:win && pnpm run build:mac",
     "copy-files": "rimraf build/electron/html && vite build",
     "test:process": "tsc -p electron && node --test tests/process-runner.test.cjs",
