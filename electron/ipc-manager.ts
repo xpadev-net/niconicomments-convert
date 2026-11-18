@@ -31,6 +31,7 @@ import {
   sendProgress,
 } from "./queue";
 import { store } from "./store";
+import { onAutoUpdateSettingChanged } from "./updater";
 
 const logger = getLogger("[ipcManager]");
 const controllerHandlers: RequestHandlers["controller"] = {
@@ -49,6 +50,7 @@ const controllerHandlers: RequestHandlers["controller"] = {
   getSetting: (request) => store.get(request.key),
   setSetting: (request) => {
     store.set(request.key, request.data);
+    if (request.key === "autoUpdate") onAutoUpdateSettingChanged();
   },
   getAvailableProfiles: () => getAvailableProfiles(),
   getNiconicoMovieMetadata: (request) => getMetadata(request.nicoId),

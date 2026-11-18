@@ -18,6 +18,7 @@ test("unversioned settings migrate without losing user choices and migration is 
   assert.deepEqual(migrated, {
     ...legacy,
     settingsVersion,
+    autoUpdate: "unset",
     ffmpegOptions: { crf: "25", r: "{FPS}", an: "" },
   });
   assert.deepEqual(migrateSettings(migrated), migrated);
@@ -50,6 +51,16 @@ test("missing or corrupt settings recover independently; false and empty options
   );
 });
 
+test("auto update is opt-in: unset by default and invalid values fall back to unset", () => {
+  assert.equal(getDefaultSettings().autoUpdate, "unset");
+  assert.equal(migrateSettings({}).autoUpdate, "unset");
+  assert.equal(migrateSettings({ autoUpdate: "yes" }).autoUpdate, "unset");
+  assert.equal(
+    migrateSettings({ autoUpdate: "enabled" }).autoUpdate,
+    "enabled",
+  );
+});
+
 test("current writes reject invalid types rather than coercing them", () => {
   for (const [key, value] of [
     ["auth", null],
@@ -62,9 +73,13 @@ test("current writes reject invalid types rather than coercing them", () => {
     ["ffmpegOptions", { crf: 30 }],
     ["ffmpegOptions", { an: null }],
     ["commentFileExt", "json"],
+    ["autoUpdate", true],
+    ["autoUpdate", "on"],
   ])
     assert.throws(() => parseSetting(key, value), validation.ValidationError);
   assert.deepEqual(parseSetting("ffmpegOptions", { an: "" }), { an: "" });
+  for (const value of ["unset", "enabled", "disabled"])
+    assert.equal(parseSetting("autoUpdate", value), value);
   assert.deepEqual(parseSetting("auth", { type: "browser" }), {
     type: "browser",
   });

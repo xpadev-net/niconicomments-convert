@@ -9,6 +9,7 @@ const getDefaultSettings = (): AppSettings => ({
   ffmpegOptions: { ...defaultOptions },
   showRendererWindow: true,
   commentFileExt: ".json",
+  autoUpdate: "unset",
 });
 
 const isNonemptyString = (value: unknown): value is string =>
@@ -65,6 +66,8 @@ const validators: {
   showRendererWindow: (value): value is boolean => typeof value === "boolean",
   commentFileExt: (value): value is string =>
     typeof value === "string" && /^\.[a-z0-9]+$/i.test(value),
+  autoUpdate: (value): value is AppSettings["autoUpdate"] =>
+    value === "unset" || value === "enabled" || value === "disabled",
 };
 
 const isSettingKey = (key: unknown): key is keyof AppSettings =>
@@ -113,6 +116,7 @@ const migrateSettings = (input: unknown) => {
     ffmpegOptions: restore("ffmpegOptions", ffmpegOptions),
     showRendererWindow: restore("showRendererWindow", raw.showRendererWindow),
     commentFileExt: restore("commentFileExt", raw.commentFileExt),
+    autoUpdate: restore("autoUpdate", raw.autoUpdate),
   };
 };
 

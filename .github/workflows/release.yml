@@ -27,6 +27,8 @@ jobs:
           draft: true
           files: |
             dist/*.dmg
+            dist/*-mac.zip
+            dist/latest-mac.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -50,6 +52,9 @@ jobs:
           draft: true
           files: |
             dist/*.zip
+            dist/*.exe
+            dist/*.exe.blockmap
+            dist/latest.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
