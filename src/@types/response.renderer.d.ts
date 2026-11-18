@@ -1,5 +1,5 @@
-import type { ConvertQueue, ProgressItem, Queue } from "@/@types/queue";
-import type { ApiResponseEnd } from "@/@types/response.controller";
+import type { ConvertQueue, ProgressItem, Queue } from "@/@types/queue.js";
+import type { ApiResponseEnd } from "@/@types/response.controller.js";
 
 export type ApiResponseToRenderer = {
   target: "renderer";

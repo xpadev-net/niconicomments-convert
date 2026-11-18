@@ -1,10 +1,10 @@
 import * as path from "node:path";
 import { app, BrowserWindow } from "electron";
 
-import type { ApiResponsesToRenderer } from "@/@types/response.renderer";
+import type { ApiResponsesToRenderer } from "@/@types/response.renderer.js";
 
-import { baseUrl } from "./context";
-import { store } from "./store";
+import { baseUrl } from "./context.js";
+import { store } from "./store.js";
 
 const closingWindows = new WeakSet<BrowserWindow>();
 
@@ -15,7 +15,7 @@ const createRendererWindow = (
     width: 640,
     height: 360,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(import.meta.dirname, "preload.cjs"),
       nodeIntegration: false,
       contextIsolation: true,
       additionalArguments: ["--ipc-role=renderer"],

@@ -1,6 +1,6 @@
-import type { IpcRequest, RequestHandlers } from "../../src/@types/ipc";
-import type { ApiResponseLoad } from "../../src/@types/response.renderer";
-import type { AuthType } from "../../src/@types/setting";
+import type { IpcRequest, RequestHandlers } from "../../src/@types/ipc.js";
+import type { ApiResponseLoad } from "../../src/@types/response.renderer.js";
+import type { AuthType } from "../../src/@types/setting.js";
 
 declare const request: IpcRequest;
 const output: Promise<string | undefined> = request({

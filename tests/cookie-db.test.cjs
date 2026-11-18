@@ -1,7 +1,5 @@
 const assert = require("node:assert/strict");
-const { execFileSync } = require("node:child_process");
 const fs = require("node:fs");
-const { Module } = require("node:module");
 const os = require("node:os");
 const path = require("node:path");
 const { after, test } = require("node:test");
@@ -19,25 +17,10 @@ after(() => {
   fs.rmSync(fixtureDir, { recursive: true, force: true });
 });
 
-// Exercise the application's CommonJS output without starting Electron.
-execFileSync(process.execPath, [
-  path.join(
-    path.dirname(require.resolve("typescript/package.json")),
-    "bin/tsc",
-  ),
-  "-p",
-  path.join(__dirname, "../electron"),
-  "--outDir",
-  path.join(fixtureDir, "build"),
-  "--sourceMap",
-  "false",
-]);
-const dbFile = path.join(fixtureDir, "build/electron/lib/db.js");
-const dbModule = new Module(dbFile, module);
-dbModule.require = (specifier) =>
-  specifier === "../context" ? { appPrefix: prefix } : require(specifier);
-dbModule._compile(fs.readFileSync(dbFile, "utf8"), dbFile);
-const { fetchAll, withClonedDB } = dbModule.exports;
+const { loadCompiled } = require("./helpers/load-typescript.cjs");
+const { fetchAll, withClonedDB } = loadCompiled("build/electron/lib/db.js", {
+  "../context": { appPrefix: prefix },
+});
 
 const createDB = async (profile, value = "session") => {
   const directory = path.join(fixtureDir, profile);

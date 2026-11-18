@@ -1,12 +1,12 @@
-import type { NicoId, UUID } from "@/@types/brand";
-import type { Request } from "@/@types/ipc";
+import type { NicoId, UUID } from "@/@types/brand.js";
+import type { Request } from "@/@types/ipc.js";
 import type {
   TCommentOption,
   TCommentThread,
   V3MetadataComment,
   V3MetadataCommentThread,
-} from "@/@types/niconico";
-import type { CommentFormat } from "@/@types/niconicomments";
+} from "@/@types/niconico.js";
+import type { CommentFormat } from "@/@types/niconicomments.js";
 import type {
   CommentQueue,
   ConvertQueue,
@@ -16,10 +16,10 @@ import type {
   TCommentItem,
   TMovieItem,
   TRemoteMovieItemFormat,
-} from "@/@types/queue";
-import type { AppSettings } from "@/@types/setting";
+} from "@/@types/queue.js";
+import type { AppSettings } from "@/@types/setting.js";
 
-import { isSettingKey, parseSetting } from "../src/domain/settings";
+import { isSettingKey, parseSetting } from "../src/domain/settings.js";
 
 // Each object schema must cover every declared field, including optional fields.
 // IPC structured cloning removes accessors and custom prototypes before validation.

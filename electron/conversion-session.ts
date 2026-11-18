@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 
-import type { ConvertQueue } from "@/@types/queue";
+import type { ConvertQueue } from "@/@types/queue.js";
 
-import { createConverter } from "./converter";
+import { createConverter } from "./converter.js";
 
 // All asynchronous frame work keeps a reference to its own converter and queue.
 export class ConversionSession {

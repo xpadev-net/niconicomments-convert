@@ -10,7 +10,7 @@ export default {
   },
   resolve:{
     alias: {
-      "@/": `${__dirname}/src/`,
+      "@/": `${import.meta.dirname}/src/`,
     },
   },
   base:""

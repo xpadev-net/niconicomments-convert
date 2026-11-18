@@ -2,23 +2,23 @@ import * as fs from "node:fs";
 import { parseStringPromise } from "@xpadev-net/xml2js";
 import type { WebContents } from "electron";
 
-import type { UUID } from "@/@types/brand";
-import type { Queue, QueueLists } from "@/@types/queue";
-import type { ApiResponseLoad } from "@/@types/response.renderer";
-import { getConversionError } from "../src/domain/conversion";
-import { ValidationError } from "../src/domain/validation";
+import type { UUID } from "@/@types/brand.js";
+import type { Queue, QueueLists } from "@/@types/queue.js";
+import type { ApiResponseLoad } from "@/@types/response.renderer.js";
+import { getConversionError } from "../src/domain/conversion.js";
+import { ValidationError } from "../src/domain/validation.js";
 
-import { getFrameCount } from "../src/util/frame-timing";
-import { sendMessageToController } from "./controller-window";
-import { ConversionSession } from "./conversion-session";
-import { encodeError } from "./lib/json";
-import { getLogger } from "./lib/log";
-import { download, downloadComment } from "./lib/niconico";
+import { getFrameCount } from "../src/util/frame-timing.js";
+import { sendMessageToController } from "./controller-window.js";
+import { ConversionSession } from "./conversion-session.js";
+import { encodeError } from "./lib/json.js";
+import { getLogger } from "./lib/log.js";
+import { download, downloadComment } from "./lib/niconico/index.js";
 import {
   closeRendererWindow,
   createRendererWindow,
   sendMessageToRenderer,
-} from "./renderer-window";
+} from "./renderer-window.js";
 
 const logger = getLogger("[queue]");
 

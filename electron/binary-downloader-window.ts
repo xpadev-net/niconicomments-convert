@@ -1,9 +1,9 @@
 import * as path from "node:path";
 import { app, BrowserWindow } from "electron";
 
-import type { ApiResponsesToBinaryDownloader } from "@/@types/response.binary-downloader";
+import type { ApiResponsesToBinaryDownloader } from "@/@types/response.binary-downloader.js";
 
-import { baseUrl } from "./context";
+import { baseUrl } from "./context.js";
 
 let binaryDownloaderWindow: BrowserWindow | undefined;
 
@@ -13,7 +13,7 @@ const createBinaryDownloaderWindow = async (): Promise<void> => {
     height: 200,
     resizable: false,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(import.meta.dirname, "preload.cjs"),
       nodeIntegration: false,
       contextIsolation: true,
       additionalArguments: ["--ipc-role=downloader"],

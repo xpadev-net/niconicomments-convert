@@ -5,30 +5,9 @@ const os = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
 
-// npm test compiles the production modules first. Replace only external edges.
-const load = (filename, imports, globals = {}) => {
-  const module = { exports: {} };
-  const requireMock = (name) => {
-    if (Object.hasOwn(imports, name)) return imports[name];
-    if (name.startsWith("node:")) return require(name);
-    throw new Error(`Missing mock for ${name}`);
-  };
-  new Function(
-    "require",
-    "module",
-    "exports",
-    "__dirname",
-    ...Object.keys(globals),
-    fs.readFileSync(path.join("build/electron", filename), "utf8"),
-  )(
-    requireMock,
-    module,
-    module.exports,
-    "/read-only/install/app.asar/build/electron",
-    ...Object.values(globals),
-  );
-  return module.exports;
-};
+const { loadCompiled } = require("./helpers/load-typescript.cjs");
+const load = (filename, imports, globals) =>
+  loadCompiled(path.join("build/electron", filename), imports, globals);
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 const deferred = () => {
   let resolve, reject;
@@ -76,7 +55,7 @@ test("logging creates the Electron logs path recursively", (t) => {
           },
         },
       },
-      "electron-log/main": logger,
+      "electron-log/main.js": logger,
     },
     { process: { on: (...args) => events.push(args) } },
   );
@@ -104,7 +83,7 @@ test("an unavailable log path preserves startup diagnostics via console logging"
           },
         },
       },
-      "electron-log/main": logger,
+      "electron-log/main.js": logger,
     },
     { process: { on() {} } },
   ).initLogger();

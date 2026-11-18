@@ -3,21 +3,21 @@ import type { V1Thread } from "@xpadev-net/niconicomments";
 import type {
   ApiResponsesToBinaryDownloader,
   ApiResponseToBinaryDownloader,
-} from "@/@types/response.binary-downloader";
+} from "@/@types/response.binary-downloader.js";
 import type {
   ApiResponsesToRenderer,
   ApiResponseToRenderer,
-} from "@/@types/response.renderer";
+} from "@/@types/response.renderer.js";
 
 import type {
   ApiResponsesToController,
   ApiResponseToController,
-} from "./response.controller";
+} from "./response.controller.js";
 
 declare global {
   interface Window {
     api: {
-      request: import("./ipc").IpcRequest;
+      request: import("./ipc.js").IpcRequest;
       onResponse: (
         callback: (_: unknown, data: ApiResponseType) => void,
       ) => void;
@@ -27,7 +27,7 @@ declare global {
   }
 }
 
-export type ApiRequestType = import("./ipc").Request;
+export type ApiRequestType = import("./ipc.js").Request;
 type ApiResponseType =
   | (ApiResponsesToController & ApiResponseToController)
   | (ApiResponsesToRenderer & ApiResponseToRenderer)

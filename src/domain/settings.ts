@@ -1,7 +1,7 @@
-import { defaultOptions } from "../../electron/const";
-import type { BrowserProfile } from "../@types/cookies";
-import type { AppSettings, AuthType } from "../@types/setting";
-import { isRecord, ValidationError } from "./validation";
+import { defaultOptions } from "../../electron/const.js";
+import type { BrowserProfile } from "../@types/cookies.js";
+import type { AppSettings, AuthType } from "../@types/setting.js";
+import { isRecord, ValidationError } from "./validation.js";
 
 const settingsVersion = 1;
 const getDefaultSettings = (): AppSettings => ({

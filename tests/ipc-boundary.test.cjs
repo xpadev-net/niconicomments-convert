@@ -532,7 +532,7 @@ const preloadHarness = (role) => {
   const emitter = new EventEmitter();
   const invokes = [];
   load(
-    "electron/preload.ts",
+    "electron/preload.cts",
     {
       electron: {
         contextBridge: {
