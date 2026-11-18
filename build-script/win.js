@@ -7,18 +7,14 @@ builder.build({
     appId: "net.xpadev.niconicomments-convert",
     icon: "assets/niconicomments_icon.png",
     win: {
-      // electron-updater on Windows requires the NSIS target; zip stays for
-      // portable distribution.
-      target: [
-        { target: "zip", arch: ["x64"] },
-        { target: "nsis", arch: ["x64"] },
-      ],
+      target: {
+        target: "zip",
+        arch: [
+          "x64",
+          //'ia32',
+        ],
+      },
       signAndEditExecutable: false,
-    },
-    publish: {
-      provider: "github",
-      owner: "xpadev-net",
-      repo: "niconicomments-convert",
     },
   },
   publish: "never",

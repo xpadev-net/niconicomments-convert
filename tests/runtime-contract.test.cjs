@@ -116,7 +116,7 @@ function harness(rendererOptions = {}) {
     "./lib/json": { encodeError: String, encodeJson: JSON.stringify },
     "./lib/log": { getLogger: () => logger },
     "./lib/niconico": {},
-    "./updater": { onAutoUpdateSettingChanged: () => {} },
+    "./updater": { onUpdateCheckSettingChanged: () => {} },
     "./store": {},
     "./queue": queue,
   }).registerListener();

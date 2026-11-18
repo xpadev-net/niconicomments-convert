@@ -7,11 +7,11 @@ import { getSetting } from "@/util/settings";
 
 const OtherSetting: FC = () => {
   const [showRendererWindow, setShowRendererWindow] = useState<boolean>(false);
-  const [autoUpdate, setAutoUpdate] = useState<boolean>(false);
+  const [updateCheck, setAutoUpdate] = useState<boolean>(false);
   useLayoutEffect(() => {
     void runControllerTask(async () => {
       setShowRendererWindow(await getSetting("showRendererWindow"));
-      setAutoUpdate((await getSetting("autoUpdate")) === "enabled");
+      setAutoUpdate((await getSetting("updateCheck")) === "enabled");
     });
   }, []);
   return (
@@ -41,13 +41,13 @@ const OtherSetting: FC = () => {
       <FormControlLabel
         control={
           <Switch
-            checked={autoUpdate}
+            checked={updateCheck}
             onChange={(_, checked) => {
               setAutoUpdate(checked);
               void runControllerTask(() =>
                 window.api.request({
                   type: "setSetting",
-                  key: "autoUpdate",
+                  key: "updateCheck",
                   data: checked ? "enabled" : "disabled",
                   host: "controller",
                 }),
@@ -55,7 +55,7 @@ const OtherSetting: FC = () => {
             }}
           />
         }
-        label={"起動時に更新を確認して自動でダウンロードする"}
+        label={"起動時に更新を確認して通知する"}
       />
     </div>
   );

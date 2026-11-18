@@ -18,7 +18,7 @@ test("unversioned settings migrate without losing user choices and migration is 
   assert.deepEqual(migrated, {
     ...legacy,
     settingsVersion,
-    autoUpdate: "unset",
+    updateCheck: "unset",
     ffmpegOptions: { crf: "25", r: "{FPS}", an: "" },
   });
   assert.deepEqual(migrateSettings(migrated), migrated);
@@ -51,12 +51,12 @@ test("missing or corrupt settings recover independently; false and empty options
   );
 });
 
-test("auto update is opt-in: unset by default and invalid values fall back to unset", () => {
-  assert.equal(getDefaultSettings().autoUpdate, "unset");
-  assert.equal(migrateSettings({}).autoUpdate, "unset");
-  assert.equal(migrateSettings({ autoUpdate: "yes" }).autoUpdate, "unset");
+test("update check is opt-in: unset by default and invalid values fall back to unset", () => {
+  assert.equal(getDefaultSettings().updateCheck, "unset");
+  assert.equal(migrateSettings({}).updateCheck, "unset");
+  assert.equal(migrateSettings({ updateCheck: "yes" }).updateCheck, "unset");
   assert.equal(
-    migrateSettings({ autoUpdate: "enabled" }).autoUpdate,
+    migrateSettings({ updateCheck: "enabled" }).updateCheck,
     "enabled",
   );
 });
@@ -73,13 +73,13 @@ test("current writes reject invalid types rather than coercing them", () => {
     ["ffmpegOptions", { crf: 30 }],
     ["ffmpegOptions", { an: null }],
     ["commentFileExt", "json"],
-    ["autoUpdate", true],
-    ["autoUpdate", "on"],
+    ["updateCheck", true],
+    ["updateCheck", "on"],
   ])
     assert.throws(() => parseSetting(key, value), validation.ValidationError);
   assert.deepEqual(parseSetting("ffmpegOptions", { an: "" }), { an: "" });
   for (const value of ["unset", "enabled", "disabled"])
-    assert.equal(parseSetting("autoUpdate", value), value);
+    assert.equal(parseSetting("updateCheck", value), value);
   assert.deepEqual(parseSetting("auth", { type: "browser" }), {
     type: "browser",
   });
@@ -186,4 +186,13 @@ test("settings store persists migration and rejects invalid or unknown IPC write
   const template = store.get("ffmpegOptions");
   template.crf = "0";
   assert.equal(store.get("ffmpegOptions").crf, "25");
+});
+
+test("isNewerVersion compares numeric versions and ignores unparsable tags", () => {
+  const { isNewerVersion } = require("../build/src/domain/update");
+  assert.equal(isNewerVersion("v0.0.35", "0.0.34"), true);
+  assert.equal(isNewerVersion("v0.1", "0.0.34"), true);
+  assert.equal(isNewerVersion("v0.0.34", "0.0.34"), false);
+  assert.equal(isNewerVersion("v0.0.9", "0.0.34"), false);
+  assert.equal(isNewerVersion("v1.0.0-beta", "0.0.34"), false);
 });

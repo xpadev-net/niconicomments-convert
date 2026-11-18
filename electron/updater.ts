@@ -1,33 +1,42 @@
-import { app, dialog } from "electron";
+import { app, dialog, net, shell } from "electron";
 
+import { isNewerVersion } from "../src/domain/update";
 import { getLogger } from "./lib/log";
 import { store } from "./store";
 
 const logger = getLogger("[updater]");
+const LATEST_RELEASE_API =
+  "https://api.github.com/repos/xpadev-net/niconicomments-convert/releases/latest";
 
-let configured = false;
-
-const getUpdater = async () => {
-  const { autoUpdater } = await import("electron-updater");
-  if (!configured) {
-    configured = true;
-    // Never download or install anything the user has not opted in to.
-    autoUpdater.autoDownload = true;
-    autoUpdater.autoInstallOnAppQuit = true;
-    autoUpdater.logger = logger;
-    autoUpdater.on("error", (error) => {
-      logger.error("auto update failed:", error);
-    });
-  }
-  return autoUpdater;
-};
-
+// Only notifies: nothing is downloaded or installed automatically, so this
+// works for portable builds and unsigned macOS builds alike.
 const checkForUpdates = async (): Promise<void> => {
-  // Development builds have no app-update.yml.
+  // Development builds report Electron's version, not the app's.
   if (!app.isPackaged) return;
   try {
-    const updater = await getUpdater();
-    await updater.checkForUpdates();
+    const response = await net.fetch(LATEST_RELEASE_API, {
+      headers: { Accept: "application/vnd.github+json" },
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const release = (await response.json()) as {
+      tag_name?: unknown;
+      html_url?: unknown;
+    };
+    const { tag_name: tag, html_url: url } = release;
+    if (typeof tag !== "string" || typeof url !== "string") return;
+    if (!isNewerVersion(tag, app.getVersion())) return;
+    if (!url.startsWith("https://github.com/")) return;
+    const { response: choice } = await dialog.showMessageBox({
+      type: "info",
+      title: "更新があります",
+      message: `新しいバージョン ${tag} が公開されています。`,
+      detail: `現在のバージョン: ${app.getVersion()}\nダウンロードページを開きますか？`,
+      buttons: ["ダウンロードページを開く", "あとで"],
+      defaultId: 0,
+      cancelId: 1,
+      noLink: true,
+    });
+    if (choice === 0) await shell.openExternal(url);
   } catch (error) {
     logger.error("failed to check for updates:", error);
   }
@@ -36,32 +45,32 @@ const checkForUpdates = async (): Promise<void> => {
 const askOptIn = async (): Promise<void> => {
   const { response } = await dialog.showMessageBox({
     type: "question",
-    title: "自動更新の設定",
+    title: "更新確認の設定",
     message: "起動時に更新を確認しますか？",
     detail:
-      "新しいバージョンがある場合は、バックグラウンドでダウンロードし、アプリ終了時にインストールします。\nこの設定は「設定」画面からいつでも変更できます。",
+      "新しいバージョンがある場合にお知らせします（自動ではインストールしません）。\nこの設定は「設定」画面からいつでも変更できます。",
     buttons: ["確認する", "確認しない"],
     defaultId: 0,
     cancelId: 1,
     noLink: true,
   });
-  store.set("autoUpdate", response === 0 ? "enabled" : "disabled");
+  store.set("updateCheck", response === 0 ? "enabled" : "disabled");
 };
 
 // Called once after the controller window is shown.
-const initAutoUpdate = async (): Promise<void> => {
+const initUpdateCheck = async (): Promise<void> => {
   if (!app.isPackaged) return;
   try {
-    if (store.get("autoUpdate") === "unset") await askOptIn();
-    if (store.get("autoUpdate") === "enabled") await checkForUpdates();
+    if (store.get("updateCheck") === "unset") await askOptIn();
+    if (store.get("updateCheck") === "enabled") await checkForUpdates();
   } catch (error) {
-    logger.error("failed to initialize auto update:", error);
+    logger.error("failed to initialize update check:", error);
   }
 };
 
 // Called when the setting changes; checks immediately when turned on.
-const onAutoUpdateSettingChanged = (): void => {
-  if (store.get("autoUpdate") === "enabled") void checkForUpdates();
+const onUpdateCheckSettingChanged = (): void => {
+  if (store.get("updateCheck") === "enabled") void checkForUpdates();
 };
 
-export { initAutoUpdate, onAutoUpdateSettingChanged };
+export { initUpdateCheck, onUpdateCheckSettingChanged };

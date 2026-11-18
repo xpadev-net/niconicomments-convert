@@ -463,7 +463,7 @@ const startupHarness = (
       },
     },
     "./assets": { onStartUp: prepare },
-    "./updater": { initAutoUpdate: async () => {} },
+    "./updater": { initUpdateCheck: async () => {} },
     "./controller-window": {
       createControllerWindow: () => {
         controllers++;

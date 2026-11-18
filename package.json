@@ -36,7 +36,6 @@
     "@xpadev-net/xml2js": "0.6.2-2",
     "electron-log": "^5.4.3",
     "electron-store": "^8.2.0",
-    "electron-updater": "^6.8.11",
     "jotai": "^2.20.0",
     "sqlite3": "5.1.6",
     "undici": "^8.9.0"
@@ -47,7 +46,6 @@
     "@types/node": "^26.0.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@types/semver": "^7.8.0",
     "@types/sqlite3": "^5.1.0",
     "@vitejs/plugin-react": "^6.0.1",
     "ansi-regex": "^6.2.2",

@@ -3,7 +3,7 @@ import { app, BrowserWindow, dialog } from "electron";
 import { onStartUp } from "./assets";
 import { createControllerWindow } from "./controller-window";
 import { getLogger } from "./lib/log";
-import { initAutoUpdate } from "./updater";
+import { initUpdateCheck } from "./updater";
 
 type StartupState = "preparing" | "ready" | "quitting";
 
@@ -39,7 +39,7 @@ const startApplication = async (): Promise<void> => {
         if (preparation.signal.aborted) return;
         createControllerWindow();
         state = "ready";
-        void initAutoUpdate();
+        void initUpdateCheck();
         return;
       } catch (error) {
         if (preparation.signal.aborted) return;

@@ -374,7 +374,7 @@ const ipcHarness = ({ appendError } = {}) => {
       appendFrame: recordCall("appendFrame"),
       processOnLoad: recordCall("load", { type: "load", sessionId: "s" }),
     },
-    "./updater": { onAutoUpdateSettingChanged: () => {} },
+    "./updater": { onUpdateCheckSettingChanged: () => {} },
     "./store": {
       store: {
         get: recordCall("get", true),
