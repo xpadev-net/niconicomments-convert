@@ -11,9 +11,9 @@ import {
   closeBinaryDownloaderWindow,
   createBinaryDownloaderWindow,
   sendMessageToBinaryDownloader,
-} from "./binary-downloader-window";
-import { binPath } from "./context";
-import { spawn } from "./lib/spawn";
+} from "./binary-downloader-window.js";
+import { binPath } from "./context.js";
+import { spawn } from "./lib/spawn.js";
 
 type lib = "ffmpeg" | "ffprobe";
 

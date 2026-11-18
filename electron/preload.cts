@@ -1,8 +1,8 @@
 import type { IpcRendererEvent } from "electron";
 import { contextBridge, ipcRenderer, webUtils } from "electron";
 
-import type { Request } from "@/@types/ipc";
-import type { ApiResponseType } from "@/@types/types";
+import type { Request } from "@/@types/ipc.js";
+import type { ApiResponseType } from "@/@types/types.js";
 
 // Assigned by main when the window is created; page URL/query cannot change it.
 const role = process.argv

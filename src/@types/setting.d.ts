@@ -1,5 +1,5 @@
-import type { BrowserProfile } from "@/@types/cookies";
-import type { FfmpegOptions } from "@/@types/ffmpeg";
+import type { BrowserProfile } from "@/@types/cookies.js";
+import type { FfmpegOptions } from "@/@types/ffmpeg.js";
 
 export type AppSettings = {
   auth: AuthType;

@@ -137,7 +137,7 @@ const ipcHarness = () => {
     "./lib/json": {},
     "./lib/log": { getLogger: () => ({ debug() {} }) },
     "./lib/niconico": {},
-    "./updater": { onUpdateCheckSettingChanged: () => {} },
+    "./updater.js": { onUpdateCheckSettingChanged: () => {} },
     "./store": {},
     "./ipc-schema": schema,
     "./queue": {

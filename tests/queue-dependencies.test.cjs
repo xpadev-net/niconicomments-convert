@@ -17,6 +17,8 @@ writeFileSync(
     extends: path.join(root, "electron/tsconfig.json"),
     compilerOptions: {
       outDir: temporary,
+      module: "CommonJS",
+      moduleResolution: "bundler",
       jsx: "react-jsx",
       // Type checking runs separately; these tests execute the emitted modules.
       noCheck: true,
@@ -43,14 +45,17 @@ function loadModule(file, mocks, globals = {}) {
     {
       exports,
       AbortController,
-      require: (name) =>
-        Object.hasOwn(mocks, name)
-          ? mocks[name]
-          : require(
-              name.startsWith(".")
-                ? path.resolve(temporary, path.dirname(file), name)
-                : name,
-            ),
+      require: (name) => {
+        const mockName = name.startsWith(".")
+          ? name.replace(/(?:\/index)?\.js$/, "")
+          : name;
+        if (Object.hasOwn(mocks, mockName)) return mocks[mockName];
+        return require(
+          name.startsWith(".")
+            ? path.resolve(temporary, path.dirname(file), name)
+            : name,
+        );
+      },
       ...globals,
     },
     { filename: file },

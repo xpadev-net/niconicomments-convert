@@ -12,9 +12,9 @@ import type { Readable, Writable } from "node:stream";
 import { PassThrough } from "node:stream";
 import { promisify } from "node:util";
 
-import { ffmpegPath } from "../assets";
-import { getLogger } from "../lib/log";
-import { spawn } from "../lib/spawn";
+import { ffmpegPath } from "../assets.js";
+import { getLogger } from "../lib/log.js";
+import { spawn } from "../lib/spawn.js";
 
 const logger = getLogger("[ffmpeg-stream]");
 

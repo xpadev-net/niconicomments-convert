@@ -2,13 +2,13 @@ import type {
   CreateSessionRequest,
   CreateSessionResponse,
   V3MetadataBody,
-} from "@/@types/niconico";
-import type { TDMCFormat } from "@/@types/queue";
-import type { SpawnResult } from "@/@types/spawn";
+} from "@/@types/niconico.js";
+import type { TDMCFormat } from "@/@types/queue.js";
+import type { SpawnResult } from "@/@types/spawn.js";
 
-import { typeGuard } from "../../type-guard";
-import { DownloadM3U8 } from "../../utils/ffmpeg";
-import { withRequestTimeout } from "./request";
+import { typeGuard } from "../../type-guard.js";
+import { DownloadM3U8 } from "../../utils/ffmpeg.js";
+import { withRequestTimeout } from "./request.js";
 
 const downloadDMC = async (
   metadata: V3MetadataBody,

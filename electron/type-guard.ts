@@ -3,7 +3,7 @@ import type {
   firefoxContainerDefault,
   firefoxContainersJson,
   ParsedCookie,
-} from "@/@types/cookies";
+} from "@/@types/cookies.js";
 import type {
   CreateSessionResponse,
   TWatchV3Metadata,
@@ -11,7 +11,7 @@ import type {
   V1AccessRightsHls,
   V3MetadataBody,
   WatchPageMetadata,
-} from "@/@types/niconico";
+} from "@/@types/niconico.js";
 
 const typeGuard = {
   firefox: {

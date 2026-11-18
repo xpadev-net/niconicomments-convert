@@ -2,10 +2,10 @@ import * as path from "node:path";
 import type { WebContents } from "electron";
 import { app, BrowserWindow } from "electron";
 
-import type { ApiResponsesToController } from "@/@types/response.controller";
+import type { ApiResponsesToController } from "@/@types/response.controller.js";
 
-import { baseUrl } from "./context";
-import { isConversionProcessing } from "./queue";
+import { baseUrl } from "./context.js";
+import { isConversionProcessing } from "./queue.js";
 
 let controllerWindow: BrowserWindow;
 const createControllerWindow = (): void => {
@@ -13,7 +13,7 @@ const createControllerWindow = (): void => {
     width: 800,
     height: 600,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(import.meta.dirname, "preload.cjs"),
       nodeIntegration: false,
       contextIsolation: true,
       additionalArguments: ["--ipc-role=controller"],

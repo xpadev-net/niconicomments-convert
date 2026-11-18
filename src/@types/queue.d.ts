@@ -1,8 +1,8 @@
 import type { Options } from "@xpadev-net/niconicomments";
 
-import type { NicoId, UUID } from "@/@types/brand";
-import type { TCommentOption, V3MetadataComment } from "@/@types/niconico";
-import type { CommentFormat } from "@/@types/niconicomments";
+import type { NicoId, UUID } from "@/@types/brand.js";
+import type { TCommentOption, V3MetadataComment } from "@/@types/niconico.js";
+import type { CommentFormat } from "@/@types/niconicomments.js";
 
 export type Status =
   | "queued"

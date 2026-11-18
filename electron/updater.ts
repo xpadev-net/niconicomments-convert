@@ -1,8 +1,8 @@
 import { app, dialog, net, shell } from "electron";
 
-import { isNewerVersion } from "../src/domain/update";
-import { getLogger } from "./lib/log";
-import { store } from "./store";
+import { isNewerVersion } from "../src/domain/update.js";
+import { getLogger } from "./lib/log.js";
+import { store } from "./store.js";
 
 const logger = getLogger("[updater]");
 const LATEST_RELEASE_API =
@@ -24,6 +24,8 @@ const notifyUpdate = async (): Promise<void> => {
     headers: { Accept: "application/vnd.github+json" },
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  // The user may have turned checks off while the request was pending.
+  if (store.get("updateCheck") !== "enabled") return;
   const release = (await response.json()) as {
     tag_name?: unknown;
     html_url?: unknown;

@@ -1,38 +1,11 @@
 const assert = require("node:assert/strict");
-const { execFileSync } = require("node:child_process");
 const { EventEmitter } = require("node:events");
-const { mkdtempSync, readFileSync, rmSync } = require("node:fs");
-const Module = require("node:module");
-const { tmpdir } = require("node:os");
-const { dirname, join } = require("node:path");
+const { join } = require("node:path");
 const { Writable } = require("node:stream");
-const { after, test } = require("node:test");
+const { test } = require("node:test");
 
-const build = mkdtempSync(join(tmpdir(), "conversion-session-test-"));
-after(() => rmSync(build, { recursive: true, force: true }));
-const tsc = join(
-  dirname(require.resolve("typescript/package.json")),
-  "bin/tsc",
-);
-execFileSync(process.execPath, [
-  tsc,
-  "-p",
-  "electron",
-  "--outDir",
-  build,
-  "--sourceMap",
-  "false",
-]);
-
-function load(file, mocks) {
-  const filename = join(build, "electron", file);
-  const mod = new Module(filename, module);
-  const originalRequire = Module.createRequire(filename);
-  mod.require = (id) =>
-    Object.hasOwn(mocks, id) ? mocks[id] : originalRequire(id);
-  mod._compile(readFileSync(filename, "utf8"), filename);
-  return mod.exports;
-}
+const { loadCompiled } = require("./helpers/load-typescript.cjs");
+const load = (file, mocks) => loadCompiled(join("build/electron", file), mocks);
 
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 const logger = { debug() {}, log() {}, error() {} };

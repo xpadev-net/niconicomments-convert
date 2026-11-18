@@ -1,7 +1,4 @@
 const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
-const { Module } = require("node:module");
-const { resolve } = require("node:path");
 const { Writable } = require("node:stream");
 const { setTimeout: delay } = require("node:timers/promises");
 const { test } = require("node:test");
@@ -24,33 +21,29 @@ function harness(rendererOptions = {}) {
     windows = [],
     messages = [];
   let handler;
-  const filename = resolve("build/electron/conversion-session.js");
-  const sessionModule = new Module(filename, module);
-  const realRequire = Module.createRequire(filename);
-  const imports = {
-    "./converter": {
-      createConverter() {
-        const finished = Promise.withResolvers();
-        const backend = { ...finished, chunks: [], stops: 0 };
-        backend.inputStream = new Writable({
-          write(chunk, _encoding, callback) {
-            backend.chunks.push([...chunk]);
-            callback();
-          },
-        });
-        backends.push(backend);
-        return {
-          inputStream: backend.inputStream,
-          run: () => finished.promise,
-          stop: () => backend.stops++,
-        };
+  const { ConversionSession } = load.loadCompiled(
+    "build/electron/conversion-session.js",
+    {
+      "./converter": {
+        createConverter() {
+          const finished = Promise.withResolvers();
+          const backend = { ...finished, chunks: [], stops: 0 };
+          backend.inputStream = new Writable({
+            write(chunk, _encoding, callback) {
+              backend.chunks.push([...chunk]);
+              callback();
+            },
+          });
+          backends.push(backend);
+          return {
+            inputStream: backend.inputStream,
+            run: () => finished.promise,
+            stop: () => backend.stops++,
+          };
+        },
       },
     },
-  };
-  sessionModule.require = (name) =>
-    Object.hasOwn(imports, name) ? imports[name] : realRequire(name);
-  sessionModule._compile(readFileSync(filename, "utf8"), filename);
-  const { ConversionSession } = sessionModule.exports;
+  );
   const controller = {
     isControllerSender: () => false,
     sendMessageToController: (message) =>
@@ -116,7 +109,7 @@ function harness(rendererOptions = {}) {
     "./lib/json": { encodeError: String, encodeJson: JSON.stringify },
     "./lib/log": { getLogger: () => logger },
     "./lib/niconico": {},
-    "./updater": { onUpdateCheckSettingChanged: () => {} },
+    "./updater.js": { onUpdateCheckSettingChanged: () => {} },
     "./store": {},
     "./queue": queue,
   }).registerListener();

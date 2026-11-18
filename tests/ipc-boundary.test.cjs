@@ -374,7 +374,7 @@ const ipcHarness = ({ appendError } = {}) => {
       appendFrame: recordCall("appendFrame"),
       processOnLoad: recordCall("load", { type: "load", sessionId: "s" }),
     },
-    "./updater": { onUpdateCheckSettingChanged: () => {} },
+    "./updater.js": { onUpdateCheckSettingChanged: () => {} },
     "./store": {
       store: {
         get: recordCall("get", true),
@@ -533,7 +533,7 @@ const preloadHarness = (role) => {
   const emitter = new EventEmitter();
   const invokes = [];
   load(
-    "electron/preload.ts",
+    "electron/preload.cts",
     {
       electron: {
         contextBridge: {

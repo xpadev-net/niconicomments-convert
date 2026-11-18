@@ -1,8 +1,8 @@
 import type { SaveDialogOptions } from "electron";
 
-import type { UUID } from "@/@types/brand";
-import type { Queue } from "@/@types/queue";
-import type { AppSettings } from "@/@types/setting";
+import type { UUID } from "@/@types/brand.js";
+import type { Queue } from "@/@types/queue.js";
+import type { AppSettings } from "@/@types/setting.js";
 
 export type ApiRequestFromController = {
   host: "controller";

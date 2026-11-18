@@ -1,15 +1,8 @@
 const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
 const { Writable } = require("node:stream");
 const { setImmediate: nextTurn } = require("node:timers/promises");
 const { test } = require("node:test");
-const { runInNewContext } = require("node:vm");
-
-const source = readFileSync("build/electron/queue.js", "utf8");
-const sessionSource = readFileSync(
-  "build/electron/conversion-session.js",
-  "utf8",
-);
+const { loadCompiled } = require("./helpers/load-typescript.cjs");
 
 function setup() {
   const conversions = [];
@@ -37,10 +30,8 @@ function setup() {
       };
     },
   };
-  const sessionExports = {};
-  runInNewContext(sessionSource, {
-    exports: sessionExports,
-    require: (name) => (name === "./converter" ? converter : require(name)),
+  const sessionExports = loadCompiled("build/electron/conversion-session.js", {
+    "./converter": converter,
   });
   let currentSession;
   let rendererId = 0;
@@ -76,15 +67,7 @@ function setup() {
       sendMessageToRenderer: noop,
     },
   };
-  const api = {};
-  runInNewContext(source, {
-    exports: api,
-    require(name) {
-      assert.ok(Object.hasOwn(mocks, name), `Unexpected import: ${name}`);
-      return mocks[name];
-    },
-    console,
-  });
+  const api = loadCompiled("build/electron/queue.js", mocks);
   const queue = {
     appendFrame: (frameId, data) =>
       api.appendFrame(rendererId, currentSession.id, frameId, data),

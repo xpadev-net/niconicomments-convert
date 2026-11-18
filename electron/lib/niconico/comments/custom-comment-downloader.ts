@@ -1,12 +1,12 @@
-import NiconiComments, {
+import niconicomments, {
   type FormattedComment,
 } from "@xpadev-net/niconicomments";
 import type {
   TCommentOptionCustom,
   V3MetadataComment,
-} from "@/@types/niconico";
-import type { V1Raw } from "@/@types/types";
-import { convertV3ToFormatted } from "./utils";
+} from "@/@types/niconico.js";
+import type { V1Raw } from "@/@types/types.js";
+import { convertV3ToFormatted } from "./utils.js";
 
 export type BaseData = {
   threadKey: string;
@@ -95,7 +95,7 @@ const download = async () => {
   const res = (await req.json()) as unknown;
   signal.throwIfAborted();
   const thread = (res as V1Raw)?.data?.threads[0];
-  if (!NiconiComments.typeGuard.v1.thread(thread))
+  if (!niconicomments.default.typeGuard.v1.thread(thread))
     throw new Error("failed to get comments");
   const oldestCommentDate = new Date(
     Math.min(

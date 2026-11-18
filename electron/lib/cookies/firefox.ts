@@ -6,13 +6,13 @@ import type {
   FirefoxProfile,
   l10nID,
   moz_cookies,
-} from "@/@types/cookies";
-import type { UserData } from "@/@types/niconico";
+} from "@/@types/cookies.js";
+import type { UserData } from "@/@types/niconico.js";
 
-import { typeGuard } from "../../type-guard";
-import { convertToEncodedCookie } from "../cookie";
-import { fetchAll, withClonedDB } from "../db";
-import { getUserInfo } from "../niconico";
+import { typeGuard } from "../../type-guard.js";
+import { convertToEncodedCookie } from "../cookie.js";
+import { fetchAll, withClonedDB } from "../db.js";
+import { getUserInfo } from "../niconico/index.js";
 
 /*
 reference source:

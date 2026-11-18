@@ -1,9 +1,9 @@
 import { app, BrowserWindow, dialog } from "electron";
 
-import { onStartUp } from "./assets";
-import { createControllerWindow } from "./controller-window";
-import { getLogger } from "./lib/log";
-import { initUpdateCheck } from "./updater";
+import { onStartUp } from "./assets.js";
+import { createControllerWindow } from "./controller-window.js";
+import { getLogger } from "./lib/log.js";
+import { initUpdateCheck } from "./updater.js";
 
 type StartupState = "preparing" | "ready" | "quitting";
 

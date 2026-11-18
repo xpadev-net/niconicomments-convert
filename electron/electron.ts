@@ -1,8 +1,8 @@
 import { app, globalShortcut } from "electron";
 
-import { registerListener } from "./ipc-manager";
-import { initLogger } from "./lib/log";
-import { startApplication } from "./startup";
+import { registerListener } from "./ipc-manager.js";
+import { initLogger } from "./lib/log.js";
+import { startApplication } from "./startup.js";
 
 if (app.isPackaged) {
   app.on("browser-window-focus", () => {

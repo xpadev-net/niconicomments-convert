@@ -1,6 +1,6 @@
-import type { CommentFormat } from "@/@types/niconicomments";
-import type { Queue } from "@/@types/queue";
-import type { Movie } from "@/@types/types";
+import type { CommentFormat } from "@/@types/niconicomments.js";
+import type { Queue } from "@/@types/queue.js";
+import type { Movie } from "@/@types/types.js";
 
 export type ApiResponseToController = {
   target: "controller";

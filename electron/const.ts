@@ -1,4 +1,4 @@
-import type { FfmpegOptions } from "@/@types/ffmpeg";
+import type { FfmpegOptions } from "@/@types/ffmpeg.js";
 
 const defaultOptions: FfmpegOptions = {
   sws_flags: "spline+accurate_rnd+full_chroma_int",

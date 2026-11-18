@@ -1,28 +1,15 @@
 const assert = require("node:assert/strict");
 const { EventEmitter, once } = require("node:events");
-const {
-  chmodSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} = require("node:fs");
-const { createRequire, Module } = require("node:module");
+const { chmodSync, mkdtempSync, rmSync, writeFileSync } = require("node:fs");
 const { tmpdir } = require("node:os");
-const { join, resolve } = require("node:path");
+const { join } = require("node:path");
 const { PassThrough } = require("node:stream");
 const { test } = require("node:test");
 const { spawn, ProcessError } = require("../build/electron/lib/spawn.js");
 
-// Stub only application dependencies; exercise the compiled production code.
-function loadWithMocks(filename, mocks) {
-  const path = resolve(filename);
-  const module = new Module(path);
-  const realRequire = createRequire(path);
-  module.require = (name) => (name in mocks ? mocks[name] : realRequire(name));
-  module._compile(readFileSync(path, "utf8"), path);
-  return module.exports;
-}
+const {
+  loadCompiled: loadWithMocks,
+} = require("./helpers/load-typescript.cjs");
 
 function fakeExecution(onData) {
   const child = new EventEmitter();

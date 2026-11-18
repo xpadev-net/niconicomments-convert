@@ -1,10 +1,10 @@
-import type { TRemoteMovieItemFormat } from "@/@types/queue";
-import type { SpawnResult } from "@/@types/spawn";
+import type { TRemoteMovieItemFormat } from "@/@types/queue.js";
+import type { SpawnResult } from "@/@types/spawn.js";
 
-import { downloadDMC } from "./dmc";
-import { downloadDMS } from "./dms";
-import { withRequestTimeout } from "./request";
-import { getMetadata } from "./utils";
+import { downloadDMC } from "./dmc.js";
+import { downloadDMS } from "./dms.js";
+import { withRequestTimeout } from "./request.js";
+import { getMetadata } from "./utils.js";
 
 const download = async (
   nicoId: string,

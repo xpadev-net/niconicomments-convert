@@ -18,6 +18,11 @@ execFileSync(process.execPath, [
   ),
   "-p",
   "electron",
+  "--module",
+  "CommonJS",
+  "--moduleResolution",
+  "bundler",
+  "--noCheck",
   "--outDir",
   build,
   "--sourceMap",
@@ -34,7 +39,7 @@ const loadModules = (mocks = {}, globals = {}) => {
     const localRequire = (id) => {
       if (!id.startsWith(".")) return require(id);
       let target = path.posix.normalize(
-        path.posix.join(path.posix.dirname(name), id),
+        path.posix.join(path.posix.dirname(name), id.replace(/\.js$/, "")),
       );
       if (!fs.existsSync(path.join(build, `${target}.js`))) target += "/index";
       return load(target);

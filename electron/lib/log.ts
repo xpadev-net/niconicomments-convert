@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { app } from "electron";
-import log from "electron-log/main";
+import log from "electron-log/main.js";
 
 export const initLogger = (): void => {
   log.initialize();
