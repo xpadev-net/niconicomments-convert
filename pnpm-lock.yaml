@@ -176,7 +176,7 @@ overrides:
   tar@<7.5.22: ^7.5.22
   shell-quote@<1.11.0: ^1.11.0
   '@xmldom/xmldom@<0.8.15': ^0.8.15
-  fast-uri@<3.1.9: ^3.1.9
+  fast-uri@<3.1.9: ^4.0.0
   ip-address@<=10.7.3: ^10.7.4
   js-yaml@>=4.0.0 <4.3.2: ^4.3.2
   qs@<6.16.1: ^6.16.1
@@ -1492,8 +1492,8 @@ packages:
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
 
-  fast-uri@3.1.9:
-    resolution: {integrity: sha512-hS/0Wt3Ya043oKXs0sIxrMpKQITXhMLIrVAKKXi4gozGC9v7YRWVnXIZzjNPTO02M9BdxLCWqK1yRXgNziVyJQ==}
+  fast-uri@4.2.4:
+    resolution: {integrity: sha512-ARrctoImibWG27hlPe0Gc93d6HwZBYipqd9QhnXyYzS101vKmqx2J/1R8kzhnnYTph0umtJqu9rqIuYtVDaAOg==}
 
   fdir@6.5.0:
     resolution: {integrity: sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==}
@@ -3458,7 +3458,7 @@ snapshots:
   ajv@8.20.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 3.1.9
+      fast-uri: 4.2.4
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -3980,7 +3980,7 @@ snapshots:
 
   fast-deep-equal@3.1.3: {}
 
-  fast-uri@3.1.9: {}
+  fast-uri@4.2.4: {}
 
   fdir@6.5.0(picomatch@4.0.7):
     optionalDependencies:
