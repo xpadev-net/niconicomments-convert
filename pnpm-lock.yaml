@@ -206,8 +206,8 @@ importers:
         specifier: ^9.0.0
         version: 9.3.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@10.2.2))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@10.2.2))(@types/react@19.3.0)(react@19.3.1)(supports-color@10.2.2))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@xpadev-net/niconicomments':
-        specifier: ^0.4.1
-        version: 0.4.1
+        specifier: ^0.5.0
+        version: 0.5.0
       '@xpadev-net/xml2js':
         specifier: 0.6.2-2
         version: 0.6.2-2
@@ -1067,8 +1067,8 @@ packages:
     resolution: {integrity: sha512-/5NV/vDALVFDXgLmfsy9TRCBlKwO2LNBFzpzvb9iIj+jR+eSc6DLYYvVOdivT/jm7MtU6TebYuRmzEOI7w40UA==}
     engines: {node: '>=10.0.0'}
 
-  '@xpadev-net/niconicomments@0.4.1':
-    resolution: {integrity: sha512-VZAExTFPv1uv1boU75bMPIh+tKkTKgzKJsK7oTConCe7EbuTygRj8VH0LpohsEUv4dKHIH5pY0TsS4hVIb+lEQ==}
+  '@xpadev-net/niconicomments@0.5.0':
+    resolution: {integrity: sha512-bC7Fi7b+oS7TFF3ifMWXn0ndOp/Q/0Ig33SoYUep2Y3ZQy4CL5s5ifvpNRg36WzvdrceSuoTtEvpCD48WRcxHw==}
     engines: {node: '>=22.0.0'}
 
   '@xpadev-net/xml2js@0.6.2-2':
@@ -3636,7 +3636,7 @@ snapshots:
 
   '@xmldom/xmldom@0.8.15': {}
 
-  '@xpadev-net/niconicomments@0.4.1': {}
+  '@xpadev-net/niconicomments@0.5.0': {}
 
   '@xpadev-net/xml2js@0.6.2-2':
     dependencies:
