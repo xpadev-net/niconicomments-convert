@@ -9,6 +9,7 @@ on:
 jobs:
   build_on_mac:
     runs-on: macos-latest
+    environment: release
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
