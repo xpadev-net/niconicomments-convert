@@ -912,6 +912,10 @@ const commentModules = (globals = {}, mocks = {}) =>
   loadModules(
     {
       "electron/utils": { sleep: async () => {} },
+      "electron/lib/cookie": {
+        ...cookieMock,
+        convertToEncodedCookie: () => "",
+      },
       ...mocks,
     },
     globals,

@@ -32,14 +32,19 @@ const downloadDMS = async (
 
   const cookie = await getCookies();
   const accessRightsReq = await fetch(
-    `https://nvapi.nicovideo.jp/v1/watch/${metadata.video.id}/access-rights/hls?actionTrackId=0_0`,
+    `https://nvapi.nicovideo.jp/v1/watch/${metadata.video.id}/access-rights/hls?${new URLSearchParams(
+      {
+        actionTrackId: metadata.client?.watchTrackId ?? "0_0",
+      },
+    ).toString()}`,
     {
       signal,
       headers: {
         Host: "nvapi.nicovideo.jp",
         Cookie: cookie ? convertToEncodedCookie(cookie) : "",
         "Content-Type": "application/json",
-        "X-Request-With": "https://www.nicovideo.jp",
+        "X-Request-With": "nicovideo",
+        "X-Niconico-Language": "ja-jp",
         "X-Access-Right-Key": metadata.media.domand.accessRightKey,
         "X-Frontend-Id": "6",
         "X-Frontend-Version": "0",
