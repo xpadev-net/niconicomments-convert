@@ -178,7 +178,7 @@ overrides:
   '@xmldom/xmldom@<0.8.15': ^0.8.15
   fast-uri@<3.1.9: ^3.1.9
   ip-address@<=10.7.3: ^10.7.4
-  js-yaml@>=4.0.0 <4.3.2: ^4.3.2
+  js-yaml@>=4.0.0 <4.3.2: ^5.0.0
   qs@<6.16.1: ^6.16.1
   glob@>=9.0.0 <14.0.2: ^14.0.2
   minimatch@>=7.0.0 <11.0.1: ^11.0.1
@@ -1103,8 +1103,8 @@ packages:
       dmg-builder: 26.18.0
       electron-builder-squirrel-windows: 26.18.0
 
-  argparse@2.0.1:
-    resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
+  argparse@3.0.4:
+    resolution: {integrity: sha512-fwWK3Zq22l4XJJjx5mcBHGikIk+hJqO+32dPm0Jur7+rtG5x1scOjSfdT9ZKeWHPpsya/l0HHK4tDImBkTrtvA==}
 
   asn1js@3.0.10:
     resolution: {integrity: sha512-S2s3aOytiKdFRdulw2qPE51MzjzVOisppcVv7jVFR+Kw0kxwvFrDcYA0h7Ndqbmj0HkMIXYWaoj7fli8kgx1eg==}
@@ -1756,8 +1756,8 @@ packages:
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
-  js-yaml@4.3.2:
-    resolution: {integrity: sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TIRejdH3rhR4EZMGoNx3/TP3O+wzWuiTFl4sqbltzA==}
+  js-yaml@5.5.0:
+    resolution: {integrity: sha512-paNr4LFIFPjeeSmwNYdrb8FafLLG/Cr2Af3GjbsHJ5CxIjH4r0c2emlmRdAtpPAieP1gRVzk6buBbVP5gBMGAg==}
     hasBin: true
 
   jsesc@3.1.0:
@@ -3503,7 +3503,7 @@ snapshots:
       hosted-git-info: 4.1.0
       isbinaryfile: 5.0.7
       jiti: 2.7.0
-      js-yaml: 4.3.2
+      js-yaml: 5.5.0
       json5: 2.2.3
       lazy-val: 1.0.5
       minimatch: 11.0.9
@@ -3520,7 +3520,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  argparse@2.0.1: {}
+  argparse@3.0.4: {}
 
   asn1js@3.0.10:
     dependencies:
@@ -3607,7 +3607,7 @@ snapshots:
       fs-extra: 10.1.0
       http-proxy-agent: 7.0.2(supports-color@10.2.2)
       https-proxy-agent: 7.0.6(supports-color@10.2.2)
-      js-yaml: 4.3.2
+      js-yaml: 5.5.0
       sanitize-filename: 1.6.4
       source-map-support: 0.5.21
       stat-mode: 1.0.0
@@ -3819,7 +3819,7 @@ snapshots:
       app-builder-lib: 26.18.0(dmg-builder@26.18.0)(electron-builder-squirrel-windows@26.18.0)(supports-color@10.2.2)
       builder-util: 26.16.0(supports-color@10.2.2)
       fs-extra: 10.1.0
-      js-yaml: 4.3.2
+      js-yaml: 5.5.0
     transitivePeerDependencies:
       - electron-builder-squirrel-windows
       - supports-color
@@ -3905,7 +3905,7 @@ snapshots:
     dependencies:
       builder-util-runtime: 9.7.0(supports-color@10.2.2)
       fs-extra: 10.1.0
-      js-yaml: 4.3.2
+      js-yaml: 5.5.0
       lazy-val: 1.0.5
       lodash.escaperegexp: 4.1.2
       lodash.isequal: 4.5.0
@@ -4253,9 +4253,9 @@ snapshots:
 
   js-tokens@4.0.0: {}
 
-  js-yaml@4.3.2:
+  js-yaml@5.5.0:
     dependencies:
-      argparse: 2.0.1
+      argparse: 3.0.4
 
   jsesc@3.1.0: {}
 
