@@ -1,0 +1,126 @@
+name: test-build
+
+# Build the app without creating a release or tag.
+# Artifacts are attached to the workflow run only.
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build'
+        required: true
+        type: choice
+        options:
+          - all
+          - mac
+          - win
+        default: all
+      sign:
+        description: 'Sign and notarize the mac build (needs the release environment; run it from master)'
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  mac_unsigned:
+    if: ${{ inputs.platform != 'win' && !inputs.sign }}
+    runs-on: macos-latest
+    timeout-minutes: 30
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - run: |
+          pnpm config delete proxy
+          pnpm config delete https-proxy
+          pnpm config delete registry
+          pnpm install --frozen-lockfile
+      - run: pnpm build:mac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: niconicomments-convert-mac-unsigned
+          if-no-files-found: error
+          path: dist/*.dmg
+
+  mac_signed:
+    if: ${{ inputs.platform != 'win' && inputs.sign }}
+    runs-on: macos-latest
+    environment: release
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - run: |
+          pnpm config delete proxy
+          pnpm config delete https-proxy
+          pnpm config delete registry
+          pnpm install --frozen-lockfile
+
+      - name: Prepare notarization key
+        env:
+          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+        run: |
+          umask 077
+          printf '%s' "$APPLE_API_PRIVATE_KEY" > "$RUNNER_TEMP/AuthKey.p8"
+          echo "APPLE_API_KEY_PATH=$RUNNER_TEMP/AuthKey.p8" >> "$GITHUB_ENV"
+
+      - name: Build, sign and notarize
+        # The repository secret APPLE_API_KEY holds the key id; electron-builder
+        # wants APPLE_API_KEY_ID for the id and APPLE_API_KEY for the .p8 path.
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: |
+          export APPLE_API_KEY="$APPLE_API_KEY_PATH"
+          pnpm build:mac
+
+      - name: Verify signature and notarization
+        run: |
+          set -euo pipefail
+          app="$(find dist -maxdepth 3 -name '*.app' -type d | head -n1)"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          spctl --assess --type execute --verbose=2 "$app"
+          xcrun stapler validate "$app"
+
+      - name: Remove notarization key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/AuthKey.p8"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: niconicomments-convert-mac-signed
+          if-no-files-found: error
+          path: dist/*.dmg
+
+  win:
+    if: ${{ inputs.platform != 'mac' }}
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - run: |
+          pnpm config delete proxy
+          pnpm config delete https-proxy
+          pnpm config delete registry
+          pnpm install --frozen-lockfile
+      - run: pnpm build:win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: niconicomments-convert-win
+          if-no-files-found: error
+          path: dist/*.zip
