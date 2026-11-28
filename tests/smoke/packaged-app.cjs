@@ -2,7 +2,7 @@
 const assert = require("node:assert/strict");
 const { spawn, execFile } = require("node:child_process");
 const { once } = require("node:events");
-const { mkdtempSync, rmSync } = require("node:fs");
+const { mkdtempSync, rmSync, writeFileSync } = require("node:fs");
 const { createServer } = require("node:net");
 const { tmpdir } = require("node:os");
 const { join, resolve } = require("node:path");
@@ -10,6 +10,11 @@ const { setTimeout: delay } = require("node:timers/promises");
 
 async function smoke(executable) {
   const profile = mkdtempSync(join(tmpdir(), "niconicomments-smoke-"));
+  // Skip the first-run update opt-in dialog, which would block startup.
+  writeFileSync(
+    join(profile, "config.json"),
+    JSON.stringify({ updateCheck: "disabled" }),
+  );
   const server = createServer();
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
