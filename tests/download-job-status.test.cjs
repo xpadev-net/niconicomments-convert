@@ -912,6 +912,10 @@ const commentModules = (globals = {}, mocks = {}) =>
   loadModules(
     {
       "electron/utils": { sleep: async () => {} },
+      "electron/lib/cookie": {
+        ...cookieMock,
+        convertToEncodedCookie: () => "",
+      },
       ...mocks,
     },
     globals,
@@ -938,6 +942,64 @@ test("comment fetch and file write failures reach the queue exactly once", async
     );
     assert.equal(fs.existsSync(download.path), false);
   }
+});
+
+const threadKeyModule = (fetch) =>
+  loadModules(
+    {
+      "electron/lib/cookie": {
+        getCookies: async () => undefined,
+        convertToEncodedCookie: () => "",
+      },
+    },
+    { fetch },
+  )("electron/lib/niconico/comments/thread-key");
+const threadKeyMetadata = {
+  threads: [{ videoId: "sm9" }],
+  nvComment: { threadKey: "old" },
+};
+
+test("thread key is refreshed from the key API", async () => {
+  const urls = [];
+  const { fetchThreadKey } = threadKeyModule(async (url) => {
+    urls.push(String(url));
+    return response({ meta: { status: 200 }, data: { threadKey: "fresh" } });
+  });
+  const key = await fetchThreadKey(
+    threadKeyMetadata,
+    new AbortController().signal,
+  );
+  assert.equal(key, "fresh");
+  assert.deepEqual(urls, [
+    "https://nvapi.nicovideo.jp/v1/comment/keys/thread?videoId=sm9",
+  ]);
+});
+
+test("thread key falls back to the saved key when refreshing fails", async () => {
+  for (const fetch of [
+    async () => {
+      throw new Error("network failed");
+    },
+    async () => response({ meta: { status: 403 } }),
+  ]) {
+    const { fetchThreadKey } = threadKeyModule(fetch);
+    const key = await fetchThreadKey(
+      threadKeyMetadata,
+      new AbortController().signal,
+    );
+    assert.equal(key, "old");
+  }
+});
+
+test("thread key refresh is cancelled with the job", async () => {
+  const controller = new AbortController();
+  const { fetchThreadKey } = threadKeyModule((_url, init) => {
+    controller.abort();
+    return untilAborted(init.signal);
+  });
+  await assert.rejects(fetchThreadKey(threadKeyMetadata, controller.signal), {
+    name: "AbortError",
+  });
 });
 
 test("simple and custom comments are not saved after interruption during a request", async () => {
