@@ -6,7 +6,11 @@ export type AppSettings = {
   ffmpegOptions: FfmpegOptions;
   showRendererWindow: boolean;
   commentFileExt: string;
+  updateCheck: UpdateCheckSetting;
 };
+
+// "unset": the opt-in dialog has not been answered yet.
+export type UpdateCheckSetting = "unset" | "enabled" | "disabled";
 
 export type AuthType = AuthByBrowserCookie | AuthByCookieFile | NoAuth;
 

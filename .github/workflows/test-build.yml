@@ -42,7 +42,7 @@ jobs:
           pnpm config delete registry
           pnpm install --frozen-lockfile
       - run: pnpm build:mac
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: niconicomments-convert-mac-unsigned
           if-no-files-found: error
@@ -97,7 +97,7 @@ jobs:
         if: always()
         run: rm -f "$RUNNER_TEMP/AuthKey.p8"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: niconicomments-convert-mac-signed
           if-no-files-found: error
@@ -119,7 +119,7 @@ jobs:
           pnpm config delete registry
           pnpm install --frozen-lockfile
       - run: pnpm build:win
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: niconicomments-convert-win
           if-no-files-found: error

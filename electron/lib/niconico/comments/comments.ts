@@ -16,6 +16,7 @@ import {
   type BaseData,
   downloadCustomComment,
 } from "./custom-comment-downloader.js";
+import { fetchThreadKey } from "./thread-key.js";
 import { convertV3ToFormatted } from "./utils.js";
 
 const downloadComment = async (
@@ -79,7 +80,7 @@ const downloadV3V1SimpleComment = async (
   const userList: string[] = [];
   const targetThreads = option.threads.filter((thread) => thread.enable);
   const body = {
-    threadKey: metadata.nvComment.threadKey,
+    threadKey: await fetchThreadKey(metadata, signal),
     params: {
       language: metadata.nvComment.params.language,
       targets: targetThreads.map((thread) => ({
@@ -123,12 +124,13 @@ const downloadV3V1CustomComment = async (
       ? start - Math.floor(new Date(option.end.date).getTime() / 1000)
       : option.end.count;
   let threadId = 0;
+  const threadKey = await fetchThreadKey(metadata, signal);
   for (const thread of option.threads) {
     if (!thread.enable) continue;
     signal.throwIfAborted();
     const when = Math.floor(new Date(option.start).getTime() / 1000);
     const baseData: BaseData = {
-      threadKey: metadata.nvComment.threadKey,
+      threadKey,
       params: {
         language: metadata.nvComment.params.language,
         targets: [

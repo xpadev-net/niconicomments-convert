@@ -10,8 +10,79 @@ export type WatchPageMetadata<_T extends "dmc" | "dms" | "" = ""> = {
     status: 200;
   };
   data: {
-    response: V3MetadataBody;
+    // 旧仕様では V3MetadataBody が直接入り、新仕様では $watchV4 でラップされる
+    response: V3MetadataBody | WatchPageV4Response;
   };
+};
+
+/** 新仕様 (`nvpcClientVersion=1`) の視聴ページ情報 */
+export type WatchPageV4Response = {
+  $watchV4: {
+    data: WatchV4Data;
+  };
+};
+
+export type WatchV4Data = {
+  client: { watchTrackId: string };
+  comment: {
+    threads: WatchV4Thread[];
+    nvComment: V3MetadataNvComment;
+  };
+  media: {
+    contents: {
+      videos: V3MetadataDMSVideoItem[];
+      audios: V3MetadataDMSAudioItem[];
+    };
+    accessRightKey: string;
+  } | null;
+  video: {
+    id: string;
+    title: string;
+    description: string;
+    count: {
+      view: number;
+      comment: number;
+      mylist: number;
+      like: number;
+    };
+    duration: number;
+    thumbnail: {
+      normal: string;
+      middle: string | null;
+      large: string | null;
+      player: string;
+      ogp: string;
+    };
+    registeredAt: string;
+    permission: {
+      isPrivate: boolean;
+      isDeleted: boolean;
+      isAuthenticationRequired: boolean;
+      isEmbedPlayerAllowed: boolean;
+      rating: { isAdult: boolean };
+    };
+  };
+  viewer: {
+    id: number;
+    nickname: string;
+    isPremium: boolean;
+    allowSensitiveContents: boolean;
+  } | null;
+  payment?: {
+    watchableUserType?: string;
+    commentableUserType?: string;
+  };
+};
+
+export type WatchV4Thread = {
+  id: number;
+  fork: number;
+  forkLabel: "owner" | "main" | "easy";
+  videoId: string;
+  isPostTarget: boolean;
+  isOwnerThread: boolean;
+  is184Forced: boolean;
+  label: V3MetadataCommentThread["label"];
 };
 
 export type V3MetadataBody<T extends "dmc" | "dms" | "" = ""> = {
@@ -53,6 +124,8 @@ export type V3MetadataBody<T extends "dmc" | "dms" | "" = ""> = {
     "9d091f87": boolean;
   };
   viewer: V3MetadataViewerItem | null;
+  /** アクセス権取得時の actionTrackId (新仕様の client.watchTrackId) */
+  client?: { watchTrackId: string };
 };
 
 export type V3MetadataViewerItem = {
@@ -60,7 +133,7 @@ export type V3MetadataViewerItem = {
   nickname: string;
   isPremium: boolean;
   allowSensitiveContents: boolean;
-  existence: {
+  existence?: {
     age: number;
     prefecture: string;
     sex: string;
@@ -140,7 +213,7 @@ export type V3MetadataDMSVideoItem = {
   width: number;
   height: number;
   qualityLevel: number;
-  recommendedHighestAudioQualityLevel: number;
+  recommendedHighestAudioQualityLevel?: number;
 };
 
 export type V3MetadataDMSAudioItem = {
