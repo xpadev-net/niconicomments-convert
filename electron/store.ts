@@ -22,7 +22,8 @@ const store = {
   },
   set<K extends keyof AppSettings>(key: K, value: AppSettings[K]): void {
     if (!isSettingKey(key)) throw new ValidationError("未知の設定項目です。");
-    persisted.set(key, parseSetting(key, value));
+    // Dynamic key: electron-store v12 cannot narrow a generic key, and values are validated by parseSetting.
+    persisted.set(key as string, parseSetting(key, value));
   },
 };
 
