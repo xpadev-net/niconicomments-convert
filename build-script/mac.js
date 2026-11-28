@@ -7,9 +7,12 @@ builder.build({
     mac: {
       target: {
         target: "dmg",
-        arch: ["x64"],
+        arch: ["arm64"],
       },
       singleArchFiles: "*",
+      hardenedRuntime: true,
+      gatekeeperAssess: false,
+      notarize: true,
     },
   },
   publish: "never",
