@@ -3,6 +3,13 @@ import type { UserData, V3MetadataBody } from "@/@types/niconico.js";
 import { typeGuard } from "../../type-guard.js";
 import { convertToEncodedCookie, getCookies } from "../cookie.js";
 import { encodeJson } from "../json.js";
+import { normalizeWatchResponse } from "./normalize.js";
+
+const watchPageUrl = (nicoId: string): string =>
+  `https://www.nicovideo.jp/watch/${nicoId}?${new URLSearchParams({
+    responseType: "json",
+    nvpcClientVersion: "1",
+  }).toString()}`;
 
 const userInfoCache: { [key: string]: UserData | undefined } = {};
 const getUserInfo = async (cookies: string): Promise<UserData | undefined> => {
@@ -34,35 +41,29 @@ const getMetadata = async (
   if (!cookies) {
     return getV3GuestMetadata(nicoId, signal);
   }
-  const req = await fetch(
-    `https://www.nicovideo.jp/watch/${nicoId}?responseType=json`,
-    {
-      signal,
-      headers: {
-        Cookie: convertToEncodedCookie(cookies),
-      },
+  const req = await fetch(watchPageUrl(nicoId), {
+    signal,
+    headers: {
+      Cookie: convertToEncodedCookie(cookies),
     },
-  );
+  });
   const metadata = (await req.json()) as unknown;
   if (!typeGuard.niconico.WatchPageJson(metadata)) {
     return getV3GuestMetadata(nicoId, signal);
   }
-  return metadata.data.response;
+  return normalizeWatchResponse(metadata.data.response);
 };
 
 const getV3GuestMetadata = async (
   nicoId: string,
   signal?: AbortSignal,
 ): Promise<V3MetadataBody> => {
-  const req = await fetch(
-    `https://www.nicovideo.jp/watch/${nicoId}?responseType=json`,
-    { signal },
-  );
+  const req = await fetch(watchPageUrl(nicoId), { signal });
   const metadata = (await req.json()) as unknown;
   if (!typeGuard.niconico.WatchPageJson(metadata)) {
     throw new Error(`failed to get metadata\n${encodeJson(metadata)}`);
   }
-  return metadata.data.response;
+  return normalizeWatchResponse(metadata.data.response);
 };
 
 export { getMetadata, getUserInfo };

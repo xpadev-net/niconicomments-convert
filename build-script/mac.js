@@ -7,10 +7,13 @@ builder.build({
     mac: {
       // electron-updater on macOS requires the zip target next to the dmg.
       target: [
-        { target: "dmg", arch: ["x64"] },
-        { target: "zip", arch: ["x64"] },
+        { target: "dmg", arch: ["arm64"] },
+        { target: "zip", arch: ["arm64"] },
       ],
       singleArchFiles: "*",
+      hardenedRuntime: true,
+      gatekeeperAssess: false,
+      notarize: true,
     },
     publish: {
       provider: "github",
